@@ -1,7 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { eq, and } from "drizzle-orm";
-import { db } from "@neogesys/db";
-import { tenantIntegrations } from "@neogesys/db/schema";
+import { db, tenantIntegrations } from "@neogesys/db";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
