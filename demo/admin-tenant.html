@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="it" data-palette="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEOGESYS SPORT — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    const theme = localStorage.getItem('theme') || 'system';
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) document.documentElement.classList.add('dark');
+    const palette = localStorage.getItem('palette') || 'default';
+    document.documentElement.setAttribute('data-palette', palette);
+  })();
+</script>
+<style>
+/* ============================== PALETTE SYSTEM ============================== */
+:root,
+[data-palette="default"] {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 94%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
+}
+.dark,
+.dark[data-palette="default"] {
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 10%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 10%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 20%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --border: 217 33% 20%;
+  --input: 217 33% 20%;
+  --ring: 217 91% 60%;
+}
+
+[data-palette="ocean"] {
+  --primary: 189 94% 43%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 180 40% 94%;
+  --accent: 180 50% 90%;
+  --ring: 189 94% 43%;
+}
+.dark[data-palette="ocean"] {
+  --primary: 188 86% 53%;
+  --primary-foreground: 222 47% 11%;
+  --background: 200 47% 7%;
+  --card: 200 47% 10%;
+}
+
+[data-palette="forest"] {
+  --primary: 142 71% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 20% 94%;
+  --accent: 90 30% 90%;
+  --ring: 142 71% 35%;
+}
+.dark[data-palette="forest"] {
+  --primary: 142 61% 45%;
+  --background: 120 20% 7%;
+  --card: 120 20% 10%;
+}
+
+[data-palette="sunset"] {
+  --primary: 24 95% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 340 40% 95%;
+  --accent: 340 50% 92%;
+  --ring: 24 95% 53%;
+}
+.dark[data-palette="sunset"] {
+  --primary: 24 95% 58%;
+  --background: 24 30% 8%;
+  --card: 24 30% 12%;
+}
+
+[data-palette="monochrome"] {
+  --primary: 0 0% 20%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 94%;
+  --accent: 0 0% 90%;
+  --ring: 0 0% 40%;
+}
+.dark[data-palette="monochrome"] {
+  --primary: 0 0% 90%;
+  --primary-foreground: 0 0% 10%;
+  --background: 0 0% 7%;
+  --card: 0 0% 10%;
+}
+
+[data-palette="vibrant"] {
+  --primary: 271 91% 65%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 190 70% 94%;
+  --accent: 190 80% 90%;
+  --ring: 271 91% 65%;
+}
+.dark[data-palette="vibrant"] {
+  --primary: 271 91% 70%;
+  --background: 260 30% 8%;
+  --card: 260 30% 12%;
+}
+
+[data-palette="corporate"] {
+  --primary: 217 90% 20%;
+  --primary-foreground: 45 100% 70%;
+  --secondary: 45 80% 94%;
+  --accent: 45 70% 90%;
+  --ring: 45 80% 50%;
+}
+.dark[data-palette="corporate"] {
+  --primary: 45 80% 60%;
+  --primary-foreground: 217 90% 15%;
+  --background: 217 50% 8%;
+  --card: 217 50% 12%;
+}
+
+[data-palette="sport"] {
+  --primary: 0 84% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 94%;
+  --accent: 0 0% 90%;
+  --ring: 0 84% 50%;
+}
+.dark[data-palette="sport"] {
+  --primary: 0 84% 58%;
+  --background: 0 0% 8%;
+  --card: 0 0% 12%;
+}
+
+/* ============================== BASE STYLES ============================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: background-color 200ms ease, color 200ms ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body { min-height: 100vh; overflow-x: hidden; }
+
+button { font-family: inherit; font-size: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+/* Utilities */
+.hidden { display: none !important; }
+.flex { display: flex; }
+.grid { display: grid; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+
+/* Button */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem;
+  transition: all 150ms ease; white-space: nowrap;
+}
+.btn:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.btn-primary:hover { background: hsl(var(--primary) / 0.9); }
+.btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.btn-secondary:hover { background: hsl(var(--secondary) / 0.8); }
+.btn-outline { border: 1px solid hsl(var(--border)); }
+.btn-outline:hover { background: hsl(var(--accent)); }
+.btn-ghost:hover { background: hsl(var(--accent)); }
+.btn-icon { padding: 0.5rem; width: 2.25rem; height: 2.25rem; }
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;
+  background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));
+}
+.badge-success { background: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
+.badge-warning { background: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
+.badge-destructive { background: hsl(var(--destructive) / 0.15); color: hsl(var(--destructive)); }
+.badge-primary { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+
+/* Card */
+.card {
+  background: hsl(var(--card)); color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border)); border-radius: 0.75rem;
+}
+.card-header { padding: 1.25rem 1.25rem 0.75rem; }
+.card-body { padding: 1.25rem; }
+.card-title { font-size: 1rem; font-weight: 600; }
+.card-desc { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); margin-top: 0.25rem; }
+
+/* Inputs */
+.input, .select {
+  width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+  border: 1px solid hsl(var(--input)); background: hsl(var(--background));
+  transition: border-color 150ms;
+}
+.input:focus, .select:focus { outline: none; border-color: hsl(var(--ring)); box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1); }
+
+/* Icon */
+.icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+.icon-sm { width: 0.875rem; height: 0.875rem; }
+.icon-lg { width: 1.25rem; height: 1.25rem; }
+.icon-xl { width: 1.5rem; height: 1.5rem; }
+
+/* ============================== LAYOUT ============================== */
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Header */
+.app-header {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 1rem;
+  height: 3.5rem; padding: 0 1rem;
+  background: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsl(var(--border));
+}
+.header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.logo {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-weight: 800; font-size: 0.875rem; letter-spacing: -0.02em;
+}
+.logo-mark {
+  width: 2rem; height: 2rem; border-radius: 0.5rem;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+  display: grid; place-items: center;
+  color: hsl(var(--primary-foreground));
+  font-weight: 800;
+}
+.tenant-name { color: hsl(var(--muted-foreground)); font-size: 0.75rem; font-weight: 500; }
+.tenant-name::before { content: "•"; margin-right: 0.5rem; opacity: 0.5; }
+
+.header-search {
+  flex: 1; max-width: 32rem; margin: 0 auto;
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8125rem;
+  cursor: text; transition: all 150ms;
+}
+.header-search:hover { background: hsl(var(--accent)); }
+.header-search kbd {
+  margin-left: auto; padding: 0.125rem 0.375rem;
+  background: hsl(var(--background)); border: 1px solid hsl(var(--border));
+  border-radius: 0.25rem; font-size: 0.6875rem; font-family: inherit;
+}
+
+.header-right { display: flex; align-items: center; gap: 0.25rem; }
+.header-right .btn-icon { position: relative; color: hsl(var(--muted-foreground)); }
+.header-right .btn-icon:hover { color: hsl(var(--foreground)); }
+.notification-dot {
+  position: absolute; top: 0.375rem; right: 0.375rem;
+  width: 1rem; height: 1rem; border-radius: 50%;
+  background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground));
+  font-size: 0.625rem; font-weight: 600;
+  display: grid; place-items: center;
+}
+
+.avatar {
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
+  color: hsl(var(--primary-foreground));
+  display: grid; place-items: center;
+  font-weight: 600; font-size: 0.75rem;
+}
+
+/* Main container */
+.app-body { display: flex; flex: 1; min-height: 0; }
+
+/* Sidebar */
+.app-sidebar {
+  width: 240px; flex-shrink: 0;
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
+  display: flex; flex-direction: column;
+  transition: width 200ms ease;
+  overflow: hidden;
+}
+.app-sidebar.collapsed { width: 64px; }
+.sidebar-nav { padding: 0.75rem 0.5rem; display: flex; flex-direction: column; gap: 0.125rem; overflow-y: auto; }
+.nav-group-label {
+  padding: 0.75rem 0.75rem 0.25rem;
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: hsl(var(--muted-foreground));
+}
+.collapsed .nav-group-label { display: none; }
+.nav-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500; font-size: 0.8125rem;
+  cursor: pointer; transition: all 150ms; width: 100%; text-align: left;
+  white-space: nowrap;
+}
+.nav-item:hover { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+.nav-item.active {
+  background: hsl(var(--primary) / 0.1); color: hsl(var(--primary));
+}
+.nav-item.active .icon { color: hsl(var(--primary)); }
+.nav-item .icon { width: 1.125rem; height: 1.125rem; }
+.collapsed .nav-item { justify-content: center; padding: 0.625rem; }
+.collapsed .nav-item .nav-label { display: none; }
+.nav-badge {
+  margin-left: auto; background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground));
+  padding: 0.0625rem 0.375rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 600;
+}
+.collapsed .nav-badge { display: none; }
+
+/* Topbar mode */
+.app-topbar {
+  display: none; padding: 0 1rem;
+  background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border));
+}
+.topbar-nav { display: flex; gap: 0.25rem; overflow-x: auto; }
+.topbar-nav .nav-item { flex-direction: row; padding: 0.875rem 1rem; border-radius: 0; position: relative; }
+.topbar-nav .nav-item.active { background: transparent; }
+.topbar-nav .nav-item.active::after {
+  content: ""; position: absolute; bottom: 0; left: 0.5rem; right: 0.5rem; height: 2px;
+  background: hsl(var(--primary));
+}
+
+body[data-layout="topbar"] .app-sidebar { display: none; }
+body[data-layout="topbar"] .app-topbar { display: block; }
+
+/* Main content */
+.app-main { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;
+}
+.page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.page-subtitle { color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-top: 0.25rem; }
+.page-actions { display: flex; gap: 0.5rem; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .app-sidebar { position: fixed; top: 3.5rem; bottom: 0; left: 0; z-index: 30;
+    transform: translateX(-100%); transition: transform 250ms; width: 240px !important; }
+  .app-sidebar.mobile-open { transform: translateX(0); box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+}
+@media (max-width: 768px) {
+  .header-search { display: none; }
+  .tenant-name { display: none; }
+  .app-main { padding: 1rem; }
+  .page-title { font-size: 1.25rem; }
+}
+
+/* ============================== DASHBOARD ============================== */
+.stat-grid {
+  display: grid; gap: 1rem; margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.stat-card { padding: 1.25rem; }
+.stat-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.stat-card-title { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); font-weight: 500; }
+.stat-icon { width: 2rem; height: 2rem; border-radius: 0.5rem; display: grid; place-items: center; }
+.stat-value { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.stat-trend { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; margin-top: 0.5rem; }
+.stat-trend.up { color: hsl(var(--success)); }
+.stat-trend.down { color: hsl(var(--destructive)); }
+.stat-trend.warn { color: hsl(var(--warning)); }
+
+.dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+@media (max-width: 1024px) { .dash-grid { grid-template-columns: 1fr; } }
+
+/* Chart simple bar */
+.chart-bars { display: flex; align-items: flex-end; gap: 0.5rem; height: 200px; padding: 1rem 0; }
+.chart-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.chart-bar-fill {
+  width: 100%; background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
+  border-radius: 0.25rem 0.25rem 0 0; transition: height 400ms ease;
+  min-height: 4px;
+}
+.chart-bar-label { font-size: 0.6875rem; color: hsl(var(--muted-foreground)); }
+.chart-bar-value { font-size: 0.6875rem; font-weight: 600; }
+
+/* Alerts */
+.alert-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.alert-item {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.75rem; border-radius: 0.5rem;
+  background: hsl(var(--muted));
+  border-left: 3px solid hsl(var(--warning));
+  font-size: 0.8125rem;
+}
+.alert-item.warn { border-left-color: hsl(var(--warning)); }
+.alert-item.danger { border-left-color: hsl(var(--destructive)); }
+.alert-item.info { border-left-color: hsl(var(--primary)); }
+.alert-icon {
+  width: 1.75rem; height: 1.75rem; border-radius: 0.5rem;
+  background: hsl(var(--warning) / 0.15); color: hsl(var(--warning));
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.alert-item.danger .alert-icon { background: hsl(var(--destructive) / 0.15); color: hsl(var(--destructive)); }
+.alert-item.info .alert-icon { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+.alert-title { font-weight: 600; }
+.alert-desc { color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin-top: 0.125rem; }
+
+/* Event cards */
+.event-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.event-item { display: flex; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; transition: background 150ms; cursor: pointer; }
+.event-item:hover { background: hsl(var(--muted)); }
+.event-date {
+  width: 3rem; height: 3rem; border-radius: 0.5rem;
+  background: hsl(var(--primary) / 0.1); color: hsl(var(--primary));
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.event-date-day { font-size: 1.125rem; font-weight: 700; line-height: 1; }
+.event-date-month { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; }
+.event-title { font-weight: 600; font-size: 0.875rem; }
+.event-meta { font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 0.125rem; display: flex; gap: 0.75rem; }
+
+/* ============================== TABLE ============================== */
+.table-container { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.table thead th {
+  padding: 0.75rem 1rem; text-align: left; font-weight: 600; font-size: 0.75rem;
+  color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.05em;
+  background: hsl(var(--muted) / 0.5);
+  border-bottom: 1px solid hsl(var(--border));
+  position: sticky; top: 0;
+}
+.table tbody td { padding: 0.875rem 1rem; border-bottom: 1px solid hsl(var(--border)); }
+.table tbody tr:hover { background: hsl(var(--muted) / 0.5); }
+.table tbody tr:last-child td { border-bottom: none; }
+.table-actions { display: flex; gap: 0.25rem; }
+.table-action { padding: 0.375rem; border-radius: 0.375rem; color: hsl(var(--muted-foreground)); }
+.table-action:hover { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+
+.filters-bar {
+  display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.filters-bar .input { max-width: 20rem; }
+.filters-bar .select { max-width: 12rem; }
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1rem; border-top: 1px solid hsl(var(--border));
+  font-size: 0.8125rem; color: hsl(var(--muted-foreground));
+}
+
+/* ============================== COURSES GRID ============================== */
+.course-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.course-card { padding: 1.25rem; cursor: pointer; transition: all 200ms; }
+.course-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px hsl(var(--foreground) / 0.08); }
+.course-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+.course-title { font-weight: 700; font-size: 1rem; }
+.course-desc { font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin: 0.25rem 0 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.course-desc span { display: inline-flex; align-items: center; gap: 0.25rem; }
+.capacity-bar { height: 0.5rem; background: hsl(var(--muted)); border-radius: 9999px; overflow: hidden; margin: 0.75rem 0 0.375rem; }
+.capacity-fill { height: 100%; border-radius: 9999px; transition: width 300ms; }
+.capacity-fill.low { background: hsl(var(--success)); }
+.capacity-fill.mid { background: hsl(var(--warning)); }
+.capacity-fill.high { background: hsl(var(--destructive)); }
+.capacity-text { font-size: 0.75rem; color: hsl(var(--muted-foreground)); display: flex; justify-content: space-between; }
+
+/* ============================== CALENDAR ============================== */
+.calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;
+  background: hsl(var(--border)); border: 1px solid hsl(var(--border)); border-radius: 0.5rem;
+  overflow: hidden;
+}
+.calendar-dow {
+  background: hsl(var(--muted)); padding: 0.5rem; text-align: center;
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+.calendar-day {
+  background: hsl(var(--card)); min-height: 90px; padding: 0.5rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
+  cursor: pointer; transition: background 150ms;
+}
+.calendar-day:hover { background: hsl(var(--accent)); }
+.calendar-day.other-month { opacity: 0.4; }
+.calendar-day.today .day-num {
+  background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 700;
+}
+.day-num { font-size: 0.8125rem; font-weight: 500; }
+.cal-event {
+  font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 0.25rem;
+  background: hsl(var(--primary) / 0.15); color: hsl(var(--primary));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cal-event.evento { background: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
+.cal-event.corso { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+
+/* ============================== POPOVERS & MODALS ============================== */
+.popover {
+  position: absolute; z-index: 50;
+  background: hsl(var(--popover)); color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border)); border-radius: 0.75rem;
+  box-shadow: 0 10px 38px -10px hsl(var(--foreground) / 0.35), 0 10px 20px -15px hsl(var(--foreground) / 0.2);
+  padding: 0.5rem; min-width: 14rem;
+}
+.popover-item {
+  display: flex; align-items: center; gap: 0.625rem;
+  padding: 0.5rem 0.625rem; border-radius: 0.375rem;
+  font-size: 0.8125rem; cursor: pointer; transition: background 100ms;
+  width: 100%; text-align: left;
+}
+.popover-item:hover { background: hsl(var(--accent)); }
+.popover-item.active { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); font-weight: 600; }
+.popover-divider { height: 1px; background: hsl(var(--border)); margin: 0.375rem -0.5rem; }
+.popover-label { padding: 0.375rem 0.625rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); }
+
+/* Palette swatches */
+.palette-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.375rem; padding: 0.25rem; }
+.palette-swatch {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem; border-radius: 0.5rem;
+  border: 2px solid transparent; cursor: pointer; transition: all 150ms;
+  font-size: 0.75rem; font-weight: 500;
+}
+.palette-swatch:hover { background: hsl(var(--accent)); }
+.palette-swatch.active { border-color: hsl(var(--ring)); background: hsl(var(--accent)); }
+.palette-dot {
+  width: 1.75rem; height: 1.75rem; border-radius: 50%; flex-shrink: 0;
+  background: conic-gradient(var(--swatch-a), var(--swatch-b), var(--swatch-a));
+  box-shadow: 0 0 0 1px hsl(var(--border));
+}
+
+/* Backdrop */
+.backdrop {
+  position: fixed; inset: 0; z-index: 45;
+  background: hsl(var(--background) / 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* Modal: Command Palette */
+.cmdk-modal {
+  position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
+  z-index: 60; width: min(90vw, 40rem);
+  background: hsl(var(--popover)); color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border)); border-radius: 0.75rem;
+  box-shadow: 0 20px 50px hsl(var(--foreground) / 0.25);
+  overflow: hidden;
+}
+.cmdk-input {
+  width: 100%; padding: 1rem 1.25rem; font-size: 0.9375rem;
+  background: transparent; border: none; border-bottom: 1px solid hsl(var(--border));
+}
+.cmdk-input:focus { outline: none; }
+.cmdk-list { max-height: 22rem; overflow-y: auto; padding: 0.5rem; }
+.cmdk-group { margin-bottom: 0.5rem; }
+.cmdk-group-label {
+  padding: 0.375rem 0.625rem; font-size: 0.6875rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground));
+}
+.cmdk-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.625rem; border-radius: 0.375rem;
+  cursor: pointer; font-size: 0.875rem; width: 100%; text-align: left;
+}
+.cmdk-item:hover, .cmdk-item.selected { background: hsl(var(--accent)); }
+.cmdk-footer {
+  display: flex; justify-content: space-between; padding: 0.5rem 1rem;
+  border-top: 1px solid hsl(var(--border));
+  font-size: 0.75rem; color: hsl(var(--muted-foreground));
+}
+.cmdk-footer kbd {
+  background: hsl(var(--muted)); border-radius: 0.25rem;
+  padding: 0.0625rem 0.375rem; font-family: inherit; font-size: 0.6875rem;
+}
+
+/* AI Drawer */
+.ai-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 55;
+  width: min(90vw, 420px); background: hsl(var(--background));
+  border-left: 1px solid hsl(var(--border));
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 250ms ease;
+  box-shadow: -10px 0 40px hsl(var(--foreground) / 0.1);
+}
+.ai-drawer.open { transform: translateX(0); }
+.ai-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid hsl(var(--border));
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ai-header-title { display: flex; align-items: center; gap: 0.625rem; font-weight: 700; }
+.ai-header-title .icon { color: hsl(var(--primary)); }
+
+.ai-messages { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.ai-msg { display: flex; gap: 0.625rem; align-items: flex-start; }
+.ai-msg-avatar {
+  width: 1.75rem; height: 1.75rem; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 0.6875rem; font-weight: 700;
+}
+.ai-msg.user { flex-direction: row-reverse; }
+.ai-msg.user .ai-msg-avatar { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.ai-msg.assistant .ai-msg-avatar { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.ai-msg-body {
+  max-width: 85%; padding: 0.625rem 0.875rem; border-radius: 0.75rem;
+  font-size: 0.8125rem; line-height: 1.5;
+}
+.ai-msg.user .ai-msg-body { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-bottom-right-radius: 0.25rem; }
+.ai-msg.assistant .ai-msg-body { background: hsl(var(--muted)); border-bottom-left-radius: 0.25rem; }
+
+.ai-tool-card {
+  margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--card));
+}
+.ai-tool-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+.ai-tool-head .icon { color: hsl(var(--primary)); }
+.ai-tool-actions { display: flex; gap: 0.375rem; margin-top: 0.5rem; }
+
+.ai-suggestions { padding: 0 1.25rem 0.5rem; display: flex; gap: 0.375rem; flex-wrap: wrap; }
+.ai-chip {
+  padding: 0.375rem 0.625rem; background: hsl(var(--muted));
+  border-radius: 9999px; font-size: 0.75rem; cursor: pointer;
+  transition: background 150ms;
+}
+.ai-chip:hover { background: hsl(var(--accent)); }
+
+.ai-input {
+  padding: 0.75rem 1.25rem 1rem; border-top: 1px solid hsl(var(--border));
+  display: flex; gap: 0.5rem;
+}
+.ai-input input {
+  flex: 1; padding: 0.625rem 0.875rem; border: 1px solid hsl(var(--border));
+  background: hsl(var(--card)); border-radius: 9999px;
+}
+.ai-input input:focus { outline: none; border-color: hsl(var(--ring)); }
+.ai-input .btn-icon {
+  background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  border-radius: 50%; width: 2.25rem; height: 2.25rem;
+}
+
+/* Integrations */
+.int-section { margin-bottom: 1.5rem; }
+.int-section-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.75rem; font-size: 0.9375rem; }
+.int-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.int-card { padding: 1rem; display: flex; flex-direction: column; gap: 0.625rem; }
+.int-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.int-card-name { font-weight: 600; font-size: 0.875rem; }
+.int-card-desc { font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.int-card-actions { display: flex; gap: 0.375rem; margin-top: auto; }
+
+/* Settings page */
+.settings-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); }
+.setting-row:last-child { border: none; }
+.setting-label { font-weight: 500; font-size: 0.875rem; }
+.setting-desc { font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 0.125rem; }
+
+.radio-group { display: inline-flex; background: hsl(var(--muted)); border-radius: 0.5rem; padding: 0.25rem; gap: 0.125rem; }
+.radio-btn {
+  padding: 0.375rem 0.75rem; border-radius: 0.375rem;
+  font-size: 0.75rem; font-weight: 500; cursor: pointer;
+  color: hsl(var(--muted-foreground));
+}
+.radio-btn.active { background: hsl(var(--background)); color: hsl(var(--foreground)); box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1); }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes scaleIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.anim-fade { animation: fadeIn 150ms ease; }
+.anim-slide { animation: slideUp 200ms ease; }
+.anim-scale { animation: scaleIn 180ms ease; }
+
+/* Cmdk additions */
+.cmdk-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid hsl(var(--border)); }
+.cmdk-header input { flex: 1; border: none; background: transparent; font-size: 1rem; outline: none; color: hsl(var(--foreground)); }
+.cmdk-header kbd { font-size: 0.6875rem; padding: 0.125rem 0.375rem; background: hsl(var(--muted)); border-radius: 0.25rem; font-family: ui-monospace, monospace; }
+.cmdk-results { flex: 1; overflow-y: auto; padding: 0.5rem; max-height: 60vh; }
+.cmdk-footer kbd { font-size: 0.6875rem; padding: 0.0625rem 0.375rem; background: hsl(var(--muted)); border-radius: 0.25rem; font-family: ui-monospace, monospace; margin: 0 0.125rem; }
+
+/* Ai aliases */
+.ai-title { display: flex; align-items: center; gap: 0.625rem; }
+.ai-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.ai-avatar { width: 1.75rem; height: 1.75rem; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.ai-avatar .icon, .ai-avatar i { width: 0.875rem; height: 0.875rem; color: hsl(var(--primary)); }
+.ai-msg-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ai-msg.user .ai-msg-content { align-items: flex-end; }
+.ai-tool-header { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; color: hsl(var(--muted-foreground)); }
+.ai-tool-header code { font-size: 0.6875rem; color: hsl(var(--foreground)); background: hsl(var(--muted)); padding: 0.0625rem 0.25rem; border-radius: 0.1875rem; }
+.ai-tool-rows { display: flex; flex-direction: column; gap: 0.375rem; margin-top: 0.5rem; }
+.ai-tool-row { display: flex; justify-content: space-between; align-items: center; padding: 0.375rem 0.5rem; background: hsl(var(--muted) / 0.5); border-radius: 0.375rem; font-size: 0.8125rem; }
+
+/* Backdrop for modals */
+.backdrop { position: fixed; inset: 0; background: hsl(var(--foreground) / 0.4); backdrop-filter: blur(4px); z-index: 50; display: grid; place-items: center; animation: fadeIn 120ms ease; }
+.cmdk-modal { position: relative; transform: none; top: auto; left: auto; }
+
+/* Filters bar */
+.filters-bar { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+.filters-bar .input, .filters-bar .select { flex: 0 1 auto; min-width: 160px; }
+.filters-bar .input[placeholder*="erca"] { flex: 1 1 280px; max-width: 360px; }
+
+/* Page header */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.page-title { font-size: 1.5rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+.page-subtitle { color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin: 0.25rem 0 0; }
+.page-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+/* ============================== STATE ============================== */
+const STATE = {
+  page: localStorage.getItem('page') || 'dashboard',
+  layout: localStorage.getItem('layout') || 'sidebar',
+  sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+  mobileOpen: false,
+  theme: localStorage.getItem('theme') || 'system',
+  palette: localStorage.getItem('palette') || 'default',
+  paletteOpen: false,
+  userMenuOpen: false,
+  cmdkOpen: false,
+  aiOpen: false,
+  calendarMonth: new Date(2026, 3, 1),
+};
+
+const PALETTES = [
+  { id: 'default', name: 'Default', a: '#2563eb', b: '#64748b' },
+  { id: 'ocean', name: 'Ocean', a: '#0891b2', b: '#14b8a6' },
+  { id: 'forest', name: 'Forest', a: '#16a34a', b: '#a16207' },
+  { id: 'sunset', name: 'Sunset', a: '#f97316', b: '#ec4899' },
+  { id: 'monochrome', name: 'Monochrome', a: '#404040', b: '#a3a3a3' },
+  { id: 'vibrant', name: 'Vibrant', a: '#a855f7', b: '#06b6d4' },
+  { id: 'corporate', name: 'Corporate', a: '#1e3a8a', b: '#eab308' },
+  { id: 'sport', name: 'Sport', a: '#dc2626', b: '#171717' },
+];
+
+const NAV = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+  { id: 'soci', label: 'Soci', icon: 'users', badge: '247' },
+  { id: 'quote', label: 'Quote', icon: 'credit-card' },
+  { id: 'calendario', label: 'Calendario', icon: 'calendar' },
+  { id: 'corsi', label: 'Corsi', icon: 'book-open' },
+  { id: 'eventi', label: 'Eventi', icon: 'trophy' },
+  { id: 'documenti', label: 'Documenti', icon: 'file-text' },
+  { id: 'comunicazioni', label: 'Comunicazioni', icon: 'mail' },
+  { id: 'contabilita', label: 'Contabilità', icon: 'calculator' },
+  { id: 'integrazioni', label: 'Integrazioni', icon: 'plug' },
+  { id: 'impostazioni', label: 'Impostazioni', icon: 'settings' },
+];
+
+/* ============================== MOCK DATA ============================== */
+const SOCI = [
+  { t: '2026-001', n: 'Mario', c: 'Rossi', d: 'Calcetto', s: 'attivo', cert: 'valido' },
+  { t: '2026-002', n: 'Luigi', c: 'Verdi', d: 'Pallavolo', s: 'attivo', cert: 'scadenza' },
+  { t: '2026-003', n: 'Anna', c: 'Bianchi', d: 'Yoga', s: 'attivo', cert: 'valido' },
+  { t: '2026-004', n: 'Giulia', c: 'Ferrari', d: 'Nuoto', s: 'attivo', cert: 'valido' },
+  { t: '2026-005', n: 'Marco', c: 'Neri', d: 'Karate', s: 'churn', cert: 'scaduto' },
+  { t: '2026-006', n: 'Laura', c: 'Romano', d: 'Atletica', s: 'attivo', cert: 'valido' },
+  { t: '2026-007', n: 'Paolo', c: 'Conti', d: 'Pallavolo', s: 'sospeso', cert: 'scaduto' },
+  { t: '2026-008', n: 'Sara', c: 'Rizzo', d: 'Yoga', s: 'attivo', cert: 'scadenza' },
+  { t: '2026-009', n: 'Davide', c: 'Gallo', d: 'Calcetto', s: 'attivo', cert: 'valido' },
+  { t: '2026-010', n: 'Martina', c: 'Marino', d: 'Nuoto', s: 'attivo', cert: 'valido' },
+  { t: '2026-011', n: 'Andrea', c: 'Greco', d: 'Karate', s: 'attivo', cert: 'valido' },
+  { t: '2026-012', n: 'Chiara', c: 'Lombardi', d: 'Atletica', s: 'attivo', cert: 'scadenza' },
+  { t: '2026-013', n: 'Simone', c: 'Moretti', d: 'Pallavolo', s: 'churn', cert: 'valido' },
+  { t: '2026-014', n: 'Elena', c: 'Costa', d: 'Yoga', s: 'attivo', cert: 'valido' },
+  { t: '2026-015', n: 'Francesco', c: 'Vitali', d: 'Nuoto', s: 'attivo', cert: 'valido' },
+];
+
+const CORSI = [
+  { n: 'Atletica Leggera', d: 'Atletica', o: 'Lun-Mer-Ven 16:00-18:00', i: 24, m: 30, ist: 'Paolo Verdi' },
+  { n: 'Nuoto Bambini', d: 'Nuoto', o: 'Mar-Gio 15:00-16:30', i: 18, m: 20, ist: 'Laura Bianchi' },
+  { n: 'Pallavolo Giovanile', d: 'Pallavolo', o: 'Lun-Ven 17:00-19:00', i: 15, m: 25, ist: 'Marco Neri' },
+  { n: 'Karate Kids', d: 'Karate', o: 'Mar-Gio-Sab 16:00-17:30', i: 12, m: 15, ist: 'Yuki Tanaka' },
+  { n: 'Yoga Mattutino', d: 'Yoga', o: 'Lun-Mer 09:00-10:30', i: 20, m: 20, ist: 'Giulia Ferrari' },
+  { n: 'Calcetto a 5', d: 'Calcetto', o: 'Mar-Gio 18:00-20:00', i: 28, m: 30, ist: 'Andrea Greco' },
+];
+
+const QUOTE = [
+  { s: 'Mario Rossi', t: 'Annuale 2025/2026', imp: '€ 240,00', st: 'pagata', sc: '15/09/2025' },
+  { s: 'Luigi Verdi', t: 'Mensile Ottobre', imp: '€ 45,00', st: 'da_pagare', sc: '05/10/2026' },
+  { s: 'Anna Bianchi', t: 'Annuale 2025/2026', imp: '€ 240,00', st: 'pagata', sc: '10/09/2025' },
+  { s: 'Giulia Ferrari', t: 'Trimestrale Q1', imp: '€ 120,00', st: 'parziale', sc: '20/04/2026' },
+  { s: 'Marco Neri', t: 'Mensile Settembre', imp: '€ 45,00', st: 'scaduta', sc: '05/09/2025' },
+  { s: 'Laura Romano', t: 'Iscrizione 2025/2026', imp: '€ 50,00', st: 'pagata', sc: '01/09/2025' },
+  { s: 'Paolo Conti', t: 'Mensile Marzo', imp: '€ 45,00', st: 'scaduta', sc: '05/03/2026' },
+  { s: 'Sara Rizzo', t: 'Annuale 2025/2026', imp: '€ 240,00', st: 'da_pagare', sc: '30/04/2026' },
+];
+
+const EVENTI = [
+  { giorno: 20, mese: 'APR', nome: 'Torneo Primavera Pallavolo', luogo: 'Palazzetto Comunale', iscritti: 42 },
+  { giorno: 25, mese: 'APR', nome: 'Saggio di Fine Anno Yoga', luogo: 'Sala A - Sede', iscritti: 18 },
+  { giorno: 2, mese: 'MAG', nome: 'Gara Regionale Atletica', luogo: 'Stadio A. Moro', iscritti: 67 },
+  { giorno: 10, mese: 'MAG', nome: 'Stage Karate con Maestro', luogo: 'Dojo Centrale', iscritti: 12 },
+];
+
+const INTEGRAZIONI = [
+  { cat: 'Pagamenti', icon: 'credit-card', items: [
+    { n: 'Stripe', d: 'Pagamenti online con carta', ok: true },
+    { n: 'SatisPay', d: 'Pagamenti mobile italiani', ok: false },
+  ]},
+  { cat: 'Email', icon: 'mail', items: [
+    { n: 'Resend', d: 'Email transazionali moderne', ok: true },
+    { n: 'AWS SES', d: 'Amazon Simple Email Service', ok: false },
+    { n: 'Postmark', d: 'Email transazionali affidabili', ok: false },
+    { n: 'SMTP Custom', d: 'Server SMTP personalizzato', ok: false },
+  ]},
+  { cat: 'SMS & WhatsApp', icon: 'message-circle', items: [
+    { n: 'Twilio', d: 'SMS globali', ok: false },
+    { n: 'Skebby', d: 'SMS provider italiano', ok: true },
+    { n: 'WhatsApp Cloud', d: 'WhatsApp Business API', ok: false },
+  ]},
+  { cat: 'Fatturazione SDI', icon: 'file-text', items: [
+    { n: 'Aruba', d: 'Servizio fatturazione elettronica', ok: false },
+    { n: 'Fatture in Cloud', d: 'Gestione fatture online', ok: true },
+    { n: 'Acube', d: 'API fatturazione SDI', ok: false },
+  ]},
+  { cat: 'Cloud Storage', icon: 'hard-drive', items: [
+    { n: 'Google Drive', d: 'Archiviazione documenti Google', ok: true },
+    { n: 'Microsoft OneDrive', d: 'Archiviazione Microsoft 365', ok: false },
+  ]},
+  { cat: 'Calendario', icon: 'calendar', items: [
+    { n: 'Google Calendar', d: 'Sincronizza corsi ed eventi', ok: true },
+    { n: 'Microsoft Outlook', d: 'Calendario Outlook / M365', ok: false },
+  ]},
+  { cat: 'Intelligenza Artificiale', icon: 'sparkles', items: [
+    { n: 'Anthropic Claude', d: 'Default piattaforma attivo', ok: true },
+    { n: 'OpenAI', d: 'Override con chiave propria', ok: false },
+  ]},
+];
+
+/* ============================== APP INIT ============================== */
+const app = document.getElementById('app');
+
+function render() {
+  app.innerHTML = `
+    <div class="app-shell">
+      ${renderHeader()}
+      ${renderTopbar()}
+      <div class="app-body">
+        ${renderSidebar()}
+        <main class="app-main" id="main-content">
+          ${renderPage()}
+        </main>
+      </div>
+    </div>
+    ${STATE.cmdkOpen ? renderCmdk() : ''}
+    ${renderAIDrawer()}
+    ${renderPopovers()}
+    ${STATE.mobileOpen ? '<div class="backdrop" onclick="toggleMobile()"></div>' : ''}
+  `;
+  document.body.setAttribute('data-layout', STATE.layout);
+  if (window.lucide) lucide.createIcons();
+}
+
+function renderHeader() {
+  return `
+    <header class="app-header">
+      <div class="header-left">
+        <button class="btn btn-ghost btn-icon" onclick="toggleSidebar()" aria-label="Menu">
+          <i data-lucide="menu" class="icon-lg"></i>
+        </button>
+        <a href="#" class="logo" onclick="event.preventDefault(); navigate('dashboard')">
+          <div class="logo-mark">N</div>
+          <span>NEOGESYS SPORT</span>
+        </a>
+        <span class="tenant-name">ASD Demo Sport · <strong style="color: hsl(var(--primary));">admin_tenant</strong></span>
+      </div>
+      <button class="header-search" onclick="openCmdk()">
+        <i data-lucide="search" class="icon"></i>
+        <span>Cerca soci, corsi, azioni...</span>
+        <kbd>⌘K</kbd>
+      </button>
+      <div class="header-right">
+        <button class="btn btn-ghost btn-icon" title="Notifiche" onclick="alert('3 notifiche non lette')">
+          <i data-lucide="bell" class="icon-lg"></i>
+          <span class="notification-dot">3</span>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="Messaggi" onclick="alert('Hai 2 nuovi messaggi')">
+          <i data-lucide="inbox" class="icon-lg"></i>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="Palette colori" onclick="togglePalette()">
+          <i data-lucide="palette" class="icon-lg"></i>
+        </button>
+        <button class="btn btn-ghost btn-icon" title="Tema" onclick="cycleTheme()">
+          <i data-lucide="${STATE.theme === 'light' ? 'sun' : STATE.theme === 'dark' ? 'moon' : 'monitor'}" class="icon-lg"></i>
+        </button>
+        <button class="btn btn-ghost" onclick="toggleUserMenu()" style="padding: 0.25rem; gap: 0.5rem;">
+          <div class="avatar">MR</div>
+          <i data-lucide="chevron-down" class="icon-sm"></i>
+        </button>
+      </div>
+    </header>
+  `;
+}
+
+function renderSidebar() {
+  const cls = [
+    'app-sidebar',
+    STATE.sidebarCollapsed ? 'collapsed' : '',
+    STATE.mobileOpen ? 'mobile-open' : '',
+  ].filter(Boolean).join(' ');
+  return `
+    <aside class="${cls}">
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">Gestione</div>
+        ${NAV.slice(0, 9).map(navBtn).join('')}
+        <div class="nav-group-label">Sistema</div>
+        ${NAV.slice(9).map(navBtn).join('')}
+        <div class="nav-group-label">AI</div>
+        <button class="nav-item" onclick="toggleAI()">
+          <i data-lucide="sparkles"></i>
+          <span class="nav-label">AI Assistente</span>
+          <kbd style="margin-left:auto; font-size: 0.625rem; padding: 0.0625rem 0.25rem; background: hsl(var(--muted)); border-radius: 0.25rem;">⌘J</kbd>
+        </button>
+      </nav>
+    </aside>
+  `;
+}
+
+function navBtn(n) {
+  const active = STATE.page === n.id ? 'active' : '';
+  return `
+    <button class="nav-item ${active}" onclick="navigate('${n.id}')" title="${n.label}">
+      <i data-lucide="${n.icon}"></i>
+      <span class="nav-label">${n.label}</span>
+      ${n.badge ? `<span class="nav-badge">${n.badge}</span>` : ''}
+    </button>
+  `;
+}
+
+function renderTopbar() {
+  if (STATE.layout !== 'topbar') return '';
+  return `
+    <div class="app-topbar">
+      <nav class="topbar-nav">
+        ${NAV.map(n => `
+          <button class="nav-item ${STATE.page === n.id ? 'active' : ''}" onclick="navigate('${n.id}')">
+            <i data-lucide="${n.icon}" class="icon"></i>
+            <span>${n.label}</span>
+          </button>
+        `).join('')}
+      </nav>
+    </div>
+  `;
+}
+
+function renderPopovers() {
+  const items = [];
+  if (STATE.paletteOpen) {
+    items.push(`
+      <div class="backdrop" style="background:transparent" onclick="togglePalette()"></div>
+      <div class="popover anim-fade" style="top: 3.75rem; right: 6.5rem; width: 18rem;">
+        <div class="popover-label">Palette colori</div>
+        <div class="palette-grid">
+          ${PALETTES.map(p => `
+            <button class="palette-swatch ${STATE.palette === p.id ? 'active' : ''}" onclick="setPalette('${p.id}')">
+              <span class="palette-dot" style="--swatch-a:${p.a}; --swatch-b:${p.b};"></span>
+              <span>${p.name}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="popover-divider"></div>
+        <div style="padding: 0.375rem 0.625rem; font-size: 0.6875rem; color: hsl(var(--muted-foreground));">
+          Solo admin tenant: <a href="#" style="color: hsl(var(--primary)); text-decoration: underline;" onclick="event.preventDefault(); alert('Custom palette: picker HSL per primary, secondary, accent')">Palette personalizzata</a>
+        </div>
+      </div>
+    `);
+  }
+  if (STATE.userMenuOpen) {
+    items.push(`
+      <div class="backdrop" style="background:transparent" onclick="toggleUserMenu()"></div>
+      <div class="popover anim-fade" style="top: 3.75rem; right: 0.75rem; width: 15rem;">
+        <div style="padding: 0.625rem; display: flex; gap: 0.625rem; align-items: center;">
+          <div class="avatar" style="width: 2.5rem; height: 2.5rem;">MR</div>
+          <div>
+            <div style="font-weight: 600; font-size: 0.875rem;">Mario Rossi</div>
+            <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">admin@demo-asd.sport · <code style="background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); padding: 0.0625rem 0.25rem; border-radius: 0.25rem; font-size: 0.6875rem;">admin_tenant</code></div>
+          </div>
+        </div>
+        <div class="popover-divider"></div>
+        <button class="popover-item"><i data-lucide="user"></i> Il mio profilo</button>
+        <button class="popover-item"><i data-lucide="building-2"></i> Cambia società</button>
+        <button class="popover-item" onclick="navigate('impostazioni'); toggleUserMenu()"><i data-lucide="settings"></i> Impostazioni</button>
+        <button class="popover-item"><i data-lucide="help-circle"></i> Aiuto</button>
+        <div class="popover-divider"></div>
+        <button class="popover-item" style="color: hsl(var(--destructive));"><i data-lucide="log-out"></i> Esci</button>
+      </div>
+    `);
+  }
+  return items.join('');
+}
+
+/* ============================== ACTIONS ============================== */
+function navigate(page) {
+  STATE.page = page;
+  localStorage.setItem('page', page);
+  STATE.mobileOpen = false;
+  render();
+  document.getElementById('main-content')?.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  if (window.innerWidth <= 1024) {
+    STATE.mobileOpen = !STATE.mobileOpen;
+  } else {
+    STATE.sidebarCollapsed = !STATE.sidebarCollapsed;
+    localStorage.setItem('sidebarCollapsed', STATE.sidebarCollapsed);
+  }
+  render();
+}
+
+function toggleMobile() { STATE.mobileOpen = !STATE.mobileOpen; render(); }
+function togglePalette() { STATE.paletteOpen = !STATE.paletteOpen; STATE.userMenuOpen = false; render(); }
+function toggleUserMenu() { STATE.userMenuOpen = !STATE.userMenuOpen; STATE.paletteOpen = false; render(); }
+
+function setPalette(id) {
+  STATE.palette = id;
+  document.documentElement.setAttribute('data-palette', id);
+  localStorage.setItem('palette', id);
+  STATE.paletteOpen = false;
+  render();
+}
+
+function cycleTheme() {
+  const order = ['light', 'dark', 'system'];
+  const idx = order.indexOf(STATE.theme);
+  STATE.theme = order[(idx + 1) % order.length];
+  localStorage.setItem('theme', STATE.theme);
+  applyTheme();
+  render();
+}
+
+function applyTheme() {
+  const isDark = STATE.theme === 'dark' || (STATE.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.classList.toggle('dark', isDark);
+}
+
+function setLayout(mode) {
+  STATE.layout = mode;
+  localStorage.setItem('layout', mode);
+  render();
+}
+
+function setTheme(id) {
+  STATE.theme = id;
+  localStorage.setItem('theme', id);
+  applyTheme();
+  render();
+}
+
+function openCmdk() { STATE.cmdkOpen = true; render(); setTimeout(() => document.getElementById('cmdk-input')?.focus(), 10); }
+function closeCmdk() { STATE.cmdkOpen = false; render(); }
+function toggleAI() { STATE.aiOpen = !STATE.aiOpen; render(); }
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openCmdk(); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); toggleAI(); }
+  if (e.key === 'Escape') {
+    if (STATE.cmdkOpen) closeCmdk();
+    else if (STATE.aiOpen) toggleAI();
+    else if (STATE.paletteOpen || STATE.userMenuOpen) { STATE.paletteOpen = false; STATE.userMenuOpen = false; render(); }
+  }
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (STATE.theme === 'system') applyTheme();
+});
+
+/* ============================== PAGES ============================== */
+function renderPage() {
+  const pages = {
+    dashboard: pageDashboard, soci: pageSoci, corsi: pageCorsi,
+    calendario: pageCalendario, quote: pageQuote, eventi: pageEventi,
+    documenti: pageDocumenti, comunicazioni: pageComunicazioni,
+    contabilita: pageContabilita, integrazioni: pageIntegrazioni,
+    impostazioni: pageImpostazioni,
+  };
+  return (pages[STATE.page] || pageDashboard)();
+}
+
+function pageDashboard() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Benvenuto, Mario. Ecco un riepilogo della tua società.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="download" class="icon"></i> Esporta</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Nuovo Socio</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('Soci Attivi', '247', '+12 vs mese scorso', 'up', 'users', 'primary')}
+      ${statCard('Quote Incassate', '€ 14.200', '+8% vs mese scorso', 'up', 'euro', 'success')}
+      ${statCard('Certificati in Scadenza', '12', 'Richiede attenzione', 'warn', 'file-warning', 'warning')}
+      ${statCard('Presenza Media', '87%', '-2% vs mese scorso', 'down', 'activity', 'destructive')}
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Incassi ultimi 6 mesi</div>
+          <div class="card-desc">Totale: € 72.450 · Media mensile: € 12.075</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-bars">
+            ${[{ m: 'Nov', v: 8200, h: 45 }, { m: 'Dic', v: 11500, h: 63 }, { m: 'Gen', v: 13200, h: 72 }, { m: 'Feb', v: 12900, h: 71 }, { m: 'Mar', v: 14450, h: 79 }, { m: 'Apr', v: 14200, h: 78 }].map(b => `
+              <div class="chart-bar">
+                <span class="chart-bar-value">€${(b.v / 1000).toFixed(1)}k</span>
+                <div class="chart-bar-fill" style="height: ${b.h}%;"></div>
+                <span class="chart-bar-label">${b.m}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Alert AI</div>
+          <div class="card-desc">Analisi automatica in tempo reale</div>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item warn">
+              <div class="alert-icon"><i data-lucide="trending-down"></i></div>
+              <div>
+                <div class="alert-title">3 soci a rischio churn</div>
+                <div class="alert-desc">Presenze in calo e pagamenti in ritardo</div>
+              </div>
+            </div>
+            <div class="alert-item danger">
+              <div class="alert-icon"><i data-lucide="alert-circle"></i></div>
+              <div>
+                <div class="alert-title">5 quote scadute</div>
+                <div class="alert-desc">Oltre 30 giorni di ritardo · € 1.200 totali</div>
+              </div>
+            </div>
+            <div class="alert-item info">
+              <div class="alert-icon"><i data-lucide="file-warning"></i></div>
+              <div>
+                <div class="alert-title">2 certificati medici scaduti</div>
+                <div class="alert-desc">Blocco partecipazione corsi attivo</div>
+              </div>
+            </div>
+            <div class="alert-item info">
+              <div class="alert-icon"><i data-lucide="sparkles"></i></div>
+              <div>
+                <div class="alert-title">Suggerimento AI</div>
+                <div class="alert-desc">Le iscrizioni Yoga sono +20% vs mese scorso</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div class="card-title">Prossimi eventi</div>
+      </div>
+      <div class="card-body">
+        <div class="event-list">
+          ${EVENTI.map(e => `
+            <div class="event-item">
+              <div class="event-date">
+                <span class="event-date-day">${e.giorno}</span>
+                <span class="event-date-month">${e.mese}</span>
+              </div>
+              <div style="flex:1;">
+                <div class="event-title">${e.nome}</div>
+                <div class="event-meta">
+                  <span><i data-lucide="map-pin" class="icon-sm"></i> ${e.luogo}</span>
+                  <span><i data-lucide="users" class="icon-sm"></i> ${e.iscritti} iscritti</span>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-icon"><i data-lucide="chevron-right"></i></button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function statCard(title, value, trend, dir, icon, color) {
+  const colorMap = {
+    primary: 'hsl(var(--primary) / 0.15); color: hsl(var(--primary))',
+    success: 'hsl(var(--success) / 0.15); color: hsl(var(--success))',
+    warning: 'hsl(var(--warning) / 0.15); color: hsl(var(--warning))',
+    destructive: 'hsl(var(--destructive) / 0.15); color: hsl(var(--destructive))',
+  };
+  const arrow = dir === 'up' ? 'arrow-up-right' : dir === 'down' ? 'arrow-down-right' : 'alert-triangle';
+  return `
+    <div class="card stat-card">
+      <div class="stat-card-head">
+        <span class="stat-card-title">${title}</span>
+        <div class="stat-icon" style="background: ${colorMap[color]}">
+          <i data-lucide="${icon}" class="icon"></i>
+        </div>
+      </div>
+      <div class="stat-value">${value}</div>
+      <div class="stat-trend ${dir}">
+        <i data-lucide="${arrow}" class="icon-sm"></i>
+        <span>${trend}</span>
+      </div>
+    </div>
+  `;
+}
+
+function pageSoci() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Soci</h1>
+        <p class="page-subtitle">247 soci attivi · 12 in scadenza certificato · 3 a rischio churn</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="upload" class="icon"></i> Importa Excel</button>
+        <button class="btn btn-outline btn-sm"><i data-lucide="download" class="icon"></i> Esporta CSV</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Nuovo Socio</button>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <input class="input" placeholder="Cerca per nome, cognome, codice fiscale, tessera..." oninput="filterSoci(this.value)">
+      <select class="select"><option>Tutti gli stati</option><option>Attivo</option><option>Sospeso</option><option>Churn</option></select>
+      <select class="select"><option>Tutte le discipline</option><option>Atletica</option><option>Nuoto</option><option>Pallavolo</option><option>Karate</option><option>Yoga</option></select>
+      <select class="select"><option>Tutte le tipologie</option><option>Atleta</option><option>Istruttore</option><option>Dirigente</option></select>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tessera</th><th>Nome</th><th>Cognome</th><th>Disciplina</th>
+              <th>Stato</th><th>Certificato</th><th style="text-align:right;">Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="soci-tbody">
+            ${SOCI.map(socioRow).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span>Mostra 1-15 di 247 soci</span>
+        <div style="display:flex; gap:0.25rem;">
+          <button class="btn btn-outline btn-sm" disabled><i data-lucide="chevron-left" class="icon-sm"></i></button>
+          <button class="btn btn-primary btn-sm">1</button>
+          <button class="btn btn-outline btn-sm">2</button>
+          <button class="btn btn-outline btn-sm">3</button>
+          <button class="btn btn-outline btn-sm">...</button>
+          <button class="btn btn-outline btn-sm">17</button>
+          <button class="btn btn-outline btn-sm"><i data-lucide="chevron-right" class="icon-sm"></i></button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function socioRow(s) {
+  const statoMap = {
+    attivo: '<span class="badge badge-success"><i data-lucide="circle" class="icon-sm"></i> Attivo</span>',
+    sospeso: '<span class="badge badge-destructive"><i data-lucide="pause" class="icon-sm"></i> Sospeso</span>',
+    churn: '<span class="badge badge-warning"><i data-lucide="trending-down" class="icon-sm"></i> Churn AI</span>',
+  };
+  const certMap = {
+    valido: '<span class="badge badge-success"><i data-lucide="check" class="icon-sm"></i> Valido</span>',
+    scadenza: '<span class="badge badge-warning"><i data-lucide="clock" class="icon-sm"></i> 15gg</span>',
+    scaduto: '<span class="badge badge-destructive"><i data-lucide="x" class="icon-sm"></i> Scaduto</span>',
+  };
+  return `
+    <tr>
+      <td style="font-family: monospace; font-size: 0.8125rem; color: hsl(var(--muted-foreground));">${s.t}</td>
+      <td style="font-weight: 500;">${s.n}</td>
+      <td style="font-weight: 500;">${s.c}</td>
+      <td>${s.d}</td>
+      <td>${statoMap[s.s]}</td>
+      <td>${certMap[s.cert]}</td>
+      <td><div class="table-actions" style="justify-content:flex-end;">
+        <button class="table-action" title="Visualizza"><i data-lucide="eye" class="icon"></i></button>
+        <button class="table-action" title="Modifica"><i data-lucide="pencil" class="icon"></i></button>
+        <button class="table-action" title="Altro"><i data-lucide="more-horizontal" class="icon"></i></button>
+      </div></td>
+    </tr>
+  `;
+}
+
+function filterSoci(q) {
+  const term = q.toLowerCase();
+  const tbody = document.getElementById('soci-tbody');
+  if (!tbody) return;
+  const filtered = SOCI.filter(s => (s.n + ' ' + s.c + ' ' + s.t + ' ' + s.d).toLowerCase().includes(term));
+  tbody.innerHTML = filtered.map(socioRow).join('') || '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: hsl(var(--muted-foreground));">Nessun risultato</td></tr>';
+  if (window.lucide) lucide.createIcons();
+}
+
+function pageCorsi() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Corsi</h1>
+        <p class="page-subtitle">6 corsi attivi · 117 iscritti totali · 6 istruttori</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm" onclick="navigate('calendario')"><i data-lucide="calendar" class="icon"></i> Calendario</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Nuovo Corso</button>
+      </div>
+    </div>
+
+    <div class="course-grid">
+      ${CORSI.map(c => {
+        const pct = Math.round((c.i / c.m) * 100);
+        const lvl = pct < 70 ? 'low' : pct < 90 ? 'mid' : 'high';
+        const full = pct >= 100;
+        return `
+          <div class="card course-card">
+            <div class="course-head">
+              <div>
+                <div class="course-title">${c.n}</div>
+                <div class="course-desc">
+                  <span><i data-lucide="tag" class="icon-sm"></i> ${c.d}</span>
+                  <span><i data-lucide="user" class="icon-sm"></i> ${c.ist}</span>
+                </div>
+              </div>
+              ${full ? '<span class="badge badge-destructive">COMPLETO</span>' : '<span class="badge badge-primary">Attivo</span>'}
+            </div>
+            <div style="font-size: 0.8125rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">
+              <i data-lucide="clock" class="icon-sm" style="vertical-align: -2px;"></i> ${c.o}
+            </div>
+            <div class="capacity-bar"><div class="capacity-fill ${lvl}" style="width: ${Math.min(pct, 100)}%;"></div></div>
+            <div class="capacity-text">
+              <span><strong>${c.i}</strong> / ${c.m} iscritti</span>
+              <span>${pct}%</span>
+            </div>
+            <div style="display:flex; gap:0.375rem; margin-top: 0.75rem;">
+              <button class="btn btn-outline btn-sm" style="flex:1;">Dettagli</button>
+              <button class="btn btn-ghost btn-icon"><i data-lucide="pencil" class="icon-sm"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function pageCalendario() {
+  const d = STATE.calendarMonth;
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const monthNames = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDow = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = lastDay.getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+  const today = new Date(2026, 3, 17);
+  const cells = [];
+  for (let i = startDow - 1; i >= 0; i--) cells.push({ n: prevMonthDays - i, other: true });
+  for (let i = 1; i <= daysInMonth; i++) cells.push({ n: i, other: false, today: year === today.getFullYear() && month === today.getMonth() && i === today.getDate() });
+  while (cells.length % 7 !== 0) cells.push({ n: cells.length - daysInMonth - startDow + 1, other: true });
+  const eventsByDay = { 3: [{ t: 'Atletica', c: 'corso' }], 4: [{ t: 'Nuoto', c: 'corso' }], 5: [{ t: 'Pallavolo', c: 'corso' }], 8: [{ t: 'Yoga', c: 'corso' }, { t: 'Calcetto', c: 'corso' }], 10: [{ t: 'Karate', c: 'corso' }], 15: [{ t: 'Pallavolo', c: 'corso' }, { t: 'Yoga', c: 'corso' }], 17: [{ t: 'Atletica', c: 'corso' }, { t: 'Nuoto', c: 'corso' }], 20: [{ t: 'Torneo Pallavolo', c: 'evento' }], 22: [{ t: 'Yoga', c: 'corso' }], 25: [{ t: 'Saggio Yoga', c: 'evento' }], 28: [{ t: 'Nuoto', c: 'corso' }] };
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Calendario</h1>
+        <p class="page-subtitle">Corsi ed eventi · Vista mensile</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm">Settimana</button>
+        <button class="btn btn-primary btn-sm">Mese</button>
+        <button class="btn btn-outline btn-sm"><i data-lucide="calendar-plus" class="icon"></i> Nuovo Evento</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="calendar-nav">
+          <button class="btn btn-ghost btn-icon" onclick="calMonth(-1)"><i data-lucide="chevron-left"></i></button>
+          <div style="font-size: 1.125rem; font-weight: 600;">${monthNames[month]} ${year}</div>
+          <button class="btn btn-ghost btn-icon" onclick="calMonth(1)"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="calendar-grid">
+          ${['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map(d => `<div class="calendar-dow">${d}</div>`).join('')}
+          ${cells.map(c => {
+            const ev = !c.other && eventsByDay[c.n] ? eventsByDay[c.n] : [];
+            return `
+              <div class="calendar-day ${c.other ? 'other-month' : ''} ${c.today ? 'today' : ''}">
+                <span class="day-num">${c.n}</span>
+                ${ev.slice(0, 3).map(e => `<div class="cal-event ${e.c}">${e.t}</div>`).join('')}
+                ${ev.length > 3 ? `<div style="font-size: 0.6875rem; color: hsl(var(--muted-foreground));">+${ev.length - 3} altri</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="display:flex; gap:1rem; margin-top:1rem; font-size:0.75rem;">
+          <span style="display:inline-flex; align-items:center; gap:0.375rem;"><span style="width:0.75rem; height:0.75rem; border-radius:0.25rem; background:hsl(var(--primary) / 0.5);"></span> Corso</span>
+          <span style="display:inline-flex; align-items:center; gap:0.375rem;"><span style="width:0.75rem; height:0.75rem; border-radius:0.25rem; background:hsl(var(--warning) / 0.5);"></span> Evento</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function calMonth(delta) {
+  STATE.calendarMonth = new Date(STATE.calendarMonth.getFullYear(), STATE.calendarMonth.getMonth() + delta, 1);
+  render();
+}
+
+function pageQuote() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Quote</h1>
+        <p class="page-subtitle">Gestione pagamenti e scadenzario</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="mail" class="icon"></i> Invia Solleciti</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Emetti Quota</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('Incassato', '€ 14.200', 'Questo mese', 'up', 'check-circle', 'success')}
+      ${statCard('Da Incassare', '€ 4.800', '22 quote aperte', 'warn', 'clock', 'warning')}
+      ${statCard('Scadute', '€ 1.200', '5 quote oltre 30gg', 'down', 'alert-circle', 'destructive')}
+      ${statCard('Tasso Incasso', '94%', '+3% vs mese scorso', 'up', 'trending-up', 'primary')}
+    </div>
+
+    <div class="filters-bar">
+      <input class="input" placeholder="Cerca per socio...">
+      <select class="select"><option>Tutti gli stati</option><option>Pagata</option><option>Da Pagare</option><option>Scaduta</option></select>
+      <select class="select"><option>Tutti i tipi</option><option>Annuale</option><option>Mensile</option><option>Trimestrale</option></select>
+      <select class="select"><option>Anno 2025/2026</option></select>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Socio</th><th>Tipo Quota</th><th>Importo</th><th>Stato</th><th>Scadenza</th><th style="text-align:right;">Azioni</th></tr></thead>
+          <tbody>
+            ${QUOTE.map(q => {
+              const bm = { pagata: 'badge-success', da_pagare: 'badge', parziale: 'badge-warning', scaduta: 'badge-destructive' };
+              const lm = { pagata: 'Pagata', da_pagare: 'Da Pagare', parziale: 'Parziale', scaduta: 'Scaduta' };
+              return `
+                <tr>
+                  <td style="font-weight: 500;">${q.s}</td>
+                  <td>${q.t}</td>
+                  <td style="font-weight: 600;">${q.imp}</td>
+                  <td><span class="badge ${bm[q.st]}">${lm[q.st]}</span></td>
+                  <td style="font-family: monospace; font-size: 0.8125rem;">${q.sc}</td>
+                  <td><div class="table-actions" style="justify-content:flex-end;">
+                    ${q.st !== 'pagata' ? '<button class="btn btn-primary btn-sm"><i data-lucide="credit-card" class="icon-sm"></i> Incassa</button>' : '<button class="btn btn-ghost btn-icon" title="Ricevuta"><i data-lucide="download" class="icon"></i></button>'}
+                    <button class="table-action"><i data-lucide="more-horizontal" class="icon"></i></button>
+                  </div></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pageEventi() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Eventi & Competizioni</h1>
+        <p class="page-subtitle">Organizza tornei, gare e manifestazioni</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="calendar" class="icon"></i> Vista Calendario</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Nuovo Evento</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('Eventi Programmati', '4', 'Prossimi 30 giorni', 'up', 'calendar', 'primary')}
+      ${statCard('Iscritti Totali', '139', 'Tutte le categorie', 'up', 'users', 'success')}
+      ${statCard('Incassi Eventi', '€ 3.450', '+18% anno precedente', 'up', 'euro', 'success')}
+      ${statCard('Posti Residui', '58', 'Media 35% disponibili', 'warn', 'ticket', 'warning')}
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
+      ${EVENTI.map(e => `
+        <div class="card">
+          <div class="card-body">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+              <div style="flex-shrink: 0; width: 4rem; height: 4rem; border-radius: 0.5rem; background: hsl(var(--primary) / 0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid hsl(var(--primary) / 0.2);">
+                <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--primary)); line-height: 1;">${e.giorno}</div>
+                <div style="font-size: 0.6875rem; font-weight: 600; color: hsl(var(--primary)); text-transform: uppercase; letter-spacing: 0.05em;">${e.mese}</div>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h3 style="font-weight: 600; margin-bottom: 0.25rem; font-size: 1rem;">${e.nome}</h3>
+                <div style="font-size: 0.8125rem; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.5rem;">
+                  <i data-lucide="map-pin" class="icon-sm"></i> ${e.luogo}
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+                  <span class="badge badge-outline"><i data-lucide="users" class="icon-sm"></i> ${e.iscritti} iscritti</span>
+                  <span class="badge badge-success">Aperto</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn btn-outline btn-sm" style="flex:1;"><i data-lucide="eye" class="icon-sm"></i> Dettagli</button>
+                  <button class="btn btn-primary btn-sm" style="flex:1;"><i data-lucide="user-plus" class="icon-sm"></i> Iscrivi</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function pageDocumenti() {
+  const docs = [
+    { nome: 'Statuto 2026.pdf', tipo: 'PDF', dim: '342 KB', data: '01/01/2026', storage: 'Google Drive', cat: 'Societari' },
+    { nome: 'Verbale Assemblea 15-03.pdf', tipo: 'PDF', dim: '128 KB', data: '15/03/2026', storage: 'Google Drive', cat: 'Verbali' },
+    { nome: 'Bilancio 2025.xlsx', tipo: 'XLSX', dim: '89 KB', data: '28/02/2026', storage: 'OneDrive', cat: 'Bilanci' },
+    { nome: 'Certificato Rossi Mario.pdf', tipo: 'PDF', dim: '1.2 MB', data: '10/04/2026', storage: 'Local', cat: 'Certificati' },
+    { nome: 'Affiliazione FIDAL 2026.pdf', tipo: 'PDF', dim: '456 KB', data: '05/01/2026', storage: 'Google Drive', cat: 'Affiliazioni' },
+    { nome: 'Privacy Policy.pdf', tipo: 'PDF', dim: '78 KB', data: '01/01/2026', storage: 'Google Drive', cat: 'Societari' },
+  ];
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Documenti</h1>
+        <p class="page-subtitle">Archivio documentale con AI OCR e classificazione automatica</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="folder-plus" class="icon"></i> Nuova Cartella</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="upload" class="icon"></i> Carica Documento</button>
+      </div>
+    </div>
+
+    <div style="border: 2px dashed hsl(var(--border)); border-radius: 0.625rem; padding: 2rem; text-align: center; background: hsl(var(--muted) / 0.3); margin-bottom: 1.5rem; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.borderColor='hsl(var(--primary))'; this.style.background='hsl(var(--primary) / 0.05)'" onmouseout="this.style.borderColor='hsl(var(--border))'; this.style.background='hsl(var(--muted) / 0.3)'">
+      <i data-lucide="cloud-upload" style="width: 2.5rem; height: 2.5rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;"></i>
+      <div style="font-weight: 500; margin-bottom: 0.25rem;">Trascina file qui o clicca per selezionare</div>
+      <div style="font-size: 0.8125rem; color: hsl(var(--muted-foreground));">PDF, JPG, PNG, XLSX · Max 20 MB · OCR automatico con AI</div>
+    </div>
+
+    <div class="filters-bar">
+      <input class="input" placeholder="Cerca documenti...">
+      <select class="select"><option>Tutte le categorie</option><option>Societari</option><option>Verbali</option><option>Bilanci</option><option>Certificati</option></select>
+      <select class="select"><option>Tutti i storage</option><option>Google Drive</option><option>OneDrive</option><option>Local</option></select>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Categoria</th><th>Dimensione</th><th>Storage</th><th>Data</th><th style="text-align:right;">Azioni</th></tr></thead>
+          <tbody>
+            ${docs.map(d => `
+              <tr>
+                <td><div style="display:flex; align-items:center; gap:0.5rem;"><i data-lucide="file-text" class="icon" style="color: hsl(var(--primary));"></i> <span style="font-weight:500;">${d.nome}</span></div></td>
+                <td><span class="badge badge-outline">${d.cat}</span></td>
+                <td style="font-family: monospace; font-size: 0.8125rem;">${d.dim}</td>
+                <td><span style="font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i data-lucide="${d.storage === 'Google Drive' ? 'hard-drive' : d.storage === 'OneDrive' ? 'cloud' : 'folder'}" class="icon-sm"></i> ${d.storage}</span></td>
+                <td style="font-family: monospace; font-size: 0.8125rem;">${d.data}</td>
+                <td><div class="table-actions" style="justify-content:flex-end;">
+                  <button class="btn btn-ghost btn-icon" title="Anteprima"><i data-lucide="eye" class="icon"></i></button>
+                  <button class="btn btn-ghost btn-icon" title="Scarica"><i data-lucide="download" class="icon"></i></button>
+                  <button class="table-action"><i data-lucide="more-horizontal" class="icon"></i></button>
+                </div></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pageComunicazioni() {
+  const msgs = [
+    { t: 'Promemoria certificato medico', dest: 'Mario Rossi, Luigi Verdi +8', canale: 'email', stato: 'inviato', data: '15/04/2026' },
+    { t: 'Nuovo corso Yoga serale', dest: 'Tutti i soci (247)', canale: 'email', stato: 'inviato', data: '12/04/2026' },
+    { t: 'Sollecito quota scaduta', dest: 'Marco Neri, Paolo Conti', canale: 'whatsapp', stato: 'programmato', data: '20/04/2026' },
+    { t: 'Convocazione assemblea', dest: 'Tutti i soci (247)', canale: 'email', stato: 'bozza', data: '-' },
+    { t: 'Torneo Pallavolo: iscrizioni', dest: 'Gruppo Pallavolo (28)', canale: 'sms', stato: 'inviato', data: '08/04/2026' },
+  ];
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Comunicazioni</h1>
+        <p class="page-subtitle">Email, SMS e WhatsApp ai soci</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="layout-template" class="icon"></i> Template</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="send" class="icon"></i> Nuovo Invio</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('Email inviate', '1.247', 'Questo mese', 'up', 'mail', 'primary')}
+      ${statCard('SMS inviati', '89', 'Skebby - € 12,40', 'up', 'message-square', 'success')}
+      ${statCard('WhatsApp', '34', 'Business API', 'up', 'message-circle', 'success')}
+      ${statCard('Tasso apertura', '68%', '+5% vs benchmark', 'up', 'eye', 'success')}
+    </div>
+
+    <div style="display: flex; gap: 0.25rem; margin-bottom: 1rem; border-bottom: 1px solid hsl(var(--border));">
+      <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid hsl(var(--primary)); border-radius: 0; color: hsl(var(--primary));">Tutte</button>
+      <button class="btn btn-ghost btn-sm">Inviate</button>
+      <button class="btn btn-ghost btn-sm">Programmate</button>
+      <button class="btn btn-ghost btn-sm">Bozze</button>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Oggetto</th><th>Destinatari</th><th>Canale</th><th>Stato</th><th>Data</th><th style="text-align:right;">Azioni</th></tr></thead>
+          <tbody>
+            ${msgs.map(m => {
+              const icon = m.canale === 'email' ? 'mail' : m.canale === 'sms' ? 'message-square' : 'message-circle';
+              const stm = { inviato: 'badge-success', programmato: 'badge-warning', bozza: 'badge' };
+              const stl = { inviato: 'Inviato', programmato: 'Programmato', bozza: 'Bozza' };
+              return `
+                <tr>
+                  <td style="font-weight: 500;">${m.t}</td>
+                  <td style="font-size: 0.8125rem; color: hsl(var(--muted-foreground));">${m.dest}</td>
+                  <td><span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem;"><i data-lucide="${icon}" class="icon-sm"></i> ${m.canale.toUpperCase()}</span></td>
+                  <td><span class="badge ${stm[m.stato]}">${stl[m.stato]}</span></td>
+                  <td style="font-family: monospace; font-size: 0.8125rem;">${m.data}</td>
+                  <td><div class="table-actions" style="justify-content:flex-end;">
+                    <button class="btn btn-ghost btn-icon" title="Visualizza"><i data-lucide="eye" class="icon"></i></button>
+                    <button class="table-action"><i data-lucide="more-horizontal" class="icon"></i></button>
+                  </div></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pageContabilita() {
+  const mov = [
+    { data: '15/04/2026', desc: 'Quota Mario Rossi', cat: 'Entrate Quote', e: 240, u: 0 },
+    { data: '14/04/2026', desc: 'Fattura materiale sportivo', cat: 'Uscite Attrezzature', e: 0, u: 420 },
+    { data: '13/04/2026', desc: 'Quota Anna Bianchi', cat: 'Entrate Quote', e: 240, u: 0 },
+    { data: '12/04/2026', desc: 'Affitto palazzetto marzo', cat: 'Uscite Fisse', e: 0, u: 800 },
+    { data: '10/04/2026', desc: 'Iscrizione evento torneo', cat: 'Entrate Eventi', e: 450, u: 0 },
+    { data: '08/04/2026', desc: 'Compenso istruttore', cat: 'Uscite Personale', e: 0, u: 1200 },
+    { data: '05/04/2026', desc: 'Quote mensili aprile', cat: 'Entrate Quote', e: 1890, u: 0 },
+  ];
+  const totE = mov.reduce((s, m) => s + m.e, 0);
+  const totU = mov.reduce((s, m) => s + m.u, 0);
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Contabilità</h1>
+        <p class="page-subtitle">Prima nota, fatturazione elettronica SDI e bilancio</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm"><i data-lucide="file-spreadsheet" class="icon"></i> Export XLSX</button>
+        <button class="btn btn-outline btn-sm"><i data-lucide="receipt" class="icon"></i> Fattura SDI</button>
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="icon"></i> Nuovo Movimento</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('Entrate', '€ ' + totE.toLocaleString('it-IT'), 'Questo mese', 'up', 'trending-up', 'success')}
+      ${statCard('Uscite', '€ ' + totU.toLocaleString('it-IT'), 'Questo mese', 'down', 'trending-down', 'destructive')}
+      ${statCard('Saldo', '€ ' + (totE - totU).toLocaleString('it-IT'), 'Positivo', 'up', 'wallet', 'primary')}
+      ${statCard('Fatture SDI', '23', 'Inviate - 100%', 'up', 'file-check', 'success')}
+    </div>
+
+    <div style="display: flex; gap: 0.25rem; margin-bottom: 1rem; border-bottom: 1px solid hsl(var(--border));">
+      <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid hsl(var(--primary)); border-radius: 0; color: hsl(var(--primary));">Prima Nota</button>
+      <button class="btn btn-ghost btn-sm">Fatture Emesse</button>
+      <button class="btn btn-ghost btn-sm">Fatture Ricevute</button>
+      <button class="btn btn-ghost btn-sm">Bilancio</button>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Data</th><th>Descrizione</th><th>Categoria</th><th style="text-align:right;">Entrate</th><th style="text-align:right;">Uscite</th><th style="text-align:right;">Azioni</th></tr></thead>
+          <tbody>
+            ${mov.map(m => `
+              <tr>
+                <td style="font-family: monospace; font-size: 0.8125rem;">${m.data}</td>
+                <td style="font-weight: 500;">${m.desc}</td>
+                <td><span class="badge badge-outline">${m.cat}</span></td>
+                <td style="text-align: right; font-family: monospace; color: ${m.e > 0 ? 'hsl(var(--success))' : 'hsl(var(--muted-foreground))'}; font-weight: ${m.e > 0 ? '600' : '400'};">${m.e > 0 ? '€ ' + m.e.toLocaleString('it-IT') : '—'}</td>
+                <td style="text-align: right; font-family: monospace; color: ${m.u > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))'}; font-weight: ${m.u > 0 ? '600' : '400'};">${m.u > 0 ? '€ ' + m.u.toLocaleString('it-IT') : '—'}</td>
+                <td><div class="table-actions" style="justify-content:flex-end;">
+                  <button class="btn btn-ghost btn-icon" title="Modifica"><i data-lucide="edit" class="icon"></i></button>
+                  <button class="table-action"><i data-lucide="more-horizontal" class="icon"></i></button>
+                </div></td>
+              </tr>
+            `).join('')}
+            <tr style="background: hsl(var(--muted) / 0.5); font-weight: 700;">
+              <td colspan="3" style="text-align: right;">TOTALI</td>
+              <td style="text-align: right; font-family: monospace; color: hsl(var(--success));">€ ${totE.toLocaleString('it-IT')}</td>
+              <td style="text-align: right; font-family: monospace; color: hsl(var(--destructive));">€ ${totU.toLocaleString('it-IT')}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pageIntegrazioni() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Integrazioni</h1>
+        <p class="page-subtitle">Credenziali per tenant · Vault AES-256-GCM · No hardcoded keys</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem; border-color: hsl(var(--primary) / 0.3); background: hsl(var(--primary) / 0.05);">
+      <div class="card-body" style="display: flex; gap: 0.75rem; align-items: flex-start;">
+        <i data-lucide="shield-check" style="width: 1.5rem; height: 1.5rem; color: hsl(var(--primary)); flex-shrink: 0;"></i>
+        <div>
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">Vault credenziali sicuro</div>
+          <div style="font-size: 0.8125rem; color: hsl(var(--muted-foreground));">Tutte le credenziali sono cifrate con AES-256-GCM e una chiave KMS per tenant. Le API key non vengono mai esposte in chiaro, nemmeno negli export. Solo il ruolo <code style="background: hsl(var(--muted)); padding: 0.0625rem 0.25rem; border-radius: 0.25rem; font-size: 0.75rem;">admin_tenant</code> può modificarle.</div>
+        </div>
+      </div>
+    </div>
+
+    ${INTEGRAZIONI.map(cat => `
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <i data-lucide="${cat.icon}" class="icon-lg" style="color: hsl(var(--primary));"></i>
+          <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">${cat.cat}</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.75rem;">
+          ${cat.items.map(it => `
+            <div class="card">
+              <div class="card-body" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 600; margin-bottom: 0.125rem;">${it.n}</div>
+                    <div style="font-size: 0.8125rem; color: hsl(var(--muted-foreground));">${it.d}</div>
+                  </div>
+                  ${it.ok ? '<span class="badge badge-success" style="flex-shrink: 0;"><i data-lucide="check-circle" class="icon-sm"></i> Attivo</span>' : '<span class="badge" style="flex-shrink: 0;">Non attivo</span>'}
+                </div>
+                <div style="display: flex; gap: 0.375rem;">
+                  ${it.ok
+                    ? `<button class="btn btn-outline btn-sm" style="flex:1;"><i data-lucide="settings-2" class="icon-sm"></i> Configura</button>
+                       <button class="btn btn-ghost btn-sm"><i data-lucide="zap" class="icon-sm"></i> Test</button>`
+                    : `<button class="btn btn-primary btn-sm" style="flex:1;"><i data-lucide="plug" class="icon-sm"></i> Collega</button>`}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function pageImpostazioni() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Impostazioni</h1>
+        <p class="page-subtitle">Preferenze piattaforma, layout, tema e palette</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; max-width: 48rem;">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Layout navigazione</div>
+          <div class="card-desc">Modalità di visualizzazione del menu principale</div>
+        </div>
+        <div class="card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          ${[{ id: 'sidebar', name: 'Sidebar', icon: 'panel-left', desc: 'Menu laterale verticale' }, { id: 'topbar', name: 'Topbar', icon: 'panel-top', desc: 'Menu in alto orizzontale' }].map(l => `
+            <button onclick="setLayout('${l.id}')" class="card" style="padding: 1rem; background: ${STATE.layout === l.id ? 'hsl(var(--primary) / 0.08)' : 'transparent'}; border-color: ${STATE.layout === l.id ? 'hsl(var(--primary))' : 'hsl(var(--border))'}; border-width: 2px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 0.5rem; transition: all 0.15s;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <i data-lucide="${l.icon}" class="icon-lg" style="color: ${STATE.layout === l.id ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"></i>
+                ${STATE.layout === l.id ? '<i data-lucide="check-circle" class="icon" style="color: hsl(var(--primary));"></i>' : ''}
+              </div>
+              <div>
+                <div style="font-weight: 600; margin-bottom: 0.125rem;">${l.name}</div>
+                <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">${l.desc}</div>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Tema</div>
+          <div class="card-desc">Aspetto chiaro, scuro o automatico</div>
+        </div>
+        <div class="card-body" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          ${[{ id: 'light', name: 'Chiaro', icon: 'sun' }, { id: 'dark', name: 'Scuro', icon: 'moon' }, { id: 'system', name: 'Sistema', icon: 'monitor' }].map(t => `
+            <button onclick="setTheme('${t.id}')" class="card" style="padding: 1rem; background: ${STATE.theme === t.id ? 'hsl(var(--primary) / 0.08)' : 'transparent'}; border-color: ${STATE.theme === t.id ? 'hsl(var(--primary))' : 'hsl(var(--border))'}; border-width: 2px; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.15s;">
+              <i data-lucide="${t.icon}" class="icon-lg" style="color: ${STATE.theme === t.id ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"></i>
+              <div style="font-weight: 600; font-size: 0.875rem;">${t.name}</div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Palette colori</div>
+          <div class="card-desc">8 palette predefinite + personalizzata (admin tenant)</div>
+        </div>
+        <div class="card-body" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.625rem;">
+          ${PALETTES.map(p => `
+            <button onclick="setPalette('${p.id}')" class="card" style="padding: 0.75rem; background: ${STATE.palette === p.id ? 'hsl(var(--primary) / 0.08)' : 'transparent'}; border-color: ${STATE.palette === p.id ? 'hsl(var(--primary))' : 'hsl(var(--border))'}; border-width: 2px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 0.5rem; transition: all 0.15s;">
+              <span class="palette-dot" style="--swatch-a:${p.a}; --swatch-b:${p.b};"></span>
+              <span style="font-weight: 500; font-size: 0.8125rem;">${p.name}</span>
+              ${STATE.palette === p.id ? '<i data-lucide="check" class="icon-sm" style="color: hsl(var(--primary)); margin-left: auto;"></i>' : ''}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Società</div>
+          <div class="card-desc">Dati anagrafici tenant</div>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div><label style="font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.25rem; display: block;">Nome società</label><input class="input" value="ASD Demo Sport" style="width: 100%;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div><label style="font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.25rem; display: block;">P.IVA</label><input class="input" value="01234567890" style="width: 100%;"></div>
+            <div><label style="font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.25rem; display: block;">Codice Fiscale</label><input class="input" value="01234567890" style="width: 100%;"></div>
+          </div>
+          <div><label style="font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.25rem; display: block;">Email PEC</label><input class="input" value="asd@pec.demo-asd.sport" style="width: 100%;"></div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+            <button class="btn btn-outline btn-sm">Annulla</button>
+            <button class="btn btn-primary btn-sm"><i data-lucide="save" class="icon-sm"></i> Salva modifiche</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+/* ============================== COMMAND PALETTE ⌘K ============================== */
+function renderCmdk() {
+  const q = (STATE.cmdkQuery || '').toLowerCase();
+  const navItems = NAV.filter(n => !q || n.label.toLowerCase().includes(q));
+  const sociItems = SOCI.filter(s => !q || (s.n + ' ' + s.c).toLowerCase().includes(q)).slice(0, 5);
+  const actions = [
+    { id: 'ai', label: 'Apri AI Assistente (⌘J)', icon: 'sparkles', action: 'toggleAI()' },
+    { id: 'theme', label: 'Cambia tema', icon: 'moon', action: 'cycleTheme()' },
+    { id: 'palette', label: 'Cambia palette colori', icon: 'palette', action: 'togglePalette()' },
+    { id: 'newSocio', label: 'Nuovo socio', icon: 'user-plus', action: "alert('Form nuovo socio')" },
+    { id: 'newQuota', label: 'Emetti quota', icon: 'credit-card', action: "navigate('quote')" },
+  ].filter(a => !q || a.label.toLowerCase().includes(q));
+
+  return `
+    <div class="backdrop" onclick="closeCmdk()">
+      <div class="cmdk-modal anim-scale" onclick="event.stopPropagation()">
+        <div class="cmdk-header">
+          <i data-lucide="search" class="icon-lg" style="color: hsl(var(--muted-foreground));"></i>
+          <input id="cmdk-input" type="text" placeholder="Cerca soci, corsi, quote, azioni..." value="${STATE.cmdkQuery || ''}" oninput="STATE.cmdkQuery = this.value; renderCmdkResults();" autocomplete="off">
+          <kbd>ESC</kbd>
+        </div>
+        <div id="cmdk-results" class="cmdk-results">
+          ${cmdkResultsHTML(navItems, sociItems, actions)}
+        </div>
+        <div class="cmdk-footer">
+          <div style="display: flex; gap: 1rem;">
+            <span><kbd>↑↓</kbd> Naviga</span>
+            <span><kbd>↵</kbd> Seleziona</span>
+            <span><kbd>ESC</kbd> Chiudi</span>
+          </div>
+          <span><i data-lucide="sparkles" class="icon-sm" style="color: hsl(var(--primary));"></i> AI: <kbd>⌘J</kbd></span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function cmdkResultsHTML(navItems, sociItems, actions) {
+  if (!navItems.length && !sociItems.length && !actions.length) {
+    return `<div style="padding: 3rem 1rem; text-align: center; color: hsl(var(--muted-foreground));">
+      <i data-lucide="search-x" style="width: 2rem; height: 2rem; margin: 0 auto 0.5rem; display: block;"></i>
+      <div>Nessun risultato</div>
+    </div>`;
+  }
+  let html = '';
+  if (navItems.length) {
+    html += `<div class="cmdk-group">
+      <div class="cmdk-group-label">Navigazione</div>
+      ${navItems.map(n => `
+        <button class="cmdk-item" onclick="closeCmdk(); navigate('${n.id}')">
+          <i data-lucide="${n.icon}" class="icon"></i>
+          <span>${n.label}</span>
+          ${n.badge ? `<span class="nav-badge" style="margin-left:auto;">${n.badge}</span>` : ''}
+        </button>
+      `).join('')}
+    </div>`;
+  }
+  if (sociItems.length) {
+    html += `<div class="cmdk-group">
+      <div class="cmdk-group-label">Soci</div>
+      ${sociItems.map(s => `
+        <button class="cmdk-item" onclick="closeCmdk(); navigate('soci')">
+          <div class="avatar" style="width: 1.5rem; height: 1.5rem; font-size: 0.625rem;">${s.n[0]}${s.c[0]}</div>
+          <span>${s.n} ${s.c}</span>
+          <span style="margin-left: auto; font-size: 0.75rem; color: hsl(var(--muted-foreground));">${s.d}</span>
+        </button>
+      `).join('')}
+    </div>`;
+  }
+  if (actions.length) {
+    html += `<div class="cmdk-group">
+      <div class="cmdk-group-label">Azioni</div>
+      ${actions.map(a => `
+        <button class="cmdk-item" onclick="closeCmdk(); ${a.action}">
+          <i data-lucide="${a.icon}" class="icon"></i>
+          <span>${a.label}</span>
+        </button>
+      `).join('')}
+    </div>`;
+  }
+  return html;
+}
+
+function renderCmdkResults() {
+  const q = (STATE.cmdkQuery || '').toLowerCase();
+  const navItems = NAV.filter(n => !q || n.label.toLowerCase().includes(q));
+  const sociItems = SOCI.filter(s => !q || (s.n + ' ' + s.c).toLowerCase().includes(q)).slice(0, 5);
+  const actions = [
+    { id: 'ai', label: 'Apri AI Assistente (⌘J)', icon: 'sparkles', action: 'toggleAI()' },
+    { id: 'theme', label: 'Cambia tema', icon: 'moon', action: 'cycleTheme()' },
+    { id: 'palette', label: 'Cambia palette colori', icon: 'palette', action: 'togglePalette()' },
+    { id: 'newSocio', label: 'Nuovo socio', icon: 'user-plus', action: "alert('Form nuovo socio')" },
+    { id: 'newQuota', label: 'Emetti quota', icon: 'credit-card', action: "navigate('quote')" },
+  ].filter(a => !q || a.label.toLowerCase().includes(q));
+  const results = document.getElementById('cmdk-results');
+  if (results) {
+    results.innerHTML = cmdkResultsHTML(navItems, sociItems, actions);
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+/* ============================== AI DRAWER ⌘J ============================== */
+function renderAIDrawer() {
+  if (!STATE.aiOpen) return '';
+  const messages = [
+    { r: 'assistant', c: 'Ciao Mario! Sono il tuo assistente AI. Posso aiutarti con i dati della tua società. Prova a chiedermi:' },
+    { r: 'user', c: 'Quali soci hanno il certificato medico in scadenza nei prossimi 30 giorni?' },
+    { r: 'assistant', c: 'Ho trovato <strong>12 soci</strong> con certificato in scadenza. I più urgenti:', tool: { icon: 'search', label: 'query_soci(cert_scadenza_lt: "30d")', rows: [{ n: 'Luigi Verdi', d: '18 aprile 2026' }, { n: 'Chiara Lombardi', d: '22 aprile 2026' }, { n: 'Paolo Conti', d: '25 aprile 2026' }] } },
+    { r: 'user', c: 'Invia promemoria via email a tutti' },
+    { r: 'assistant', c: 'Ho preparato un\'email personalizzata da inviare ai 12 soci. Vuoi procedere?', tool: { icon: 'mail', label: 'draft_email(to: 12 soci, template: "cert_scadenza")', rows: [] }, confirm: true },
+  ];
+  return `
+    <div class="ai-drawer ${STATE.aiOpen ? 'open' : ''}">
+      <div class="ai-header">
+        <div class="ai-title">
+          <i data-lucide="sparkles" class="icon-lg" style="color: hsl(var(--primary));"></i>
+          <div>
+            <div style="font-weight: 600;">AI Assistente</div>
+            <div style="font-size: 0.6875rem; color: hsl(var(--muted-foreground));">Claude Sonnet · contesto ASD Demo</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-icon" onclick="toggleAI()"><i data-lucide="x" class="icon-lg"></i></button>
+      </div>
+      <div class="ai-body">
+        ${messages.map(m => `
+          <div class="ai-msg ${m.r}">
+            ${m.r === 'assistant' ? '<div class="ai-avatar"><i data-lucide="sparkles"></i></div>' : ''}
+            <div class="ai-msg-content">
+              <div class="ai-msg-body">${m.c}</div>
+              ${m.tool ? `
+                <div class="ai-tool-card">
+                  <div class="ai-tool-header"><i data-lucide="${m.tool.icon}" class="icon-sm"></i> <code>${m.tool.label}</code></div>
+                  ${m.tool.rows.length ? `<div class="ai-tool-rows">${m.tool.rows.map(r => `<div class="ai-tool-row"><span>${r.n}</span><span style="color: hsl(var(--warning)); font-family: monospace; font-size: 0.75rem;">${r.d}</span></div>`).join('')}</div>` : ''}
+                </div>
+              ` : ''}
+              ${m.confirm ? `
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                  <button class="btn btn-primary btn-sm"><i data-lucide="send" class="icon-sm"></i> Sì, invia</button>
+                  <button class="btn btn-outline btn-sm">Modifica</button>
+                  <button class="btn btn-ghost btn-sm">Annulla</button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+        <div class="ai-suggestions">
+          <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Suggerimenti:</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+            <button class="ai-chip">Chi ha quota scaduta?</button>
+            <button class="ai-chip">Incassi di aprile</button>
+            <button class="ai-chip">Soci a rischio churn</button>
+            <button class="ai-chip">Riassumi il bilancio 2025</button>
+          </div>
+        </div>
+      </div>
+      <div class="ai-input">
+        <input type="text" placeholder="Chiedi qualcosa... (es: 'Quanti soci attivi?')">
+        <button class="btn btn-primary btn-icon"><i data-lucide="send" class="icon"></i></button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================== INIT ============================== */
+applyTheme();
+render();
+</script>
+</body>
+</html>
+
