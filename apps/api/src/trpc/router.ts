@@ -15,6 +15,13 @@ import { dashboardRouter } from "../routes/dashboard";
 import { googleCalendarRouter } from "../routes/google-calendar";
 import { microsoftOneDriveRouter } from "../routes/microsoft-onedrive";
 import { microsoftCalendarRouter } from "../routes/microsoft-calendar";
+import { utentiRouter } from "../routes/utenti";
+import {
+  pianiRouter,
+  fattureRouter,
+  auditRouter,
+  sistemaRouter,
+} from "../routes/piattaforma";
 
 /**
  * Root tRPC router for the NEOGESYS Sport API.
@@ -24,7 +31,9 @@ import { microsoftCalendarRouter } from "../routes/microsoft-calendar";
  * for its domain.
  */
 export const appRouter = router({
+  // ── Tenant-level (usato dagli utenti del tenant) ─────────────
   tenant: tenantRouter,
+  utenti: utentiRouter,
   soci: sociRouter,
   certificati: certificatiRouter,
   corsi: corsiRouter,
@@ -40,6 +49,14 @@ export const appRouter = router({
   googleCalendar: googleCalendarRouter,
   microsoftOneDrive: microsoftOneDriveRouter,
   microsoftCalendar: microsoftCalendarRouter,
+
+  // ── Platform-level (solo super_admin) ────────────────────────
+  piattaforma: router({
+    piani: pianiRouter,
+    fatture: fattureRouter,
+    audit: auditRouter,
+    sistema: sistemaRouter,
+  }),
 });
 
 /** The type of the root router -- used by tRPC clients for type inference. */

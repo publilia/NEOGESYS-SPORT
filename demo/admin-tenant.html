@@ -789,6 +789,7 @@ const NAV = [
   { id: 'contabilita', label: 'Contabilità', icon: 'calculator' },
   { id: 'integrazioni', label: 'Integrazioni', icon: 'plug' },
   { id: 'impostazioni', label: 'Impostazioni', icon: 'settings' },
+  { id: 'utenti', label: 'Utenti', icon: 'user-cog' },
 ];
 
 /* ============================== MOCK DATA ============================== */
@@ -907,7 +908,7 @@ function renderHeader() {
           <div class="logo-mark">N</div>
           <span>NEOGESYS SPORT</span>
         </a>
-        <span class="tenant-name">ASD Demo Sport · <strong style="color: hsl(var(--primary));">admin_tenant</strong></span>
+        <span class="tenant-name">ASD Demo Sport</span>
       </div>
       <button class="header-search" onclick="openCmdk()">
         <i data-lucide="search" class="icon"></i>
@@ -947,9 +948,7 @@ function renderSidebar() {
     <aside class="${cls}">
       <nav class="sidebar-nav">
         <div class="nav-group-label">Gestione</div>
-        ${NAV.slice(0, 9).map(navBtn).join('')}
-        <div class="nav-group-label">Sistema</div>
-        ${NAV.slice(9).map(navBtn).join('')}
+        ${NAV.map(navBtn).join('')}
         <div class="nav-group-label">AI</div>
         <button class="nav-item" onclick="toggleAI()">
           <i data-lucide="sparkles"></i>
@@ -1018,7 +1017,7 @@ function renderPopovers() {
           <div class="avatar" style="width: 2.5rem; height: 2.5rem;">MR</div>
           <div>
             <div style="font-weight: 600; font-size: 0.875rem;">Mario Rossi</div>
-            <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">admin@demo-asd.sport · <code style="background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); padding: 0.0625rem 0.25rem; border-radius: 0.25rem; font-size: 0.6875rem;">admin_tenant</code></div>
+            <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">admin@demo-asd.sport</div>
           </div>
         </div>
         <div class="popover-divider"></div>
@@ -1128,7 +1127,7 @@ function pageDashboard() {
     <div class="page-header">
       <div>
         <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle">Benvenuto, Mario. Ecco un riepilogo della tua società.</p>
+        <p class="page-subtitle">Benvenuto, Mario. Gestione completa della società.</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-outline btn-sm"><i data-lucide="download" class="icon"></i> Esporta</button>

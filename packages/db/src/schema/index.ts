@@ -68,3 +68,12 @@ export {
   cloudStorageLinks,
   cloudStorageLinksRelations,
 } from "./cloud-storage";
+export {
+  planiAbbonamento,
+  fatturePiattaforma,
+  tenantUsage,
+  superAdminAuditLog,
+  planiAbbonamentoRelations,
+  fatturePiattaformaRelations,
+  tenantUsageRelations,
+} from "./billing";
