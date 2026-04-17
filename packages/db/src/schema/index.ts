@@ -58,3 +58,13 @@ export {
 } from "./comunicazioni";
 export { auditLog, auditLogRelations } from "./audit-log";
 export { sociEmbeddings, sociEmbeddingsRelations } from "./embeddings";
+export {
+  calendarSync,
+  calendarSyncItems,
+  calendarSyncRelations,
+  calendarSyncItemsRelations,
+} from "./calendar-sync";
+export {
+  cloudStorageLinks,
+  cloudStorageLinksRelations,
+} from "./cloud-storage";
