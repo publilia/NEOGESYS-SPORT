@@ -12,6 +12,9 @@ import { aiRouter } from "../routes/ai";
 import { impostazioniRouter } from "../routes/impostazioni";
 import { integrazioniRouter } from "../routes/integrazioni";
 import { dashboardRouter } from "../routes/dashboard";
+import { googleCalendarRouter } from "../routes/google-calendar";
+import { microsoftOneDriveRouter } from "../routes/microsoft-onedrive";
+import { microsoftCalendarRouter } from "../routes/microsoft-calendar";
 
 /**
  * Root tRPC router for the NEOGESYS Sport API.
@@ -34,6 +37,9 @@ export const appRouter = router({
   impostazioni: impostazioniRouter,
   integrazioni: integrazioniRouter,
   dashboard: dashboardRouter,
+  googleCalendar: googleCalendarRouter,
+  microsoftOneDrive: microsoftOneDriveRouter,
+  microsoftCalendar: microsoftCalendarRouter,
 });
 
 /** The type of the root router -- used by tRPC clients for type inference. */

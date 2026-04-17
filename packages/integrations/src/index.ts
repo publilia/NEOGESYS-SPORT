@@ -39,3 +39,29 @@ export type {
   SMSProviderType,
 } from "./sms/types";
 export { getSMSProvider } from "./sms/factory";
+
+// Calendar (unified)
+export type {
+  CalendarProvider,
+  CalendarProviderType,
+  UnifiedCalendar,
+  UnifiedCalendarEvent,
+  UnifiedCalendarEventList,
+  UnifiedCalendarList,
+  CreateUnifiedEvent,
+  SyncInfo,
+} from "./calendar/types";
+export { getCalendarProvider } from "./calendar/factory";
+export { CalendarSyncService } from "./calendar/sync-service";
+
+// Storage (unified)
+export type {
+  CloudStorageProvider,
+  StorageProviderType,
+  UnifiedFile,
+  UnifiedFileList,
+  StorageQuota,
+  ShareResult,
+} from "./storage/types";
+export { getStorageProvider } from "./storage/factory";
+export { LocalStorageProvider } from "./storage/local";

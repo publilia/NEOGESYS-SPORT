@@ -9,7 +9,11 @@
     "./email": "./src/email/index.ts",
     "./payment": "./src/payment/index.ts",
     "./sdi": "./src/sdi/index.ts",
-    "./sms": "./src/sms/index.ts"
+    "./sms": "./src/sms/index.ts",
+    "./google": "./src/google/index.ts",
+    "./microsoft": "./src/microsoft/index.ts",
+    "./calendar": "./src/calendar/index.ts",
+    "./storage": "./src/storage/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

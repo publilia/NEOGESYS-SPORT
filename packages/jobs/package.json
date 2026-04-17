@@ -8,7 +8,9 @@
     ".": "./src/index.ts",
     "./certificati-alerts": "./src/certificati-alerts.ts",
     "./solleciti-quote": "./src/solleciti-quote.ts",
-    "./churn-prediction": "./src/churn-prediction.ts"
+    "./churn-prediction": "./src/churn-prediction.ts",
+    "./calendar-sync": "./src/calendar-sync.ts",
+    "./storage-cleanup": "./src/storage-cleanup.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
