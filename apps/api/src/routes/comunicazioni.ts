@@ -2,6 +2,7 @@ import { z } from "zod";
 import { sql } from "drizzle-orm";
 import { router, protectedProcedure, adminProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
+import { getEmailProvider } from "@neogesys/integrations/email";
 
 // ─── Input Schemas ───────────────────────────────────────────────────────────
 
@@ -206,32 +207,87 @@ export const comunicazioniRouter = router({
   }),
 
   /**
-   * Send a comunicazione immediately.
+   * Send a comunicazione immediately via the tenant's email integration.
    */
   invia: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const tenantId = requireTenant(ctx.tenant?.id);
 
-      // TODO: Dispatch actual sending via integration providers (mailgun, twilio, etc.)
-      // This should be handled by a background job queue
+      // Load the comunicazione and its recipients
+      const [comResult, destResult] = await Promise.all([
+        ctx.db.execute(sql`
+          SELECT * FROM comunicazioni
+          WHERE id = ${input.id} AND tenant_id = ${tenantId}
+            AND stato IN ('bozza', 'programmata')
+          LIMIT 1
+        `),
+        ctx.db.execute(sql`
+          SELECT s.email, s.nome, s.cognome
+          FROM comunicazioni_destinatari cd
+          JOIN soci s ON s.id = cd.socio_id
+          WHERE cd.comunicazione_id = ${input.id}
+            AND s.email IS NOT NULL
+          ORDER BY s.cognome
+        `),
+      ]);
+
+      const comRows = comResult as unknown as Array<Record<string, unknown>>;
+      if (comRows.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Comunicazione non trovata o già inviata.",
+        });
+      }
+
+      const comunicazione = comRows[0]!;
+      const destinatari = destResult as unknown as Array<Record<string, unknown>>;
+
+      let inviate = 0;
+      let errori = 0;
+
+      if (comunicazione.canale === "email" && destinatari.length > 0) {
+        try {
+          const emailProvider = await getEmailProvider(tenantId);
+          const emails = destinatari
+            .map((d) => String(d.email ?? ""))
+            .filter(Boolean);
+
+          if (emails.length > 0) {
+            await emailProvider.sendBatch(
+              emails.map((to) => ({
+                to,
+                subject: String(comunicazione.oggetto ?? ""),
+                html: String(comunicazione.corpo ?? ""),
+              })),
+            );
+            inviate = emails.length;
+          }
+        } catch (err) {
+          // Mark as error state but don't throw — record the attempt
+          errori = destinatari.length;
+          await ctx.db.execute(sql`
+            UPDATE comunicazioni
+            SET stato = 'errore', updated_at = NOW()
+            WHERE id = ${input.id} AND tenant_id = ${tenantId}
+            RETURNING id
+          `);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Errore invio email: ${String(err instanceof Error ? err.message : err)}`,
+          });
+        }
+      }
 
       const result = await ctx.db.execute(sql`
-        UPDATE comunicazioni SET stato = 'inviata', inviata_il = NOW(), updated_at = NOW()
+        UPDATE comunicazioni
+        SET stato = 'inviata', inviata_il = NOW(), updated_at = NOW()
         WHERE id = ${input.id} AND tenant_id = ${tenantId}
-          AND stato IN ('bozza', 'programmata')
         RETURNING *
       `);
 
       const rows = result as unknown as Array<Record<string, unknown>>;
-      if (rows.length === 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Comunicazione non trovata o gia' inviata.",
-        });
-      }
-
-      return rows[0];
+      return { ...rows[0], inviate, errori };
     }),
 
   /**

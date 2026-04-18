@@ -149,7 +149,7 @@ export const quoteRouter = router({
 
       // Verify quota exists and belongs to tenant
       const quotaResult = await ctx.db.execute(sql`
-        SELECT id, importo, stato FROM quote
+        SELECT id, importo, stato, socio_id, descrizione FROM quote
         WHERE id = ${input.quotaId} AND tenant_id = ${tenantId}
         LIMIT 1
       `);
@@ -178,7 +178,28 @@ export const quoteRouter = router({
         RETURNING *
       `);
 
-      // TODO: Create prima_nota_movimenti entry for accounting
+      // Automatically create a prima_nota_movimenti entry for accounting
+      const updatedRows = result as unknown as Array<Record<string, unknown>>;
+      const updatedQuota = updatedRows[0];
+
+      if (updatedQuota) {
+        await ctx.db.execute(sql`
+          INSERT INTO prima_nota_movimenti
+            (tenant_id, tipo, causale, descrizione, importo, data,
+             categoria_contabile, quota_id, socio_id)
+          VALUES (
+            ${tenantId},
+            'entrata',
+            ${`Quota: ${String(updatedQuota.descrizione ?? "")}`},
+            ${`Pagamento con ${input.metodoPagamento}${input.riferimentoPagamento ? ` - rif. ${input.riferimentoPagamento}` : ""}`},
+            ${input.importoPagato},
+            ${input.dataPagamento ?? new Date().toISOString()},
+            'quote_associative',
+            ${input.quotaId},
+            ${quota.socio_id ? String(quota.socio_id) : null}
+          )
+        `);
+      }
 
       const rows = result as unknown as Array<Record<string, unknown>>;
       return rows[0];

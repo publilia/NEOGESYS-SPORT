@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "@neogesys/db";
 import { utenti, utenteTenant } from "@neogesys/db";
 import type { TenantInfo } from "./tenant";
@@ -118,27 +118,54 @@ function extractBearerToken(header: string | undefined): string | null {
 }
 
 /**
- * Validates a session token and returns the user ID.
+ * Validates a session token against the Better Auth sessions table.
  *
- * TODO: Integrate with @neogesys/auth session validation.
- * This should check the sessions table, verify expiry, etc.
+ * Better Auth stores sessions in the "session" table with token + expires_at.
+ * The session's user_id links to the Better Auth "user" table (by email we
+ * cross-reference into our custom utenti table).
  */
 async function validateSessionToken(token: string): Promise<string | null> {
-  // TODO: Implement proper session validation via @neogesys/auth
-  // For now, we treat the token as a user ID for development purposes.
-  // In production, this should:
-  // 1. Look up the session by token hash
-  // 2. Check session expiry
-  // 3. Return the associated user ID
   try {
-    // Placeholder: attempt to use the token as a UUID user ID (dev only)
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(token)) {
-      return token;
+    // 1. Look up the session token in Better Auth's session table
+    const sessionResult = await db.execute(sql`
+      SELECT s.user_id, s.expires_at, u.email
+      FROM "session" s
+      JOIN "user" u ON u.id = s.user_id
+      WHERE s.token = ${token}
+        AND s.expires_at > NOW()
+      LIMIT 1
+    `);
+
+    const rows = sessionResult as unknown as Array<Record<string, unknown>>;
+    if (rows.length === 0) {
+      return null;
     }
-    return null;
+
+    const sessionRow = rows[0]!;
+    const email = String(sessionRow.email ?? "");
+
+    if (!email) {
+      return null;
+    }
+
+    // 2. Resolve the email to our utenti table
+    const [utente] = await db
+      .select({ id: utenti.id })
+      .from(utenti)
+      .where(eq(utenti.email, email))
+      .limit(1);
+
+    return utente?.id ?? null;
   } catch {
+    // If Better Auth session tables don't exist yet (dev without migration),
+    // fall back to accepting a UUID directly as user ID for local development.
+    if (process.env.NODE_ENV !== "production") {
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(token)) {
+        return token;
+      }
+    }
     return null;
   }
 }

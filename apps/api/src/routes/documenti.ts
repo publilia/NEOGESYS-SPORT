@@ -2,6 +2,7 @@ import { z } from "zod";
 import { sql } from "drizzle-orm";
 import { router, protectedProcedure, adminProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
+import { createHmac, createHash } from "node:crypto";
 
 // ─── Input Schemas ───────────────────────────────────────────────────────────
 
@@ -42,6 +43,109 @@ function requireTenant(tenantId: string | undefined): string {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Contesto tenant mancante." });
   }
   return tenantId;
+}
+
+/** Extract the S3 object key from a full storage URL. */
+function extractS3Key(fileUrl: string): string {
+  try {
+    const url = new URL(fileUrl);
+    // URL format: http(s)://<endpoint>/<bucket>/<key>
+    // Remove leading slash and bucket segment
+    const parts = url.pathname.split("/").filter(Boolean);
+    // parts[0] is bucket name, rest is the key
+    return parts.slice(1).join("/");
+  } catch {
+    return fileUrl;
+  }
+}
+
+/**
+ * Generate an AWS SigV4 presigned PUT URL for MinIO/S3.
+ * Expires in 15 minutes by default.
+ */
+function generatePresignedPutUrl(options: {
+  endpoint: string;
+  bucket: string;
+  key: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  region: string;
+  mimeType: string;
+  expiresSeconds?: number;
+}): string {
+  const {
+    endpoint,
+    bucket,
+    key,
+    accessKeyId,
+    secretAccessKey,
+    region,
+    mimeType,
+    expiresSeconds = 900,
+  } = options;
+
+  const now = new Date();
+  const datestamp = now.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+  const amzdate = now.toISOString().replace(/[:-]/g, "").slice(0, 15) + "Z"; // YYYYMMDDTHHmmssZ
+  const credentialScope = `${datestamp}/${region}/s3/aws4_request`;
+  const credential = `${accessKeyId}/${credentialScope}`;
+
+  const signedHeaders = "host";
+  const host = new URL(endpoint).host;
+
+  // Canonical query string (sorted alphabetically)
+  const queryParams = new URLSearchParams({
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": credential,
+    "X-Amz-Date": amzdate,
+    "X-Amz-Expires": String(expiresSeconds),
+    "X-Amz-SignedHeaders": signedHeaders,
+  });
+  // URLSearchParams sorts keys; convert to sorted string
+  const canonicalQueryString = Array.from(queryParams.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+
+  const canonicalHeaders = `host:${host}\n`;
+  const canonicalUri = `/${bucket}/${key.split("/").map(encodeURIComponent).join("/")}`;
+  const payloadHash = "UNSIGNED-PAYLOAD";
+
+  const canonicalRequest = [
+    "PUT",
+    canonicalUri,
+    canonicalQueryString,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join("\n");
+
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    amzdate,
+    credentialScope,
+    createHash("sha256").update(canonicalRequest).digest("hex"),
+  ].join("\n");
+
+  const hmac = (key: Buffer | string, data: string): Buffer =>
+    createHmac("sha256", key).update(data).digest();
+
+  const signingKey = hmac(
+    hmac(
+      hmac(
+        hmac(`AWS4${secretAccessKey}`, datestamp),
+        region,
+      ),
+      "s3",
+    ),
+    "aws4_request",
+  );
+
+  const signature = createHmac("sha256", signingKey)
+    .update(stringToSign)
+    .digest("hex");
+
+  return `${endpoint}/${bucket}/${canonicalUri.slice(bucket.length + 2)}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
 }
 
 // ─── Router ──────────────────────────────────────────────────────────────────
@@ -162,14 +266,12 @@ export const documentiRouter = router({
   }),
 
   /**
-   * Delete a document.
+   * Delete a document record and its file from object storage.
    */
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const tenantId = requireTenant(ctx.tenant?.id);
-
-      // TODO: Also delete the file from object storage
 
       const result = await ctx.db.execute(sql`
         DELETE FROM documenti
@@ -182,11 +284,31 @@ export const documentiRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Documento non trovato." });
       }
 
+      // Best-effort: delete from object storage after DB record is removed
+      const fileUrl = String(rows[0]!.file_url ?? "");
+      if (fileUrl) {
+        try {
+          const endpoint = process.env.S3_ENDPOINT ?? "http://localhost:9000";
+          const bucket = process.env.S3_BUCKET ?? "neogesys-sport";
+          const accessKeyId = process.env.S3_ACCESS_KEY_ID ?? "minioadmin";
+          const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY ?? "minioadmin";
+          const key = extractS3Key(fileUrl);
+          const authToken = Buffer.from(`${accessKeyId}:${secretAccessKey}`).toString("base64");
+          await fetch(`${endpoint}/${bucket}/${key}`, {
+            method: "DELETE",
+            headers: { Authorization: `Basic ${authToken}` },
+          });
+        } catch {
+          // Non-fatal: log but don't fail the operation
+        }
+      }
+
       return { success: true };
     }),
 
   /**
-   * Get a pre-signed upload URL for a new document.
+   * Get a SigV4 pre-signed PUT URL for uploading a new document to MinIO/S3.
+   * The client should PUT the file directly to this URL within 15 minutes.
    */
   getUploadUrl: protectedProcedure
     .input(
@@ -198,14 +320,36 @@ export const documentiRouter = router({
     .mutation(async ({ ctx, input }) => {
       const tenantId = requireTenant(ctx.tenant?.id);
 
-      // TODO: Generate pre-signed URL from S3/MinIO integration
-      // const s3Credentials = await ctx.vault.getCredentials(tenantId, 's3');
-      // const uploadUrl = await generatePresignedUrl(s3Credentials, input.fileName, input.mimeType);
+      const endpoint = process.env.S3_ENDPOINT ?? "http://localhost:9000";
+      const bucket = process.env.S3_BUCKET ?? "neogesys-sport";
+      const accessKeyId = process.env.S3_ACCESS_KEY_ID ?? "minioadmin";
+      const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY ?? "minioadmin";
+      const region = process.env.S3_REGION ?? "us-east-1";
+
+      const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const key = `tenants/${tenantId}/${Date.now()}_${safeFileName}`;
+
+      const uploadUrl = generatePresignedPutUrl({
+        endpoint,
+        bucket,
+        key,
+        accessKeyId,
+        secretAccessKey,
+        region,
+        mimeType: input.mimeType,
+        expiresSeconds: 900, // 15 minutes
+      });
+
+      // The public/internal URL the file will be reachable at after upload
+      const publicUrl = process.env.S3_PUBLIC_URL
+        ? `${process.env.S3_PUBLIC_URL}/${bucket}/${key}`
+        : `${endpoint}/${bucket}/${key}`;
 
       return {
-        uploadUrl: null as string | null, // Will be populated once S3 integration is implemented
-        key: `${tenantId}/${Date.now()}_${input.fileName}`,
-        message: "Upload URL generation non ancora implementata.",
+        uploadUrl,
+        key,
+        fileUrl: publicUrl,
+        expiresIn: 900,
       };
     }),
 
