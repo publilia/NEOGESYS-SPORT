@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, desc, count, ilike, sql } from "drizzle-orm";
-import { utenti, utenteTenant, auditLog } from "@neogesys/db/schema";
+import { utenti, utenteTenant, auditLog } from "@neogesys/db";
 import {
   router,
   protectedProcedure,

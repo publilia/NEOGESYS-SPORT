@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, ilike, or, sql, count, desc } from "drizzle-orm";
-import { soci } from "@neogesys/db/schema";
+import { soci } from "@neogesys/db";
 import {
   router,
   protectedProcedure,

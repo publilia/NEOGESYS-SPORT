@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, lte, gte, count, desc, sql } from "drizzle-orm";
-import { certificatiMedici, soci } from "@neogesys/db/schema";
+import { certificatiMedici, soci } from "@neogesys/db";
 import { router, protectedProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
 

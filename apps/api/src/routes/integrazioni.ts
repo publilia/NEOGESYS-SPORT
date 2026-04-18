@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, sql } from "drizzle-orm";
-import { tenantIntegrations } from "@neogesys/db/schema";
+import { tenantIntegrations } from "@neogesys/db";
 import { router, protectedProcedure, adminProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
 

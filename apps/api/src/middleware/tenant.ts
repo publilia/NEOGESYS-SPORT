@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq } from "drizzle-orm";
 import { db } from "@neogesys/db";
-import { tenants } from "@neogesys/db/schema";
+import { tenants } from "@neogesys/db";
 
 export interface TenantInfo {
   id: string;

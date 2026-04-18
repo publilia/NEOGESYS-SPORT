@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, and } from "drizzle-orm";
 import { db } from "@neogesys/db";
-import { utenti, utenteTenant } from "@neogesys/db/schema";
+import { utenti, utenteTenant } from "@neogesys/db";
 import type { TenantInfo } from "./tenant";
 
 export interface UserContext {

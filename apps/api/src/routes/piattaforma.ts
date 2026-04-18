@@ -6,7 +6,7 @@ import {
   tenantUsage,
   superAdminAuditLog,
   tenants,
-} from "@neogesys/db/schema";
+} from "@neogesys/db";
 import { router, superAdminProcedure, protectedProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
 

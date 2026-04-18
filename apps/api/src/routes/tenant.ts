@@ -6,7 +6,7 @@ import {
   fatturePiattaforma,
   tenantUsage,
   superAdminAuditLog,
-} from "@neogesys/db/schema";
+} from "@neogesys/db";
 import {
   router,
   publicProcedure,
