@@ -54,7 +54,7 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -73,31 +73,13 @@ services:
       - "8108:8108"
     volumes:
       - typesense_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8108/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - neogesys
-
-  # ─────────────────────── DB MIGRATIONS ──────────────────────────
-  migrate:
-    image: node:22-alpine
-    container_name: neogesys-migrate
-    working_dir: /app
-    environment:
-      DATABASE_URL: postgresql://neogesys:neogesys_dev@postgres:5432/neogesys_sport
-    volumes:
-      - .:/app:ro
-    command: >
-      sh -c "
-        corepack enable &&
-        corepack prepare pnpm@9.15.4 --activate &&
-        pnpm install --frozen-lockfile &&
-        pnpm --filter @neogesys/db migrate
-      "
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - neogesys
-    restart: "no"
 
   # ─────────────────────────── API ────────────────────────────────
   api:
@@ -126,8 +108,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
       interval: 10s
@@ -173,10 +153,10 @@ services:
       - .env.docker
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:4000
-      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3002
       API_URL: http://api:4000
     ports:
-      - "3001:3000"
+      - "3002:3000"
     depends_on:
       api:
         condition: service_healthy

@@ -76,7 +76,7 @@ echo ============================================================
 echo.
 echo  URLS:
 echo    Gestionale (web):  http://localhost:3000
-echo    Admin Platform:    http://localhost:3001
+echo    Admin Platform:    http://localhost:3002
 echo    API:               http://localhost:4000
 echo    Demo HTML:         http://localhost:8080
 echo    MinIO Console:     http://localhost:9001
