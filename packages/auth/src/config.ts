@@ -11,9 +11,9 @@ const isProduction = process.env.NODE_ENV === "production";
  * Additional user fields for the Italian sports platform.
  */
 export interface UserAdditionalFields {
-  nome: string;
-  cognome: string;
-  telefono?: string;
+	nome: string;
+	cognome: string;
+	telefono?: string;
 }
 
 /**
@@ -26,83 +26,85 @@ export interface UserAdditionalFields {
  * - 2FA TOTP support
  * - Email verification
  */
+// biome-ignore lint/suspicious/noExplicitAny: better-auth return type is too complex to portably infer
 export function createAuthConfig(options: {
-  databaseUrl: string;
-  baseUrl: string;
-  secret: string;
-  trustedOrigins?: string[];
-}) {
-  return betterAuth({
-    database: {
-      type: "postgres",
-      url: options.databaseUrl,
-    },
+	databaseUrl: string;
+	baseUrl: string;
+	secret: string;
+	trustedOrigins?: string[];
+}): any {
+	return betterAuth({
+		database: {
+			type: "postgres",
+			url: options.databaseUrl,
+		},
 
-    baseURL: options.baseUrl,
-    secret: options.secret,
-    trustedOrigins: options.trustedOrigins ?? [],
+		baseURL: options.baseUrl,
+		secret: options.secret,
+		trustedOrigins: options.trustedOrigins ?? [],
 
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: true,
-      autoSignIn: false,
-    },
+		emailAndPassword: {
+			enabled: true,
+			requireEmailVerification: true,
+			autoSignIn: false,
+		},
 
-    session: {
-      expiresIn: SESSION_MAX_AGE,
-      updateAge: SESSION_MAX_AGE / 10, // refresh session if older than 3 days
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60, // 5 minute cookie cache
-      },
-    },
+		session: {
+			expiresIn: SESSION_MAX_AGE,
+			updateAge: SESSION_MAX_AGE / 10, // refresh session if older than 3 days
+			cookieCache: {
+				enabled: true,
+				maxAge: 5 * 60, // 5 minute cookie cache
+			},
+		},
 
-    advanced: {
-      cookiePrefix: "neogesys",
-      generateId: undefined, // use default (cuid2)
-      cookies: {
-        session_token: {
-          name: "neogesys.session_token",
-          attributes: {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "lax" as const,
-            path: "/",
-          },
-        },
-      },
-    },
+		advanced: {
+			cookiePrefix: "neogesys",
+			generateId: undefined, // use default (cuid2)
+			cookies: {
+				session_token: {
+					name: "neogesys.session_token",
+					attributes: {
+						httpOnly: true,
+						secure: isProduction,
+						sameSite: "lax" as const,
+						path: "/",
+					},
+				},
+			},
+		},
 
-    user: {
-      additionalFields: {
-        nome: {
-          type: "string",
-          required: true,
-          input: true,
-        },
-        cognome: {
-          type: "string",
-          required: true,
-          input: true,
-        },
-        telefono: {
-          type: "string",
-          required: false,
-          input: true,
-        },
-      },
-    },
+		user: {
+			additionalFields: {
+				nome: {
+					type: "string",
+					required: true,
+					input: true,
+				},
+				cognome: {
+					type: "string",
+					required: true,
+					input: true,
+				},
+				telefono: {
+					type: "string",
+					required: false,
+					input: true,
+				},
+			},
+		},
 
-    plugins: [
-      twoFactor({
-        issuer: "NeoGesys Sport",
-        totpOptions: {
-          digits: 6,
-          period: 30,
-        },
-      }),
-    ],
-  });
+		plugins: [
+			twoFactor({
+				issuer: "NeoGesys Sport",
+				totpOptions: {
+					digits: 6,
+					period: 30,
+				},
+			}),
+		],
+	});
 }
 
-export type Auth = ReturnType<typeof createAuthConfig>;
+// biome-ignore lint/suspicious/noExplicitAny: mirrors createAuthConfig return
+export type Auth = any;

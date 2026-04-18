@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Building2, ExternalLink, Filter, MoreVertical, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import {
-	Plus,
-	Search,
-	Filter,
-	Building2,
-	MoreVertical,
-	ExternalLink,
-} from "lucide-react";
+import { useState } from "react";
 
 type TenantStato = "attivo" | "trial" | "sospeso" | "chiuso";
 type Piano = "free" | "base" | "pro" | "enterprise";
@@ -141,9 +134,7 @@ export default function TenantsPage() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-bold tracking-tight">Tenant</h1>
-					<p className="text-gray-500">
-						Gestisci le organizzazioni registrate sulla piattaforma
-					</p>
+					<p className="text-gray-500">Gestisci le organizzazioni registrate sulla piattaforma</p>
 				</div>
 				<Link
 					href="/tenants/nuovo"
@@ -170,9 +161,7 @@ export default function TenantsPage() {
 					<Filter className="h-4 w-4 text-gray-400" />
 					<select
 						value={filterStato}
-						onChange={(e) =>
-							setFilterStato(e.target.value as TenantStato | "tutti")
-						}
+						onChange={(e) => setFilterStato(e.target.value as TenantStato | "tutti")}
 						className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 					>
 						<option value="tutti">Tutti gli stati</option>
@@ -189,9 +178,7 @@ export default function TenantsPage() {
 				<table className="w-full text-left text-sm">
 					<thead className="border-b border-gray-200 bg-gray-50">
 						<tr>
-							<th className="px-4 py-3 font-medium text-gray-500">
-								Organizzazione
-							</th>
+							<th className="px-4 py-3 font-medium text-gray-500">Organizzazione</th>
 							<th className="px-4 py-3 font-medium text-gray-500">Tipo</th>
 							<th className="px-4 py-3 font-medium text-gray-500">Piano</th>
 							<th className="px-4 py-3 font-medium text-gray-500">Stato</th>
@@ -207,18 +194,13 @@ export default function TenantsPage() {
 								className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
 							>
 								<td className="px-4 py-3">
-									<Link
-										href={`/tenants/${tenant.id}`}
-										className="flex items-center gap-3"
-									>
+									<Link href={`/tenants/${tenant.id}`} className="flex items-center gap-3">
 										<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50">
 											<Building2 className="h-4 w-4 text-indigo-600" />
 										</div>
 										<div>
 											<p className="font-medium">{tenant.ragioneSociale}</p>
-											<p className="font-mono text-xs text-gray-400">
-												{tenant.slug}
-											</p>
+											<p className="font-mono text-xs text-gray-400">{tenant.slug}</p>
 										</div>
 									</Link>
 								</td>
@@ -255,10 +237,7 @@ export default function TenantsPage() {
 						))}
 						{filtered.length === 0 && (
 							<tr>
-								<td
-									colSpan={7}
-									className="px-4 py-12 text-center text-gray-400"
-								>
+								<td colSpan={7} className="px-4 py-12 text-center text-gray-400">
 									Nessun tenant trovato
 								</td>
 							</tr>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { ArrowLeft, Building2, Globe, Sparkles, User } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Globe, User, Sparkles } from "lucide-react";
+import { useState } from "react";
 
 type TipoEnte = "ASD" | "SSD" | "FED";
 type Piano = "free" | "base" | "pro" | "enterprise";
@@ -54,9 +54,7 @@ export default function NuovoTenantPage() {
 		console.log("Creating tenant:", form);
 	}
 
-	const subdomainPreview = form.slug
-		? `${form.slug}.gestionale.sport`
-		: "slug.gestionale.sport";
+	const subdomainPreview = form.slug ? `${form.slug}.gestionale.sport` : "slug.gestionale.sport";
 
 	return (
 		<div className="space-y-6">
@@ -69,9 +67,7 @@ export default function NuovoTenantPage() {
 				</Link>
 				<div>
 					<h1 className="text-2xl font-bold tracking-tight">Nuovo tenant</h1>
-					<p className="text-gray-500">
-						Crea una nuova organizzazione sulla piattaforma
-					</p>
+					<p className="text-gray-500">Crea una nuova organizzazione sulla piattaforma</p>
 				</div>
 			</div>
 
@@ -103,10 +99,7 @@ export default function NuovoTenantPage() {
 						</div>
 
 						<div>
-							<label
-								htmlFor="slug"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
+							<label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
 								Slug *
 							</label>
 							<input
@@ -131,10 +124,7 @@ export default function NuovoTenantPage() {
 
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label
-									htmlFor="tipoEnte"
-									className="block text-sm font-medium text-gray-700 mb-1"
-								>
+								<label htmlFor="tipoEnte" className="block text-sm font-medium text-gray-700 mb-1">
 									Tipo ente *
 								</label>
 								<select
@@ -148,21 +138,14 @@ export default function NuovoTenantPage() {
 									}
 									className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 								>
-									<option value="ASD">
-										ASD - Associazione Sportiva Dilettantistica
-									</option>
-									<option value="SSD">
-										SSD - Societa&apos; Sportiva Dilettantistica
-									</option>
+									<option value="ASD">ASD - Associazione Sportiva Dilettantistica</option>
+									<option value="SSD">SSD - Societa&apos; Sportiva Dilettantistica</option>
 									<option value="FED">FED - Federazione</option>
 								</select>
 							</div>
 
 							<div>
-								<label
-									htmlFor="piano"
-									className="block text-sm font-medium text-gray-700 mb-1"
-								>
+								<label htmlFor="piano" className="block text-sm font-medium text-gray-700 mb-1">
 									Piano *
 								</label>
 								<select
@@ -190,13 +173,9 @@ export default function NuovoTenantPage() {
 				<div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
 					<div className="flex items-center gap-2">
 						<Globe className="h-4 w-4 text-indigo-500" />
-						<span className="text-sm font-medium text-indigo-700">
-							Anteprima URL
-						</span>
+						<span className="text-sm font-medium text-indigo-700">Anteprima URL</span>
 					</div>
-					<p className="mt-1 font-mono text-sm text-indigo-900">
-						https://{subdomainPreview}
-					</p>
+					<p className="mt-1 font-mono text-sm text-indigo-900">https://{subdomainPreview}</p>
 				</div>
 
 				{/* ── Admin utente iniziale ──────────────────────────────────── */}
@@ -206,17 +185,13 @@ export default function NuovoTenantPage() {
 						<h2 className="text-lg font-semibold">Amministratore iniziale</h2>
 					</div>
 					<p className="text-sm text-gray-500 mb-4">
-						Verra&apos; creato automaticamente un utente admin per questa
-						organizzazione.
+						Verra&apos; creato automaticamente un utente admin per questa organizzazione.
 					</p>
 
 					<div className="space-y-4">
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label
-									htmlFor="adminNome"
-									className="block text-sm font-medium text-gray-700 mb-1"
-								>
+								<label htmlFor="adminNome" className="block text-sm font-medium text-gray-700 mb-1">
 									Nome *
 								</label>
 								<input
@@ -224,9 +199,7 @@ export default function NuovoTenantPage() {
 									type="text"
 									required
 									value={form.adminNome}
-									onChange={(e) =>
-										setForm((prev) => ({ ...prev, adminNome: e.target.value }))
-									}
+									onChange={(e) => setForm((prev) => ({ ...prev, adminNome: e.target.value }))}
 									placeholder="Mario"
 									className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 								/>
@@ -255,10 +228,7 @@ export default function NuovoTenantPage() {
 							</div>
 						</div>
 						<div>
-							<label
-								htmlFor="adminEmail"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
+							<label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-1">
 								Email *
 							</label>
 							<input

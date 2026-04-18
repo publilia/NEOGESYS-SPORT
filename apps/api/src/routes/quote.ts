@@ -1,65 +1,65 @@
-import { z } from "zod";
-import { sql } from "drizzle-orm";
-import { router, protectedProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
+import { sql } from "drizzle-orm";
+import { z } from "zod";
+import { protectedProcedure, router } from "../trpc/index";
 
 // ─── Input Schemas ───────────────────────────────────────────────────────────
 
 const listInput = z.object({
-  page: z.number().int().min(1).default(1),
-  perPage: z.number().int().min(1).max(100).default(20),
-  stato: z.enum(["emessa", "pagata", "scaduta", "annullata"]).optional(),
-  socioId: z.string().uuid().optional(),
-  annoSportivoId: z.string().uuid().optional(),
+	page: z.number().int().min(1).default(1),
+	perPage: z.number().int().min(1).max(100).default(20),
+	stato: z.enum(["emessa", "pagata", "scaduta", "annullata"]).optional(),
+	socioId: z.string().uuid().optional(),
+	annoSportivoId: z.string().uuid().optional(),
 });
 
 const createQuotaInput = z.object({
-  socioId: z.string().uuid(),
-  tipoQuotaId: z.string().uuid().optional(),
-  annoSportivoId: z.string().uuid().optional(),
-  descrizione: z.string().max(500),
-  importo: z.number().min(0),
-  dataEmissione: z.string().datetime().optional(),
-  dataScadenza: z.string().datetime().optional(),
-  note: z.string().optional(),
+	socioId: z.string().uuid(),
+	tipoQuotaId: z.string().uuid().optional(),
+	annoSportivoId: z.string().uuid().optional(),
+	descrizione: z.string().max(500),
+	importo: z.number().min(0),
+	dataEmissione: z.string().datetime().optional(),
+	dataScadenza: z.string().datetime().optional(),
+	note: z.string().optional(),
 });
 
 const registraPagamentoInput = z.object({
-  quotaId: z.string().uuid(),
-  importoPagato: z.number().min(0),
-  dataPagamento: z.string().datetime().optional(),
-  metodoPagamento: z.enum(["contanti", "bonifico", "carta", "satispay", "altro"]),
-  riferimentoPagamento: z.string().optional(),
-  note: z.string().optional(),
+	quotaId: z.string().uuid(),
+	importoPagato: z.number().min(0),
+	dataPagamento: z.string().datetime().optional(),
+	metodoPagamento: z.enum(["contanti", "bonifico", "carta", "satispay", "altro"]),
+	riferimentoPagamento: z.string().optional(),
+	note: z.string().optional(),
 });
 
 const statsInput = z.object({
-  annoSportivoId: z.string().uuid().optional(),
-  periodoInizio: z.string().datetime().optional(),
-  periodoFine: z.string().datetime().optional(),
+	annoSportivoId: z.string().uuid().optional(),
+	periodoInizio: z.string().datetime().optional(),
+	periodoFine: z.string().datetime().optional(),
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function requireTenant(tenantId: string | undefined): string {
-  if (!tenantId) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Contesto tenant mancante." });
-  }
-  return tenantId;
+	if (!tenantId) {
+		throw new TRPCError({ code: "BAD_REQUEST", message: "Contesto tenant mancante." });
+	}
+	return tenantId;
 }
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const quoteRouter = router({
-  /**
-   * List quote with pagination and filters.
-   */
-  list: protectedProcedure.input(listInput).query(async ({ ctx, input }) => {
-    const tenantId = requireTenant(ctx.tenant?.id);
-    const { page, perPage } = input;
-    const offset = (page - 1) * perPage;
+	/**
+	 * List quote with pagination and filters.
+	 */
+	list: protectedProcedure.input(listInput).query(async ({ ctx, input }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
+		const { page, perPage } = input;
+		const offset = (page - 1) * perPage;
 
-    const result = await ctx.db.execute(sql`
+		const result = await ctx.db.execute(sql`
       SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
         count(*) OVER() AS total_count
       FROM quote q
@@ -72,27 +72,27 @@ export const quoteRouter = router({
       LIMIT ${perPage} OFFSET ${offset}
     `);
 
-    const rows = result as unknown as Array<Record<string, unknown>>;
-    const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
+		const rows = result as unknown as Array<Record<string, unknown>>;
+		const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
 
-    return {
-      items: rows.map(({ total_count, ...r }) => r),
-      total,
-      page,
-      perPage,
-      totalPages: Math.ceil(total / perPage),
-    };
-  }),
+		return {
+			items: rows.map(({ total_count, ...r }) => r),
+			total,
+			page,
+			perPage,
+			totalPages: Math.ceil(total / perPage),
+		};
+	}),
 
-  /**
-   * Get a single quota by ID.
-   */
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Get a single quota by ID.
+	 */
+	getById: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      const result = await ctx.db.execute(sql`
+			const result = await ctx.db.execute(sql`
         SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
           s.codice_fiscale AS socio_codice_fiscale
         FROM quote q
@@ -101,29 +101,29 @@ export const quoteRouter = router({
         LIMIT 1
       `);
 
-      const rows = result as unknown as Array<Record<string, unknown>>;
-      if (rows.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-      }
+			const rows = result as unknown as Array<Record<string, unknown>>;
+			if (rows.length === 0) {
+				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			}
 
-      return rows[0];
-    }),
+			return rows[0];
+		}),
 
-  /**
-   * Create (emit) a new quota.
-   */
-  create: protectedProcedure.input(createQuotaInput).mutation(async ({ ctx, input }) => {
-    const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Create (emit) a new quota.
+	 */
+	create: protectedProcedure.input(createQuotaInput).mutation(async ({ ctx, input }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
 
-    // Verify socio belongs to tenant
-    const socioCheck = await ctx.db.execute(sql`
+		// Verify socio belongs to tenant
+		const socioCheck = await ctx.db.execute(sql`
       SELECT id FROM soci WHERE id = ${input.socioId} AND tenant_id = ${tenantId} LIMIT 1
     `);
-    if ((socioCheck as unknown as Array<unknown>).length === 0) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Socio non trovato." });
-    }
+		if ((socioCheck as unknown as Array<unknown>).length === 0) {
+			throw new TRPCError({ code: "NOT_FOUND", message: "Socio non trovato." });
+		}
 
-    const result = await ctx.db.execute(sql`
+		const result = await ctx.db.execute(sql`
       INSERT INTO quote (tenant_id, socio_id, tipo_quota_id, anno_sportivo_id,
         descrizione, importo, data_emissione, data_scadenza, stato, note)
       VALUES (
@@ -135,37 +135,37 @@ export const quoteRouter = router({
       RETURNING *
     `);
 
-    const rows = result as unknown as Array<Record<string, unknown>>;
-    return rows[0];
-  }),
+		const rows = result as unknown as Array<Record<string, unknown>>;
+		return rows[0];
+	}),
 
-  /**
-   * Record a payment for a quota.
-   */
-  registraPagamento: protectedProcedure
-    .input(registraPagamentoInput)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Record a payment for a quota.
+	 */
+	registraPagamento: protectedProcedure
+		.input(registraPagamentoInput)
+		.mutation(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      // Verify quota exists and belongs to tenant
-      const quotaResult = await ctx.db.execute(sql`
+			// Verify quota exists and belongs to tenant
+			const quotaResult = await ctx.db.execute(sql`
         SELECT id, importo, stato, socio_id, descrizione FROM quote
         WHERE id = ${input.quotaId} AND tenant_id = ${tenantId}
         LIMIT 1
       `);
 
-      const quotaRows = quotaResult as unknown as Array<Record<string, unknown>>;
-      if (quotaRows.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-      }
+			const quotaRows = quotaResult as unknown as Array<Record<string, unknown>>;
+			if (quotaRows.length === 0) {
+				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			}
 
-      const quota = quotaRows[0]!;
-      if (quota.stato === "pagata") {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Quota gia' pagata." });
-      }
+			const quota = quotaRows[0]!;
+			if (quota.stato === "pagata") {
+				throw new TRPCError({ code: "BAD_REQUEST", message: "Quota gia' pagata." });
+			}
 
-      // Update quota with payment info
-      const result = await ctx.db.execute(sql`
+			// Update quota with payment info
+			const result = await ctx.db.execute(sql`
         UPDATE quote SET
           stato = 'pagata',
           importo_pagato = ${input.importoPagato},
@@ -178,12 +178,12 @@ export const quoteRouter = router({
         RETURNING *
       `);
 
-      // Automatically create a prima_nota_movimenti entry for accounting
-      const updatedRows = result as unknown as Array<Record<string, unknown>>;
-      const updatedQuota = updatedRows[0];
+			// Automatically create a prima_nota_movimenti entry for accounting
+			const updatedRows = result as unknown as Array<Record<string, unknown>>;
+			const updatedQuota = updatedRows[0];
 
-      if (updatedQuota) {
-        await ctx.db.execute(sql`
+			if (updatedQuota) {
+				await ctx.db.execute(sql`
           INSERT INTO prima_nota_movimenti
             (tenant_id, tipo, causale, descrizione, importo, data,
              categoria_contabile, quota_id, socio_id)
@@ -199,27 +199,27 @@ export const quoteRouter = router({
             ${quota.socio_id ? String(quota.socio_id) : null}
           )
         `);
-      }
+			}
 
-      const rows = result as unknown as Array<Record<string, unknown>>;
-      return rows[0];
-    }),
+			const rows = result as unknown as Array<Record<string, unknown>>;
+			return rows[0];
+		}),
 
-  /**
-   * Get overdue payments (scadenzario).
-   */
-  getScadenzario: protectedProcedure
-    .input(
-      z.object({
-        page: z.number().int().min(1).default(1),
-        perPage: z.number().int().min(1).max(100).default(20),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
-      const offset = (input.page - 1) * input.perPage;
+	/**
+	 * Get overdue payments (scadenzario).
+	 */
+	getScadenzario: protectedProcedure
+		.input(
+			z.object({
+				page: z.number().int().min(1).default(1),
+				perPage: z.number().int().min(1).max(100).default(20),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
+			const offset = (input.page - 1) * input.perPage;
 
-      const result = await ctx.db.execute(sql`
+			const result = await ctx.db.execute(sql`
         SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
           s.email AS socio_email, s.telefono AS socio_telefono,
           count(*) OVER() AS total_count
@@ -232,27 +232,27 @@ export const quoteRouter = router({
         LIMIT ${input.perPage} OFFSET ${offset}
       `);
 
-      const rows = result as unknown as Array<Record<string, unknown>>;
-      const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
+			const rows = result as unknown as Array<Record<string, unknown>>;
+			const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
 
-      return {
-        items: rows.map(({ total_count, ...r }) => r),
-        total,
-        page: input.page,
-        perPage: input.perPage,
-        totalPages: Math.ceil(total / input.perPage),
-      };
-    }),
+			return {
+				items: rows.map(({ total_count, ...r }) => r),
+				total,
+				page: input.page,
+				perPage: input.perPage,
+				totalPages: Math.ceil(total / input.perPage),
+			};
+		}),
 
-  /**
-   * Generate a PDF receipt URL for a paid quota.
-   */
-  generaRicevuta: protectedProcedure
-    .input(z.object({ quotaId: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Generate a PDF receipt URL for a paid quota.
+	 */
+	generaRicevuta: protectedProcedure
+		.input(z.object({ quotaId: z.string().uuid() }))
+		.mutation(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      const quotaResult = await ctx.db.execute(sql`
+			const quotaResult = await ctx.db.execute(sql`
         SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
           s.codice_fiscale AS socio_codice_fiscale,
           t.ragione_sociale, t.partita_iva, t.codice_fiscale AS tenant_cf,
@@ -264,37 +264,37 @@ export const quoteRouter = router({
         LIMIT 1
       `);
 
-      const rows = quotaResult as unknown as Array<Record<string, unknown>>;
-      if (rows.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-      }
+			const rows = quotaResult as unknown as Array<Record<string, unknown>>;
+			if (rows.length === 0) {
+				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			}
 
-      const quota = rows[0]!;
-      if (quota.stato !== "pagata") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "La ricevuta puo' essere generata solo per quote pagate.",
-        });
-      }
+			const quota = rows[0]!;
+			if (quota.stato !== "pagata") {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "La ricevuta puo' essere generata solo per quote pagate.",
+				});
+			}
 
-      // TODO: Generate PDF via a PDF service (e.g. puppeteer, pdfkit)
-      // and upload to object storage. Return the URL.
-      return {
-        success: true,
-        message: "Generazione ricevuta avviata.",
-        url: null as string | null, // Will be populated once PDF service is implemented
-      };
-    }),
+			// TODO: Generate PDF via a PDF service (e.g. puppeteer, pdfkit)
+			// and upload to object storage. Return the URL.
+			return {
+				success: true,
+				message: "Generazione ricevuta avviata.",
+				url: null as string | null, // Will be populated once PDF service is implemented
+			};
+		}),
 
-  /**
-   * Income statistics by period and discipline.
-   */
-  stats: protectedProcedure.input(statsInput).query(async ({ ctx, input }) => {
-    const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Income statistics by period and discipline.
+	 */
+	stats: protectedProcedure.input(statsInput).query(async ({ ctx, input }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
 
-    const [totals, byDisciplina, byMese] = await Promise.all([
-      // Overall totals
-      ctx.db.execute(sql`
+		const [totals, byDisciplina, byMese] = await Promise.all([
+			// Overall totals
+			ctx.db.execute(sql`
         SELECT
           count(*) FILTER (WHERE stato = 'pagata') AS quote_pagate,
           count(*) FILTER (WHERE stato = 'emessa') AS quote_emesse,
@@ -308,8 +308,8 @@ export const quoteRouter = router({
           ${input.annoSportivoId ? sql`AND anno_sportivo_id = ${input.annoSportivoId}` : sql``}
       `),
 
-      // By discipline
-      ctx.db.execute(sql`
+			// By discipline
+			ctx.db.execute(sql`
         SELECT s.disciplina,
           count(*) AS count,
           COALESCE(SUM(q.importo) FILTER (WHERE q.stato = 'pagata'), 0) AS incassato
@@ -322,8 +322,8 @@ export const quoteRouter = router({
         ORDER BY incassato DESC
       `),
 
-      // Monthly trend
-      ctx.db.execute(sql`
+			// Monthly trend
+			ctx.db.execute(sql`
         SELECT
           date_trunc('month', data_pagamento) AS mese,
           count(*) AS count,
@@ -337,12 +337,12 @@ export const quoteRouter = router({
         GROUP BY mese
         ORDER BY mese
       `),
-    ]);
+		]);
 
-    return {
-      totals: (totals as unknown as Array<Record<string, unknown>>)[0] ?? {},
-      byDisciplina: byDisciplina as unknown as Array<Record<string, unknown>>,
-      byMese: byMese as unknown as Array<Record<string, unknown>>,
-    };
-  }),
+		return {
+			totals: (totals as unknown as Array<Record<string, unknown>>)[0] ?? {},
+			byDisciplina: byDisciplina as unknown as Array<Record<string, unknown>>,
+			byMese: byMese as unknown as Array<Record<string, unknown>>,
+		};
+	}),
 });

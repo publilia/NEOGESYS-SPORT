@@ -1,10 +1,10 @@
-import { createVault } from "@neogesys/vault";
 import { db } from "@neogesys/db";
-import { eq, and } from "drizzle-orm";
 import { tenantIntegrations } from "@neogesys/db/schema";
-import type { MicrosoftAuthConfig } from "./types";
-import { OneDriveService } from "./onedrive";
+import { createVault } from "@neogesys/vault";
+import { and, eq } from "drizzle-orm";
 import { OutlookCalendarService } from "./calendar";
+import { OneDriveService } from "./onedrive";
+import type { MicrosoftAuthConfig } from "./types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -12,53 +12,49 @@ import { OutlookCalendarService } from "./calendar";
  * Resolve Microsoft auth config from the vault for a given tenant and provider key.
  */
 async function resolveMicrosoftConfig(
-  tenantId: string,
-  providerKey: string,
+	tenantId: string,
+	providerKey: string,
 ): Promise<{ config: MicrosoftAuthConfig; configurazione: Record<string, unknown> | null }> {
-  const vault = createVault();
+	const vault = createVault();
 
-  const [integration] = await db
-    .select({
-      provider: tenantIntegrations.provider,
-      configurazione: tenantIntegrations.configurazione,
-    })
-    .from(tenantIntegrations)
-    .where(
-      and(
-        eq(tenantIntegrations.tenantId, tenantId),
-        eq(tenantIntegrations.provider, providerKey),
-        eq(tenantIntegrations.attivo, true),
-      ),
-    )
-    .limit(1);
+	const [integration] = await db
+		.select({
+			provider: tenantIntegrations.provider,
+			configurazione: tenantIntegrations.configurazione,
+		})
+		.from(tenantIntegrations)
+		.where(
+			and(
+				eq(tenantIntegrations.tenantId, tenantId),
+				eq(tenantIntegrations.provider, providerKey),
+				eq(tenantIntegrations.attivo, true),
+			),
+		)
+		.limit(1);
 
-  if (!integration) {
-    throw new Error(
-      `Nessuna integrazione ${providerKey} attiva trovata per il tenant ${tenantId}`,
-    );
-  }
+	if (!integration) {
+		throw new Error(`Nessuna integrazione ${providerKey} attiva trovata per il tenant ${tenantId}`);
+	}
 
-  const credentials = await vault.getCredentials(tenantId, providerKey);
+	const credentials = await vault.getCredentials(tenantId, providerKey);
 
-  if (!credentials) {
-    throw new Error(
-      `Credenziali non trovate per ${providerKey} del tenant ${tenantId}`,
-    );
-  }
+	if (!credentials) {
+		throw new Error(`Credenziali non trovate per ${providerKey} del tenant ${tenantId}`);
+	}
 
-  const config: MicrosoftAuthConfig = {
-    clientId: credentials.clientId ?? "",
-    clientSecret: credentials.clientSecret ?? "",
-    tenantId: credentials.azureTenantId ?? "",
-    redirectUri: credentials.redirectUri ?? "",
-    refreshToken: credentials.refreshToken ?? "",
-    accessToken: credentials.accessToken,
-  };
+	const config: MicrosoftAuthConfig = {
+		clientId: credentials.clientId ?? "",
+		clientSecret: credentials.clientSecret ?? "",
+		tenantId: credentials.azureTenantId ?? "",
+		redirectUri: credentials.redirectUri ?? "",
+		refreshToken: credentials.refreshToken ?? "",
+		accessToken: credentials.accessToken,
+	};
 
-  return {
-    config,
-    configurazione: integration.configurazione as Record<string, unknown> | null,
-  };
+	return {
+		config,
+		configurazione: integration.configurazione as Record<string, unknown> | null,
+	};
 }
 
 // ─── Factories ──────────────────────────────────────────────────────────────
@@ -71,17 +67,12 @@ async function resolveMicrosoftConfig(
  *
  * @throws Error if no active integration or credentials are found
  */
-export async function getOneDriveProvider(
-  tenantId: string,
-): Promise<OneDriveService> {
-  const { config, configurazione } = await resolveMicrosoftConfig(
-    tenantId,
-    "microsoft_onedrive",
-  );
+export async function getOneDriveProvider(tenantId: string): Promise<OneDriveService> {
+	const { config, configurazione } = await resolveMicrosoftConfig(tenantId, "microsoft_onedrive");
 
-  const tenantSlug = (configurazione?.tenantSlug as string) ?? tenantId;
+	const tenantSlug = (configurazione?.tenantSlug as string) ?? tenantId;
 
-  return new OneDriveService(config, tenantSlug);
+	return new OneDriveService(config, tenantSlug);
 }
 
 /**
@@ -93,12 +84,9 @@ export async function getOneDriveProvider(
  * @throws Error if no active integration or credentials are found
  */
 export async function getOutlookCalendarProvider(
-  tenantId: string,
+	tenantId: string,
 ): Promise<OutlookCalendarService> {
-  const { config } = await resolveMicrosoftConfig(
-    tenantId,
-    "microsoft_calendar",
-  );
+	const { config } = await resolveMicrosoftConfig(tenantId, "microsoft_calendar");
 
-  return new OutlookCalendarService(config);
+	return new OutlookCalendarService(config);
 }

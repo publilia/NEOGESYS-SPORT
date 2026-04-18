@@ -1,12 +1,12 @@
 import {
-	Building2,
-	Users,
-	TrendingUp,
 	AlertTriangle,
+	Ban,
+	Building2,
 	CheckCircle2,
 	Clock,
-	Ban,
 	CreditCard,
+	TrendingUp,
+	Users,
 } from "lucide-react";
 
 /** Placeholder data - replace with real API calls */
@@ -112,24 +112,9 @@ export default function AdminDashboard() {
 					icon={Building2}
 					color="bg-indigo-500"
 				/>
-				<StatCard
-					label="Attivi"
-					value={stats.active}
-					icon={CheckCircle2}
-					color="bg-emerald-500"
-				/>
-				<StatCard
-					label="In prova"
-					value={stats.trial}
-					icon={Clock}
-					color="bg-amber-500"
-				/>
-				<StatCard
-					label="Sospesi"
-					value={stats.suspended}
-					icon={Ban}
-					color="bg-red-500"
-				/>
+				<StatCard label="Attivi" value={stats.active} icon={CheckCircle2} color="bg-emerald-500" />
+				<StatCard label="In prova" value={stats.trial} icon={Clock} color="bg-amber-500" />
+				<StatCard label="Sospesi" value={stats.suspended} icon={Ban} color="bg-red-500" />
 			</div>
 
 			{/* ── Revenue Overview ────────────────────────────────────────────── */}
@@ -209,14 +194,9 @@ export default function AdminDashboard() {
 						</thead>
 						<tbody>
 							{recentSignups.map((tenant) => (
-								<tr
-									key={tenant.slug}
-									className="border-b border-gray-100 last:border-0"
-								>
+								<tr key={tenant.slug} className="border-b border-gray-100 last:border-0">
 									<td className="py-3 pr-4 font-medium">{tenant.ragioneSociale}</td>
-									<td className="py-3 pr-4 font-mono text-xs text-gray-500">
-										{tenant.slug}
-									</td>
+									<td className="py-3 pr-4 font-mono text-xs text-gray-500">{tenant.slug}</td>
 									<td className="py-3 pr-4">
 										<PianoBadge piano={tenant.piano} />
 									</td>

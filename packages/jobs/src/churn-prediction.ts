@@ -1,6 +1,6 @@
+import { extractFeatures, predictChurn } from "@neogesys/ai";
 import { db } from "@neogesys/db";
 import { sql } from "drizzle-orm";
-import { extractFeatures, predictChurn } from "@neogesys/ai";
 
 /**
  * Job: Weekly churn scoring for all active members.
@@ -11,30 +11,28 @@ import { extractFeatures, predictChurn } from "@neogesys/ai";
  * 3. Updates the soci.churnScore field
  */
 export async function runChurnPrediction(): Promise<{
-  processed: number;
-  updated: number;
-  errors: number;
+	processed: number;
+	updated: number;
+	errors: number;
 }> {
-  console.log("[churn-prediction] Avvio job predizione churn settimanale...");
+	let processed = 0;
+	let updated = 0;
+	let errors = 0;
 
-  let processed = 0;
-  let updated = 0;
-  let errors = 0;
-
-  // Get all active tenants
-  const tenantsResult = await db.execute(sql`
+	// Get all active tenants
+	const tenantsResult = await db.execute(sql`
     SELECT id FROM tenants
     WHERE stato IN ('attivo', 'trial')
   `);
 
-  const tenantRows = (tenantsResult.rows ?? []) as Array<Record<string, unknown>>;
+	const tenantRows = tenantsResult as unknown as Array<Record<string, unknown>>;
 
-  for (const tenantRow of tenantRows) {
-    const tenantId = String(tenantRow.id);
+	for (const tenantRow of tenantRows) {
+		const tenantId = String(tenantRow.id);
 
-    try {
-      // Get all active members with their engagement data
-      const sociResult = await db.execute(sql`
+		try {
+			// Get all active members with their engagement data
+			const sociResult = await db.execute(sql`
         SELECT
           s.id as "socioId",
           s.data_iscrizione as "dataIscrizione",
@@ -115,69 +113,54 @@ export async function runChurnPrediction(): Promise<{
           AND s.stato = 'attivo'
       `);
 
-      const sociRows = (sociResult.rows ?? []) as Array<Record<string, unknown>>;
+			const sociRows = sociResult as unknown as Array<Record<string, unknown>>;
 
-      for (const row of sociRows) {
-        processed++;
+			for (const row of sociRows) {
+				processed++;
 
-        try {
-          const features = extractFeatures({
-            socioId: String(row.socioId),
-            tenantId,
-            ultimaPresenza: row.ultimaPresenza
-              ? new Date(String(row.ultimaPresenza))
-              : null,
-            presenze30g: Number(row.presenze30g ?? 0),
-            presenze90g: Number(row.presenze90g ?? 0),
-            lezionePreviste30g: Number(row.lezioniPreviste30g ?? 0),
-            quoteInsolute: Number(row.quoteInsolute ?? 0),
-            ultimaQuotaPagata: row.ultimaQuotaPagata
-              ? new Date(String(row.ultimaQuotaPagata))
-              : null,
-            importoInsoluto: Number(row.importoInsoluto ?? 0),
-            dataIscrizione: row.dataIscrizione
-              ? new Date(String(row.dataIscrizione))
-              : null,
-            corsiAttivi: Number(row.corsiAttivi ?? 0),
-            certificatiValidi: Number(row.certificatiValidi ?? 0),
-            certificatoInScadenza: Boolean(row.certificatoInScadenza),
-            ultimoAccesso: row.ultimoAccesso
-              ? new Date(String(row.ultimoAccesso))
-              : null,
-          });
+				try {
+					const features = extractFeatures({
+						socioId: String(row.socioId),
+						tenantId,
+						ultimaPresenza: row.ultimaPresenza ? new Date(String(row.ultimaPresenza)) : null,
+						presenze30g: Number(row.presenze30g ?? 0),
+						presenze90g: Number(row.presenze90g ?? 0),
+						lezionePreviste30g: Number(row.lezioniPreviste30g ?? 0),
+						quoteInsolute: Number(row.quoteInsolute ?? 0),
+						ultimaQuotaPagata: row.ultimaQuotaPagata
+							? new Date(String(row.ultimaQuotaPagata))
+							: null,
+						importoInsoluto: Number(row.importoInsoluto ?? 0),
+						dataIscrizione: row.dataIscrizione ? new Date(String(row.dataIscrizione)) : null,
+						corsiAttivi: Number(row.corsiAttivi ?? 0),
+						certificatiValidi: Number(row.certificatiValidi ?? 0),
+						certificatoInScadenza: Boolean(row.certificatoInScadenza),
+						ultimoAccesso: row.ultimoAccesso ? new Date(String(row.ultimoAccesso)) : null,
+					});
 
-          const prediction = await predictChurn(features);
+					const prediction = await predictChurn(features);
 
-          // Update the churn score in the database
-          await db.execute(sql`
+					// Update the churn score in the database
+					await db.execute(sql`
             UPDATE soci
             SET churn_score = ${String(prediction.score)},
                 updated_at = NOW()
             WHERE id = ${features.socioId}
           `);
 
-          updated++;
-        } catch (error) {
-          const msg =
-            error instanceof Error ? error.message : "Errore sconosciuto";
-          console.error(
-            `[churn-prediction] Errore per socio ${String(row.socioId)}: ${msg}`,
-          );
-          errors++;
-        }
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-      console.error(
-        `[churn-prediction] Errore per tenant ${tenantId}: ${msg}`,
-      );
-      errors++;
-    }
-  }
+					updated++;
+				} catch (error) {
+					const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+					console.error(`[churn-prediction] Errore per socio ${String(row.socioId)}: ${msg}`);
+					errors++;
+				}
+			}
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+			console.error(`[churn-prediction] Errore per tenant ${tenantId}: ${msg}`);
+			errors++;
+		}
+	}
 
-  console.log(
-    `[churn-prediction] Completato: ${processed} soci processati, ${updated} aggiornati, ${errors} errori`,
-  );
-
-  return { processed, updated, errors };
+	return { processed, updated, errors };
 }

@@ -1,9 +1,9 @@
 export type {
-  EmailProvider,
-  EmailMessage,
-  EmailSendResult,
-  EmailBatchResult,
-  EmailProviderType,
+	EmailProvider,
+	EmailMessage,
+	EmailSendResult,
+	EmailBatchResult,
+	EmailProviderType,
 } from "./types";
 export { getEmailProvider } from "./factory";
 export { ResendProvider } from "./resend";

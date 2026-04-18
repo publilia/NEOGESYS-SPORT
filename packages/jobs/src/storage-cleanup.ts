@@ -1,23 +1,23 @@
 import { db } from "@neogesys/db";
-import { sql } from "drizzle-orm";
 import { getStorageProvider } from "@neogesys/integrations";
+import { sql } from "drizzle-orm";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 interface CleanupResult {
-  tenantsChecked: number;
-  orphanedLinksFound: number;
-  orphanedLinksCleaned: number;
-  totalUsageMB: number;
-  errors: number;
-  tenantUsage: Array<{
-    tenantId: string;
-    tenantNome: string;
-    provider: string;
-    usedMB: number;
-    totalMB: number;
-    percentUsed: number;
-  }>;
+	tenantsChecked: number;
+	orphanedLinksFound: number;
+	orphanedLinksCleaned: number;
+	totalUsageMB: number;
+	errors: number;
+	tenantUsage: Array<{
+		tenantId: string;
+		tenantNome: string;
+		provider: string;
+		usedMB: number;
+		totalMB: number;
+		percentUsed: number;
+	}>;
 }
 
 // ─── Job ───────────────────────────────────────────────────────────────────
@@ -35,18 +35,16 @@ interface CleanupResult {
  * and provides usage analytics for billing.
  */
 export async function runStorageCleanup(): Promise<CleanupResult> {
-  console.log("[storage-cleanup] Avvio job pulizia storage...");
+	let tenantsChecked = 0;
+	let orphanedLinksFound = 0;
+	let orphanedLinksCleaned = 0;
+	let totalUsageMB = 0;
+	let errors = 0;
+	const tenantUsage: CleanupResult["tenantUsage"] = [];
 
-  let tenantsChecked = 0;
-  let orphanedLinksFound = 0;
-  let orphanedLinksCleaned = 0;
-  let totalUsageMB = 0;
-  let errors = 0;
-  const tenantUsage: CleanupResult["tenantUsage"] = [];
-
-  try {
-    // Find all tenants with active storage integrations
-    const activeIntegrations = await db.execute(sql`
+	try {
+		// Find all tenants with active storage integrations
+		const activeIntegrations = await db.execute(sql`
       SELECT
         ti.tenant_id as "tenantId",
         ti.provider,
@@ -58,53 +56,51 @@ export async function runStorageCleanup(): Promise<CleanupResult> {
         AND t.stato IN ('attivo', 'trial')
     `);
 
-    const rows = (activeIntegrations.rows ?? []) as Array<Record<string, unknown>>;
+		const rows = activeIntegrations as unknown as Array<Record<string, unknown>>;
 
-    for (const row of rows) {
-      const tenantId = String(row.tenantId);
-      const provider = String(row.provider);
-      const tenantNome = String(row.tenantNome);
+		for (const row of rows) {
+			const tenantId = String(row.tenantId);
+			const provider = String(row.provider);
+			const tenantNome = String(row.tenantNome);
 
-      tenantsChecked++;
+			tenantsChecked++;
 
-      try {
-        const storageProvider = await getStorageProvider(tenantId);
+			try {
+				const storageProvider = await getStorageProvider(tenantId);
 
-        // 1. Check storage quota / usage
-        try {
-          const quota = await storageProvider.getQuota();
-          const usedMB = Math.round(quota.used / (1024 * 1024));
-          const totalMB = Math.round(quota.total / (1024 * 1024));
-          const percentUsed = totalMB > 0 ? Math.round((usedMB / totalMB) * 100) : 0;
+				// 1. Check storage quota / usage
+				try {
+					const quota = await storageProvider.getQuota();
+					const usedMB = Math.round(quota.used / (1024 * 1024));
+					const totalMB = Math.round(quota.total / (1024 * 1024));
+					const percentUsed = totalMB > 0 ? Math.round((usedMB / totalMB) * 100) : 0;
 
-          totalUsageMB += usedMB;
+					totalUsageMB += usedMB;
 
-          tenantUsage.push({
-            tenantId,
-            tenantNome,
-            provider,
-            usedMB,
-            totalMB,
-            percentUsed,
-          });
+					tenantUsage.push({
+						tenantId,
+						tenantNome,
+						provider,
+						usedMB,
+						totalMB,
+						percentUsed,
+					});
 
-          // Warn if usage is above 80%
-          if (percentUsed >= 80) {
-            console.warn(
-              `[storage-cleanup] Attenzione: tenant ${tenantNome} (${tenantId}) usa ${percentUsed}% dello storage (${usedMB} MB / ${totalMB} MB)`,
-            );
-          }
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-          console.error(
-            `[storage-cleanup] Errore lettura quota tenant ${tenantId}: ${msg}`,
-          );
-          errors++;
-        }
+					// Warn if usage is above 80%
+					if (percentUsed >= 80) {
+						console.warn(
+							`[storage-cleanup] Attenzione: tenant ${tenantNome} (${tenantId}) usa ${percentUsed}% dello storage (${usedMB} MB / ${totalMB} MB)`,
+						);
+					}
+				} catch (error) {
+					const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+					console.error(`[storage-cleanup] Errore lettura quota tenant ${tenantId}: ${msg}`);
+					errors++;
+				}
 
-        // 2. Check for orphaned document references
-        try {
-          const documentRefs = await db.execute(sql`
+				// 2. Check for orphaned document references
+				try {
+					const documentRefs = await db.execute(sql`
             SELECT
               id,
               cloud_file_id as "cloudFileId",
@@ -117,25 +113,21 @@ export async function runStorageCleanup(): Promise<CleanupResult> {
             LIMIT 100
           `);
 
-          const docRows = (documentRefs.rows ?? []) as Array<Record<string, unknown>>;
+					const docRows = documentRefs as unknown as Array<Record<string, unknown>>;
 
-          for (const doc of docRows) {
-            const cloudFileId = String(doc.cloudFileId);
+					for (const doc of docRows) {
+						const cloudFileId = String(doc.cloudFileId);
 
-            try {
-              // Try to download (or just check existence) by listing
-              // In a real implementation, we'd use a HEAD/metadata check
-              await storageProvider.downloadFile(cloudFileId);
-            } catch {
-              // File not found in cloud storage - it's an orphan
-              orphanedLinksFound++;
+						try {
+							// Try to download (or just check existence) by listing
+							// In a real implementation, we'd use a HEAD/metadata check
+							await storageProvider.downloadFile(cloudFileId);
+						} catch {
+							// File not found in cloud storage - it's an orphan
+							orphanedLinksFound++;
 
-              console.log(
-                `[storage-cleanup] Link orfano trovato: doc ${doc.id} -> ${doc.nomeFile} (${cloudFileId})`,
-              );
-
-              // Mark document as orphaned in DB
-              await db.execute(sql`
+							// Mark document as orphaned in DB
+							await db.execute(sql`
                 UPDATE documenti
                 SET stato = 'orfano',
                     note = COALESCE(note, '') || ' [Auto: file cloud non trovato - ' || NOW()::text || ']',
@@ -143,27 +135,23 @@ export async function runStorageCleanup(): Promise<CleanupResult> {
                 WHERE id = ${String(doc.id)}
               `);
 
-              orphanedLinksCleaned++;
-            }
-          }
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-          console.error(
-            `[storage-cleanup] Errore controllo orfani tenant ${tenantId}: ${msg}`,
-          );
-          errors++;
-        }
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-        console.error(
-          `[storage-cleanup] Errore elaborazione tenant ${tenantId}: ${msg}`,
-        );
-        errors++;
-      }
-    }
+							orphanedLinksCleaned++;
+						}
+					}
+				} catch (error) {
+					const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+					console.error(`[storage-cleanup] Errore controllo orfani tenant ${tenantId}: ${msg}`);
+					errors++;
+				}
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+				console.error(`[storage-cleanup] Errore elaborazione tenant ${tenantId}: ${msg}`);
+				errors++;
+			}
+		}
 
-    // Also check tenants with local S3 fallback (no cloud integration)
-    const localTenants = await db.execute(sql`
+		// Also check tenants with local S3 fallback (no cloud integration)
+		const localTenants = await db.execute(sql`
       SELECT
         t.id as "tenantId",
         t.ragione_sociale as "tenantNome"
@@ -176,54 +164,46 @@ export async function runStorageCleanup(): Promise<CleanupResult> {
         )
     `);
 
-    const localRows = (localTenants.rows ?? []) as Array<Record<string, unknown>>;
+		const localRows = localTenants as unknown as Array<Record<string, unknown>>;
 
-    for (const row of localRows) {
-      const tenantId = String(row.tenantId);
-      const tenantNome = String(row.tenantNome);
+		for (const row of localRows) {
+			const tenantId = String(row.tenantId);
+			const tenantNome = String(row.tenantNome);
 
-      tenantsChecked++;
+			tenantsChecked++;
 
-      try {
-        const storageProvider = await getStorageProvider(tenantId);
-        const quota = await storageProvider.getQuota();
-        const usedMB = Math.round(quota.used / (1024 * 1024));
-        const totalMB = Math.round(quota.total / (1024 * 1024));
+			try {
+				const storageProvider = await getStorageProvider(tenantId);
+				const quota = await storageProvider.getQuota();
+				const usedMB = Math.round(quota.used / (1024 * 1024));
+				const totalMB = Math.round(quota.total / (1024 * 1024));
 
-        tenantUsage.push({
-          tenantId,
-          tenantNome,
-          provider: "local_s3",
-          usedMB,
-          totalMB,
-          percentUsed: totalMB > 0 ? Math.round((usedMB / totalMB) * 100) : 0,
-        });
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-        console.error(
-          `[storage-cleanup] Errore quota locale tenant ${tenantId}: ${msg}`,
-        );
-        errors++;
-      }
-    }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-    console.error(`[storage-cleanup] Errore fatale: ${msg}`);
-    errors++;
-  }
+				tenantUsage.push({
+					tenantId,
+					tenantNome,
+					provider: "local_s3",
+					usedMB,
+					totalMB,
+					percentUsed: totalMB > 0 ? Math.round((usedMB / totalMB) * 100) : 0,
+				});
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+				console.error(`[storage-cleanup] Errore quota locale tenant ${tenantId}: ${msg}`);
+				errors++;
+			}
+		}
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+		console.error(`[storage-cleanup] Errore fatale: ${msg}`);
+		errors++;
+	}
 
-  console.log(
-    `[storage-cleanup] Completato: ${tenantsChecked} tenant verificati, ` +
-      `${orphanedLinksFound} link orfani trovati, ${orphanedLinksCleaned} puliti, ` +
-      `uso totale ${totalUsageMB} MB, ${errors} errori`,
-  );
-
-  return {
-    tenantsChecked,
-    orphanedLinksFound,
-    orphanedLinksCleaned,
-    totalUsageMB,
-    errors,
-    tenantUsage,
-  };
+	return {
+		tenantsChecked,
+		orphanedLinksFound,
+		orphanedLinksCleaned,
+		totalUsageMB,
+		errors,
+		tenantUsage,
+	};
 }

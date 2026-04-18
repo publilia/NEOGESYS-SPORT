@@ -1,79 +1,79 @@
 export { tenants, tenantsRelations } from "./tenant";
 export {
-  tenantIntegrations,
-  tenantIntegrationsRelations,
+	tenantIntegrations,
+	tenantIntegrationsRelations,
 } from "./tenant-integrations";
 export {
-  utenti,
-  userPreferences,
-  utenteTenant,
-  utentiRelations,
-  userPreferencesRelations,
-  utenteTenantRelations,
+	utenti,
+	userPreferences,
+	utenteTenant,
+	utentiRelations,
+	userPreferencesRelations,
+	utenteTenantRelations,
 } from "./utenti";
 export { soci, sociRelations } from "./soci";
 export {
-  certificatiMedici,
-  certificatiMediciRelations,
+	certificatiMedici,
+	certificatiMediciRelations,
 } from "./certificati";
 export {
-  corsi,
-  corsiIstruttori,
-  iscrizioniCorso,
-  presenze,
-  corsiRelations,
-  corsiIstruttoriRelations,
-  iscrizioniCorsoRelations,
-  presenzeRelations,
+	corsi,
+	corsiIstruttori,
+	iscrizioniCorso,
+	presenze,
+	corsiRelations,
+	corsiIstruttoriRelations,
+	iscrizioniCorsoRelations,
+	presenzeRelations,
 } from "./corsi";
 export {
-  anniSportivi,
-  tipiQuota,
-  quote,
-  anniSportiviRelations,
-  tipiQuotaRelations,
-  quoteRelations,
+	anniSportivi,
+	tipiQuota,
+	quote,
+	anniSportiviRelations,
+	tipiQuotaRelations,
+	quoteRelations,
 } from "./quote";
 export {
-  eventi,
-  iscrizioniEvento,
-  eventiRelations,
-  iscrizioniEventoRelations,
+	eventi,
+	iscrizioniEvento,
+	eventiRelations,
+	iscrizioniEventoRelations,
 } from "./eventi";
 export {
-  primaNotaMovimenti,
-  primaNotaMovimentiRelations,
+	primaNotaMovimenti,
+	primaNotaMovimentiRelations,
 } from "./contabilita";
 export {
-  documenti,
-  consensiGdpr,
-  documentiRelations,
-  consensiGdprRelations,
+	documenti,
+	consensiGdpr,
+	documentiRelations,
+	consensiGdprRelations,
 } from "./documenti";
 export {
-  comunicazioni,
-  comunicazioniDestinatari,
-  comunicazioniRelations,
-  comunicazioniDestinatariRelations,
+	comunicazioni,
+	comunicazioniDestinatari,
+	comunicazioniRelations,
+	comunicazioniDestinatariRelations,
 } from "./comunicazioni";
 export { auditLog, auditLogRelations } from "./audit-log";
 export { sociEmbeddings, sociEmbeddingsRelations } from "./embeddings";
 export {
-  calendarSync,
-  calendarSyncItems,
-  calendarSyncRelations,
-  calendarSyncItemsRelations,
+	calendarSync,
+	calendarSyncItems,
+	calendarSyncRelations,
+	calendarSyncItemsRelations,
 } from "./calendar-sync";
 export {
-  cloudStorageLinks,
-  cloudStorageLinksRelations,
+	cloudStorageLinks,
+	cloudStorageLinksRelations,
 } from "./cloud-storage";
 export {
-  planiAbbonamento,
-  fatturePiattaforma,
-  tenantUsage,
-  superAdminAuditLog,
-  planiAbbonamentoRelations,
-  fatturePiattaformaRelations,
-  tenantUsageRelations,
+	planiAbbonamento,
+	fatturePiattaforma,
+	tenantUsage,
+	superAdminAuditLog,
+	planiAbbonamentoRelations,
+	fatturePiattaformaRelations,
+	tenantUsageRelations,
 } from "./billing";

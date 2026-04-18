@@ -1,7 +1,7 @@
-import { getAIClient } from "./client";
 import { db } from "@neogesys/db";
-import { eq, and, sql } from "drizzle-orm";
 import { sociEmbeddings } from "@neogesys/db/schema";
+import { and, eq, sql } from "drizzle-orm";
+import { getAIClient } from "./client";
 
 /**
  * Generate an embedding vector for a text string.
@@ -13,74 +13,69 @@ import { sociEmbeddings } from "@neogesys/db/schema";
  * @param tenantId - Tenant ID for API key resolution
  * @returns Array of numbers representing the embedding vector
  */
-export async function generateEmbedding(
-  text: string,
-  tenantId: string,
-): Promise<number[]> {
-  const client = await getAIClient(tenantId, "fast");
+export async function generateEmbedding(text: string, tenantId: string): Promise<number[]> {
+	const client = await getAIClient(tenantId, "fast");
 
-  if (client.provider === "openai" && client.openai) {
-    const response = await client.openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text,
-      dimensions: 1536,
-    });
+	if (client.provider === "openai" && client.openai) {
+		const response = await client.openai.embeddings.create({
+			model: "text-embedding-3-small",
+			input: text,
+			dimensions: 1536,
+		});
 
-    const embedding = response.data[0]?.embedding;
-    if (!embedding) {
-      throw new Error("Nessun embedding restituito dal modello");
-    }
-    return embedding;
-  }
+		const embedding = response.data[0]?.embedding;
+		if (!embedding) {
+			throw new Error("Nessun embedding restituito dal modello");
+		}
+		return embedding;
+	}
 
-  // Fallback: use Anthropic to generate a pseudo-embedding via text analysis
-  // In production, you would always use a proper embedding model
-  if (client.provider === "anthropic" && client.anthropic) {
-    const response = await client.anthropic.messages.create({
-      model: client.model,
-      max_tokens: 256,
-      system:
-        "Estrai le 20 parole chiave piu rilevanti dal testo. " +
-        "Rispondi SOLO con le parole separate da virgola, senza altro testo.",
-      messages: [
-        {
-          role: "user",
-          content: text,
-        },
-      ],
-    });
+	// Fallback: use Anthropic to generate a pseudo-embedding via text analysis
+	// In production, you would always use a proper embedding model
+	if (client.provider === "anthropic" && client.anthropic) {
+		const response = await client.anthropic.messages.create({
+			model: client.model,
+			max_tokens: 256,
+			system:
+				"Estrai le 20 parole chiave piu rilevanti dal testo. " +
+				"Rispondi SOLO con le parole separate da virgola, senza altro testo.",
+			messages: [
+				{
+					role: "user",
+					content: text,
+				},
+			],
+		});
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("Nessuna risposta dal modello per l'estrazione keywords");
-    }
+		const textBlock = response.content.find((b) => b.type === "text");
+		if (!textBlock || textBlock.type !== "text") {
+			throw new Error("Nessuna risposta dal modello per l'estrazione keywords");
+		}
 
-    // Generate a simple hash-based vector as fallback
-    // This is NOT a real embedding - just a placeholder for development
-    const keywords = textBlock.text.split(",").map((k) => k.trim());
-    const vector = new Array<number>(1536).fill(0);
-    for (const keyword of keywords) {
-      for (let i = 0; i < keyword.length; i++) {
-        const charCode = keyword.charCodeAt(i);
-        const idx = (charCode * (i + 1)) % 1536;
-        vector[idx] = (vector[idx] ?? 0) + 0.1;
-      }
-    }
+		// Generate a simple hash-based vector as fallback
+		// This is NOT a real embedding - just a placeholder for development
+		const keywords = textBlock.text.split(",").map((k) => k.trim());
+		const vector = new Array<number>(1536).fill(0);
+		for (const keyword of keywords) {
+			for (let i = 0; i < keyword.length; i++) {
+				const charCode = keyword.charCodeAt(i);
+				const idx = (charCode * (i + 1)) % 1536;
+				vector[idx] = (vector[idx] ?? 0) + 0.1;
+			}
+		}
 
-    // Normalize the vector
-    const magnitude = Math.sqrt(
-      vector.reduce((sum, val) => sum + val * val, 0),
-    );
-    if (magnitude > 0) {
-      for (let i = 0; i < vector.length; i++) {
-        vector[i] = (vector[i] ?? 0) / magnitude;
-      }
-    }
+		// Normalize the vector
+		const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+		if (magnitude > 0) {
+			for (let i = 0; i < vector.length; i++) {
+				vector[i] = (vector[i] ?? 0) / magnitude;
+			}
+		}
 
-    return vector;
-  }
+		return vector;
+	}
 
-  throw new Error("Nessun provider AI disponibile per generare embeddings");
+	throw new Error("Nessun provider AI disponibile per generare embeddings");
 }
 
 /**
@@ -95,23 +90,23 @@ export async function generateEmbedding(
  * @returns Array of similar members with similarity scores
  */
 export async function searchSimilar(
-  query: string,
-  tenantId: string,
-  limit = 10,
+	query: string,
+	tenantId: string,
+	limit = 10,
 ): Promise<
-  Array<{
-    socioId: string;
-    testoOriginale: string;
-    similarita: number;
-  }>
+	Array<{
+		socioId: string;
+		testoOriginale: string;
+		similarita: number;
+	}>
 > {
-  const queryEmbedding = await generateEmbedding(query, tenantId);
+	const queryEmbedding = await generateEmbedding(query, tenantId);
 
-  // Use raw SQL for pgvector cosine similarity search
-  // The embedding column is added via migration, not defined in Drizzle schema
-  const vectorStr = `[${queryEmbedding.join(",")}]`;
+	// Use raw SQL for pgvector cosine similarity search
+	// The embedding column is added via migration, not defined in Drizzle schema
+	const vectorStr = `[${queryEmbedding.join(",")}]`;
 
-  const results = await db.execute(sql`
+	const results = await db.execute(sql`
     SELECT
       socio_id as "socioId",
       testo_originale as "testoOriginale",
@@ -123,11 +118,12 @@ export async function searchSimilar(
     LIMIT ${limit}
   `);
 
-  return (results.rows ?? []).map((row) => ({
-    socioId: String((row as Record<string, unknown>).socioId),
-    testoOriginale: String((row as Record<string, unknown>).testoOriginale),
-    similarita: Number((row as Record<string, unknown>).similarita),
-  }));
+	const rows = results as unknown as Array<Record<string, unknown>>;
+	return rows.map((row) => ({
+		socioId: String(row.socioId),
+		testoOriginale: String(row.testoOriginale),
+		similarita: Number(row.similarita),
+	}));
 }
 
 /**
@@ -138,25 +134,20 @@ export async function searchSimilar(
  * @param text - Text to generate and store embedding for
  */
 export async function storeEmbedding(
-  tenantId: string,
-  socioId: string,
-  text: string,
+	tenantId: string,
+	socioId: string,
+	text: string,
 ): Promise<void> {
-  const embedding = await generateEmbedding(text, tenantId);
-  const vectorStr = `[${embedding.join(",")}]`;
+	const embedding = await generateEmbedding(text, tenantId);
+	const vectorStr = `[${embedding.join(",")}]`;
 
-  // Upsert: delete existing embeddings for this socio, then insert new one
-  await db
-    .delete(sociEmbeddings)
-    .where(
-      and(
-        eq(sociEmbeddings.tenantId, tenantId),
-        eq(sociEmbeddings.socioId, socioId),
-      ),
-    );
+	// Upsert: delete existing embeddings for this socio, then insert new one
+	await db
+		.delete(sociEmbeddings)
+		.where(and(eq(sociEmbeddings.tenantId, tenantId), eq(sociEmbeddings.socioId, socioId)));
 
-  // Insert with raw SQL for the vector column
-  await db.execute(sql`
+	// Insert with raw SQL for the vector column
+	await db.execute(sql`
     INSERT INTO soci_embeddings (tenant_id, socio_id, testo_originale, embedding)
     VALUES (${tenantId}, ${socioId}, ${text}, ${vectorStr}::vector)
   `);

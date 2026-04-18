@@ -1,35 +1,20 @@
 import { db } from "@neogesys/db";
-import { sql, eq, and, lte } from "drizzle-orm";
-import { tenantIntegrations } from "@neogesys/db/schema";
 import { getCalendarProvider } from "@neogesys/integrations";
-import type { CalendarProvider, SyncInfo } from "@neogesys/integrations";
+import type { SyncInfo } from "@neogesys/integrations";
+import { sql } from "drizzle-orm";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
-
-/** Sync interval: 15 minutes. */
-const SYNC_INTERVAL_MS = 15 * 60 * 1000;
 
 /** Refresh webhooks when they expire within 2 hours. */
 const WEBHOOK_REFRESH_THRESHOLD_MS = 2 * 60 * 60 * 1000;
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-interface CalendarSubscription {
-  tenantId: string;
-  provider: string;
-  calendarId: string;
-  channelId?: string;
-  resourceId?: string;
-  subscriptionId?: string;
-  expiration: Date;
-  webhookUrl: string;
-}
-
 interface SyncJobResult {
-  tenantsProcessed: number;
-  eventsRefreshed: number;
-  webhooksRefreshed: number;
-  errors: number;
+	tenantsProcessed: number;
+	eventsRefreshed: number;
+	webhooksRefreshed: number;
+	errors: number;
 }
 
 // ─── Job ───────────────────────────────────────────────────────────────────
@@ -46,16 +31,14 @@ interface SyncJobResult {
  * stays in sync within a 15-minute window.
  */
 export async function runCalendarSync(): Promise<SyncJobResult> {
-  console.log("[calendar-sync] Avvio job sincronizzazione calendari...");
+	let tenantsProcessed = 0;
+	let eventsRefreshed = 0;
+	let webhooksRefreshed = 0;
+	let errors = 0;
 
-  let tenantsProcessed = 0;
-  let eventsRefreshed = 0;
-  let webhooksRefreshed = 0;
-  let errors = 0;
-
-  try {
-    // Find all tenants with active calendar integrations
-    const activeIntegrations = await db.execute(sql`
+	try {
+		// Find all tenants with active calendar integrations
+		const activeIntegrations = await db.execute(sql`
       SELECT
         ti.tenant_id as "tenantId",
         ti.provider,
@@ -68,117 +51,96 @@ export async function runCalendarSync(): Promise<SyncJobResult> {
         )
     `);
 
-    const rows = (activeIntegrations.rows ?? []) as Array<Record<string, unknown>>;
+		const rows = activeIntegrations as unknown as Array<Record<string, unknown>>;
 
-    for (const row of rows) {
-      const tenantId = String(row.tenantId);
-      const provider = String(row.provider);
-      const config = (row.configurazione ?? {}) as Record<string, unknown>;
+		for (const row of rows) {
+			const tenantId = String(row.tenantId);
+			const provider = String(row.provider);
+			const config = (row.configurazione ?? {}) as Record<string, unknown>;
 
-      tenantsProcessed++;
+			tenantsProcessed++;
 
-      try {
-        const calendarProvider = await getCalendarProvider(tenantId);
+			try {
+				const calendarProvider = await getCalendarProvider(tenantId);
 
-        // Check webhook expiration and refresh if needed
-        const webhookExpiration = config.webhookExpiration
-          ? new Date(String(config.webhookExpiration))
-          : null;
+				// Check webhook expiration and refresh if needed
+				const webhookExpiration = config.webhookExpiration
+					? new Date(String(config.webhookExpiration))
+					: null;
 
-        const webhookUrl = config.webhookUrl as string | undefined;
-        const calendarId = config.calendarId as string | undefined;
+				const webhookUrl = config.webhookUrl as string | undefined;
+				const calendarId = config.calendarId as string | undefined;
 
-        if (webhookUrl && calendarId && webhookExpiration) {
-          const timeUntilExpiry = webhookExpiration.getTime() - Date.now();
+				if (webhookUrl && calendarId && webhookExpiration) {
+					const timeUntilExpiry = webhookExpiration.getTime() - Date.now();
 
-          if (timeUntilExpiry < WEBHOOK_REFRESH_THRESHOLD_MS) {
-            console.log(
-              `[calendar-sync] Rinnovo webhook per tenant ${tenantId} (scade tra ${Math.round(timeUntilExpiry / 60000)} min)`,
-            );
+					if (timeUntilExpiry < WEBHOOK_REFRESH_THRESHOLD_MS) {
+						try {
+							// Stop old subscription
+							const oldSyncInfo: SyncInfo = {
+								channelId: config.channelId as string | undefined,
+								resourceId: config.resourceId as string | undefined,
+								subscriptionId: config.subscriptionId as string | undefined,
+								expiration: webhookExpiration,
+							};
 
-            try {
-              // Stop old subscription
-              const oldSyncInfo: SyncInfo = {
-                channelId: config.channelId as string | undefined,
-                resourceId: config.resourceId as string | undefined,
-                subscriptionId: config.subscriptionId as string | undefined,
-                expiration: webhookExpiration,
-              };
+							await calendarProvider.stopSync(oldSyncInfo);
 
-              await calendarProvider.stopSync(oldSyncInfo);
+							// Setup new subscription
+							const newSyncInfo = await calendarProvider.setupSync(calendarId, webhookUrl);
 
-              // Setup new subscription
-              const newSyncInfo = await calendarProvider.setupSync(
-                calendarId,
-                webhookUrl,
-              );
-
-              // Update config with new subscription info
-              await db.execute(sql`
+							// Update config with new subscription info
+							await db.execute(sql`
                 UPDATE tenant_integrations
                 SET configurazione = configurazione || ${JSON.stringify({
-                  channelId: newSyncInfo.channelId,
-                  resourceId: newSyncInfo.resourceId,
-                  subscriptionId: newSyncInfo.subscriptionId,
-                  webhookExpiration: newSyncInfo.expiration.toISOString(),
-                })}::jsonb,
+									channelId: newSyncInfo.channelId,
+									resourceId: newSyncInfo.resourceId,
+									subscriptionId: newSyncInfo.subscriptionId,
+									webhookExpiration: newSyncInfo.expiration.toISOString(),
+								})}::jsonb,
                 updated_at = NOW()
                 WHERE tenant_id = ${tenantId}
                   AND provider = ${provider}
               `);
 
-              webhooksRefreshed++;
-            } catch (error) {
-              const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-              console.error(
-                `[calendar-sync] Errore rinnovo webhook tenant ${tenantId}: ${msg}`,
-              );
-              errors++;
-            }
-          }
-        }
+							webhooksRefreshed++;
+						} catch (error) {
+							const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+							console.error(`[calendar-sync] Errore rinnovo webhook tenant ${tenantId}: ${msg}`);
+							errors++;
+						}
+					}
+				}
 
-        // Incremental sync: fetch recent events
-        if (calendarId) {
-          try {
-            const timeMin = new Date();
-            timeMin.setDate(timeMin.getDate() - 1); // Last 24 hours
+				// Incremental sync: fetch recent events
+				if (calendarId) {
+					try {
+						const timeMin = new Date();
+						timeMin.setDate(timeMin.getDate() - 1); // Last 24 hours
 
-            const timeMax = new Date();
-            timeMax.setMonth(timeMax.getMonth() + 3); // Next 3 months
+						const timeMax = new Date();
+						timeMax.setMonth(timeMax.getMonth() + 3); // Next 3 months
 
-            const events = await calendarProvider.listEvents(
-              calendarId,
-              timeMin,
-              timeMax,
-            );
+						const events = await calendarProvider.listEvents(calendarId, timeMin, timeMax);
 
-            eventsRefreshed += events.events.length;
-          } catch (error) {
-            const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-            console.error(
-              `[calendar-sync] Errore sync eventi tenant ${tenantId}: ${msg}`,
-            );
-            errors++;
-          }
-        }
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-        console.error(
-          `[calendar-sync] Errore elaborazione tenant ${tenantId}: ${msg}`,
-        );
-        errors++;
-      }
-    }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-    console.error(`[calendar-sync] Errore fatale: ${msg}`);
-    errors++;
-  }
+						eventsRefreshed += events.events.length;
+					} catch (error) {
+						const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+						console.error(`[calendar-sync] Errore sync eventi tenant ${tenantId}: ${msg}`);
+						errors++;
+					}
+				}
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+				console.error(`[calendar-sync] Errore elaborazione tenant ${tenantId}: ${msg}`);
+				errors++;
+			}
+		}
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+		console.error(`[calendar-sync] Errore fatale: ${msg}`);
+		errors++;
+	}
 
-  console.log(
-    `[calendar-sync] Completato: ${tenantsProcessed} tenant, ${eventsRefreshed} eventi, ${webhooksRefreshed} webhook rinnovati, ${errors} errori`,
-  );
-
-  return { tenantsProcessed, eventsRefreshed, webhooksRefreshed, errors };
+	return { tenantsProcessed, eventsRefreshed, webhooksRefreshed, errors };
 }

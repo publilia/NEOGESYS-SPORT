@@ -20,7 +20,8 @@
 			},
 			"suspicious": {
 				"noExplicitAny": "warn",
-				"noConsoleLog": "warn"
+				"noConsoleLog": "warn",
+				"noArrayIndexKey": "warn"
 			},
 			"style": {
 				"noNonNullAssertion": "warn",
@@ -29,6 +30,11 @@
 			},
 			"complexity": {
 				"noForEach": "off"
+			},
+			"a11y": {
+				"noLabelWithoutControl": "warn",
+				"useKeyWithClickEvents": "warn",
+				"useSemanticElements": "warn"
 			}
 		}
 	},

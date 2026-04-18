@@ -1,19 +1,19 @@
 "use client";
 
-import { use } from "react";
-import Link from "next/link";
 import {
 	ArrowLeft,
+	BarChart3,
 	Building2,
-	Users,
+	Calendar,
 	CreditCard,
-	Settings,
+	Globe,
 	Pause,
 	Play,
-	BarChart3,
-	Calendar,
-	Globe,
+	Settings,
+	Users,
 } from "lucide-react";
+import Link from "next/link";
+import { use } from "react";
 
 type TenantStato = "attivo" | "trial" | "sospeso" | "chiuso";
 type Piano = "free" | "base" | "pro" | "enterprise";
@@ -119,9 +119,7 @@ export default function TenantDetailPage({
 					</Link>
 					<div>
 						<div className="flex items-center gap-3">
-							<h1 className="text-2xl font-bold tracking-tight">
-								{tenant.ragioneSociale}
-							</h1>
+							<h1 className="text-2xl font-bold tracking-tight">{tenant.ragioneSociale}</h1>
 							<StatoBadge stato={tenant.stato} />
 						</div>
 						<div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
@@ -199,17 +197,12 @@ export default function TenantDetailPage({
 					>
 						<div className="flex items-center gap-2 text-gray-500">
 							<stat.icon className="h-4 w-4" />
-							<span className="text-xs font-medium uppercase tracking-wider">
-								{stat.label}
-							</span>
+							<span className="text-xs font-medium uppercase tracking-wider">{stat.label}</span>
 						</div>
 						<p className="mt-2 text-2xl font-bold">
 							{stat.value}
 							{"max" in stat && stat.max && (
-								<span className="text-sm font-normal text-gray-400">
-									{" "}
-									/ {stat.max}
-								</span>
+								<span className="text-sm font-normal text-gray-400"> / {stat.max}</span>
 							)}
 						</p>
 					</div>
@@ -256,20 +249,13 @@ export default function TenantDetailPage({
 					<div className="space-y-4">
 						<div className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-4">
 							<div>
-								<p className="text-sm font-medium text-gray-500">
-									Piano attuale
-								</p>
-								<p className="mt-1 text-lg font-bold capitalize">
-									{tenant.piano}
-								</p>
+								<p className="text-sm font-medium text-gray-500">Piano attuale</p>
+								<p className="mt-1 text-lg font-bold capitalize">{tenant.piano}</p>
 							</div>
 							<PianoBadge piano={tenant.piano} />
 						</div>
 						<div>
-							<label
-								htmlFor="newPlan"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
+							<label htmlFor="newPlan" className="block text-sm font-medium text-gray-700 mb-1">
 								Cambia piano
 							</label>
 							<div className="flex gap-2">
@@ -292,10 +278,7 @@ export default function TenantDetailPage({
 							</div>
 						</div>
 						<div>
-							<label
-								htmlFor="maxSoci"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
+							<label htmlFor="maxSoci" className="block text-sm font-medium text-gray-700 mb-1">
 								Limite soci personalizzato
 							</label>
 							<div className="flex gap-2">

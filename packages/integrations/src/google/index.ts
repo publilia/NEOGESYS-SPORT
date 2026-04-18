@@ -1,28 +1,28 @@
 // Types
 export type {
-  GoogleAuthConfig,
-  GoogleDriveProvider,
-  DriveFile,
-  DriveFileList,
-  GoogleCalendarProvider,
-  CalendarEvent,
-  CreateCalendarEvent,
-  CalendarList,
-  Calendar,
-  CalendarEventList,
-  CalendarDateTime,
-  CalendarAttendee,
-  CalendarReminder,
-  WatchResponse,
+	GoogleAuthConfig,
+	GoogleDriveProvider,
+	DriveFile,
+	DriveFileList,
+	GoogleCalendarProvider,
+	CalendarEvent,
+	CreateCalendarEvent,
+	CalendarList,
+	Calendar,
+	CalendarEventList,
+	CalendarDateTime,
+	CalendarAttendee,
+	CalendarReminder,
+	WatchResponse,
 } from "./types";
 
 // Auth
 export {
-  GoogleOAuthClient,
-  GoogleAuthError,
-  DRIVE_SCOPES,
-  DRIVE_READONLY_SCOPES,
-  CALENDAR_SCOPES,
+	GoogleOAuthClient,
+	GoogleAuthError,
+	DRIVE_SCOPES,
+	DRIVE_READONLY_SCOPES,
+	CALENDAR_SCOPES,
 } from "./auth";
 
 // Drive
@@ -30,13 +30,13 @@ export { GoogleDriveService, GoogleDriveError } from "./drive";
 
 // Calendar
 export {
-  GoogleCalendarService,
-  GoogleCalendarError,
-  SPORT_COLOR_MAP,
+	GoogleCalendarService,
+	GoogleCalendarError,
+	SPORT_COLOR_MAP,
 } from "./calendar";
 
 // Factory
 export {
-  getGoogleDriveProvider,
-  getGoogleCalendarProvider,
+	getGoogleDriveProvider,
+	getGoogleCalendarProvider,
 } from "./factory";

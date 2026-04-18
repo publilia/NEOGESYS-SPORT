@@ -1,13 +1,13 @@
 // Types
 export type {
-  CalendarProvider,
-  CalendarProviderType,
-  UnifiedCalendar,
-  UnifiedCalendarEvent,
-  UnifiedCalendarEventList,
-  UnifiedCalendarList,
-  CreateUnifiedEvent,
-  SyncInfo,
+	CalendarProvider,
+	CalendarProviderType,
+	UnifiedCalendar,
+	UnifiedCalendarEvent,
+	UnifiedCalendarEventList,
+	UnifiedCalendarList,
+	CreateUnifiedEvent,
+	SyncInfo,
 } from "./types";
 
 // Factory

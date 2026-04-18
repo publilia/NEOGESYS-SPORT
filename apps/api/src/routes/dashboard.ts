@@ -1,30 +1,30 @@
-import { z } from "zod";
-import { sql } from "drizzle-orm";
-import { router, protectedProcedure } from "../trpc/index";
 import { TRPCError } from "@trpc/server";
+import { sql } from "drizzle-orm";
+import { z } from "zod";
+import { protectedProcedure, router } from "../trpc/index";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function requireTenant(tenantId: string | undefined): string {
-  if (!tenantId) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Contesto tenant mancante." });
-  }
-  return tenantId;
+	if (!tenantId) {
+		throw new TRPCError({ code: "BAD_REQUEST", message: "Contesto tenant mancante." });
+	}
+	return tenantId;
 }
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const dashboardRouter = router({
-  /**
-   * Main KPIs for the dashboard.
-   * Returns: soci attivi, quote incassate, certificati in scadenza, presenze %.
-   */
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Main KPIs for the dashboard.
+	 * Returns: soci attivi, quote incassate, certificati in scadenza, presenze %.
+	 */
+	getStats: protectedProcedure.query(async ({ ctx }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
 
-    const [sociStats, quoteStats, certStats, presenzeStats] = await Promise.all([
-      // Soci attivi count
-      ctx.db.execute(sql`
+		const [sociStats, quoteStats, certStats, presenzeStats] = await Promise.all([
+			// Soci attivi count
+			ctx.db.execute(sql`
         SELECT
           count(*) FILTER (WHERE stato = 'attivo') AS soci_attivi,
           count(*) AS soci_totali,
@@ -33,8 +33,8 @@ export const dashboardRouter = router({
         WHERE tenant_id = ${tenantId}
       `),
 
-      // Quote incassate (current year)
-      ctx.db.execute(sql`
+			// Quote incassate (current year)
+			ctx.db.execute(sql`
         SELECT
           COALESCE(SUM(importo) FILTER (WHERE stato = 'pagata'), 0) AS incassato_totale,
           COALESCE(SUM(importo) FILTER (WHERE stato = 'emessa'), 0) AS da_incassare,
@@ -44,8 +44,8 @@ export const dashboardRouter = router({
           AND data_emissione >= date_trunc('year', NOW())
       `),
 
-      // Certificati in scadenza (next 30 days)
-      ctx.db.execute(sql`
+			// Certificati in scadenza (next 30 days)
+			ctx.db.execute(sql`
         SELECT
           count(*) FILTER (WHERE stato = 'in_scadenza') AS in_scadenza,
           count(*) FILTER (WHERE stato = 'scaduto') AS scaduti,
@@ -54,8 +54,8 @@ export const dashboardRouter = router({
         WHERE tenant_id = ${tenantId}
       `),
 
-      // Presenze percentage (last 30 days)
-      ctx.db.execute(sql`
+			// Presenze percentage (last 30 days)
+			ctx.db.execute(sql`
         SELECT
           count(*) FILTER (WHERE presente = true) AS presenti,
           count(*) AS totale,
@@ -68,30 +68,30 @@ export const dashboardRouter = router({
         WHERE tenant_id = ${tenantId}
           AND data >= NOW() - INTERVAL '30 days'
       `),
-    ]);
+		]);
 
-    return {
-      soci: (sociStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
-      quote: (quoteStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
-      certificati: (certStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
-      presenze: (presenzeStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
-    };
-  }),
+		return {
+			soci: (sociStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
+			quote: (quoteStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
+			certificati: (certStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
+			presenze: (presenzeStats as unknown as Array<Record<string, unknown>>)[0] ?? {},
+		};
+	}),
 
-  /**
-   * Soci with high churn score (AI-computed).
-   */
-  getChurnAlerts: protectedProcedure
-    .input(
-      z.object({
-        minScore: z.number().min(0).max(100).default(70),
-        limit: z.number().int().min(1).max(50).default(10),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Soci with high churn score (AI-computed).
+	 */
+	getChurnAlerts: protectedProcedure
+		.input(
+			z.object({
+				minScore: z.number().min(0).max(100).default(70),
+				limit: z.number().int().min(1).max(50).default(10),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      const result = await ctx.db.execute(sql`
+			const result = await ctx.db.execute(sql`
         SELECT id, nome, cognome, email, telefono, tipologia, disciplina,
           churn_score, data_iscrizione, stato
         FROM soci
@@ -103,23 +103,23 @@ export const dashboardRouter = router({
         LIMIT ${input.limit}
       `);
 
-      return result as unknown as Array<Record<string, unknown>>;
-    }),
+			return result as unknown as Array<Record<string, unknown>>;
+		}),
 
-  /**
-   * Recent activity within the tenant.
-   */
-  getRecentActivity: protectedProcedure
-    .input(
-      z.object({
-        limit: z.number().int().min(1).max(50).default(20),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Recent activity within the tenant.
+	 */
+	getRecentActivity: protectedProcedure
+		.input(
+			z.object({
+				limit: z.number().int().min(1).max(50).default(20),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      // TODO: Pull from audit_log table once it's fully wired
-      const result = await ctx.db.execute(sql`
+			// TODO: Pull from audit_log table once it's fully wired
+			const result = await ctx.db.execute(sql`
         SELECT id, azione, entita, entita_id, dettagli, utente_id, created_at
         FROM audit_log
         WHERE tenant_id = ${tenantId}
@@ -127,24 +127,24 @@ export const dashboardRouter = router({
         LIMIT ${input.limit}
       `);
 
-      return result as unknown as Array<Record<string, unknown>>;
-    }),
+			return result as unknown as Array<Record<string, unknown>>;
+		}),
 
-  /**
-   * Enrollment and income trend data for charts.
-   */
-  getTrend: protectedProcedure
-    .input(
-      z.object({
-        months: z.number().int().min(1).max(24).default(12),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const tenantId = requireTenant(ctx.tenant?.id);
+	/**
+	 * Enrollment and income trend data for charts.
+	 */
+	getTrend: protectedProcedure
+		.input(
+			z.object({
+				months: z.number().int().min(1).max(24).default(12),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
 
-      const [enrollmentTrend, incomeTrend] = await Promise.all([
-        // New enrollments per month
-        ctx.db.execute(sql`
+			const [enrollmentTrend, incomeTrend] = await Promise.all([
+				// New enrollments per month
+				ctx.db.execute(sql`
           SELECT
             date_trunc('month', data_iscrizione) AS mese,
             count(*) AS nuovi_iscritti,
@@ -156,8 +156,8 @@ export const dashboardRouter = router({
           ORDER BY mese
         `),
 
-        // Income per month
-        ctx.db.execute(sql`
+				// Income per month
+				ctx.db.execute(sql`
           SELECT
             date_trunc('month', data_pagamento) AS mese,
             COALESCE(SUM(importo), 0) AS incassato,
@@ -170,11 +170,11 @@ export const dashboardRouter = router({
           GROUP BY mese
           ORDER BY mese
         `),
-      ]);
+			]);
 
-      return {
-        enrollment: enrollmentTrend as unknown as Array<Record<string, unknown>>,
-        income: incomeTrend as unknown as Array<Record<string, unknown>>,
-      };
-    }),
+			return {
+				enrollment: enrollmentTrend as unknown as Array<Record<string, unknown>>,
+				income: incomeTrend as unknown as Array<Record<string, unknown>>,
+			};
+		}),
 });

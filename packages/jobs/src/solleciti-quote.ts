@@ -1,49 +1,49 @@
 import { db } from "@neogesys/db";
-import { sql } from "drizzle-orm";
 import { getEmailProvider } from "@neogesys/integrations";
+import { sql } from "drizzle-orm";
 
 interface QuotaInsoluta {
-  quotaId: string;
-  tenantId: string;
-  tenantNome: string;
-  socioId: string;
-  socioNome: string;
-  socioCognome: string;
-  socioEmail: string | null;
-  tipoQuota: string;
-  importo: string;
-  importoPagato: string;
-  stato: string;
-  dataScadenza: Date | null;
-  giorniScaduti: number;
+	quotaId: string;
+	tenantId: string;
+	tenantNome: string;
+	socioId: string;
+	socioNome: string;
+	socioCognome: string;
+	socioEmail: string | null;
+	tipoQuota: string;
+	importo: string;
+	importoPagato: string;
+	stato: string;
+	dataScadenza: Date | null;
+	giorniScaduti: number;
 }
 
 /**
  * Build the HTML email body for a payment reminder.
  */
 function buildSollecitoEmail(
-  socioNome: string,
-  socioCognome: string,
-  tenantNome: string,
-  quoteInsolute: QuotaInsoluta[],
+	socioNome: string,
+	socioCognome: string,
+	tenantNome: string,
+	quoteInsolute: QuotaInsoluta[],
 ): string {
-  const importoTotale = quoteInsolute.reduce((sum, q) => {
-    const dovuto = Number.parseFloat(q.importo) - Number.parseFloat(q.importoPagato);
-    return sum + dovuto;
-  }, 0);
+	const importoTotale = quoteInsolute.reduce((sum, q) => {
+		const dovuto = Number.parseFloat(q.importo) - Number.parseFloat(q.importoPagato);
+		return sum + dovuto;
+	}, 0);
 
-  const righeQuote = quoteInsolute
-    .map((q) => {
-      const dovuto = Number.parseFloat(q.importo) - Number.parseFloat(q.importoPagato);
-      const scadenza = q.dataScadenza
-        ? q.dataScadenza.toLocaleDateString("it-IT", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })
-        : "N/D";
+	const righeQuote = quoteInsolute
+		.map((q) => {
+			const dovuto = Number.parseFloat(q.importo) - Number.parseFloat(q.importoPagato);
+			const scadenza = q.dataScadenza
+				? q.dataScadenza.toLocaleDateString("it-IT", {
+						day: "2-digit",
+						month: "long",
+						year: "numeric",
+					})
+				: "N/D";
 
-      return `
+			return `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${q.tipoQuota}</td>
         <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${scadenza}</td>
@@ -51,10 +51,10 @@ function buildSollecitoEmail(
           &euro; ${dovuto.toFixed(2)}
         </td>
       </tr>`;
-    })
-    .join("");
+		})
+		.join("");
 
-  return `
+	return `
 <!DOCTYPE html>
 <html lang="it">
 <body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -96,18 +96,16 @@ function buildSollecitoEmail(
  * via each tenant's configured email provider.
  */
 export async function runSollecitiQuote(): Promise<{
-  processed: number;
-  sent: number;
-  errors: number;
+	processed: number;
+	sent: number;
+	errors: number;
 }> {
-  console.log("[solleciti-quote] Avvio job solleciti quote insolute...");
+	let processed = 0;
+	let sent = 0;
+	let errors = 0;
 
-  let processed = 0;
-  let sent = 0;
-  let errors = 0;
-
-  // Find all overdue quotes with socio and tenant info
-  const overdueQuotes = await db.execute(sql`
+	// Find all overdue quotes with socio and tenant info
+	const overdueQuotes = await db.execute(sql`
     SELECT
       q.id as "quotaId",
       q.tenant_id as "tenantId",
@@ -134,90 +132,84 @@ export async function runSollecitiQuote(): Promise<{
     ORDER BY q.tenant_id, q.socio_id
   `);
 
-  const rows = (overdueQuotes.rows ?? []) as Array<Record<string, unknown>>;
+	const rows = overdueQuotes as unknown as Array<Record<string, unknown>>;
 
-  // Group by tenant and then by socio (one email per socio with all their overdue quotes)
-  const byTenantSocio = new Map<string, Map<string, QuotaInsoluta[]>>();
+	// Group by tenant and then by socio (one email per socio with all their overdue quotes)
+	const byTenantSocio = new Map<string, Map<string, QuotaInsoluta[]>>();
 
-  for (const row of rows) {
-    const q: QuotaInsoluta = {
-      quotaId: String(row.quotaId),
-      tenantId: String(row.tenantId),
-      tenantNome: String(row.tenantNome),
-      socioId: String(row.socioId),
-      socioNome: String(row.socioNome),
-      socioCognome: String(row.socioCognome),
-      socioEmail: row.socioEmail ? String(row.socioEmail) : null,
-      tipoQuota: String(row.tipoQuota),
-      importo: String(row.importo),
-      importoPagato: String(row.importoPagato),
-      stato: String(row.stato),
-      dataScadenza: row.dataScadenza ? new Date(String(row.dataScadenza)) : null,
-      giorniScaduti: Number(row.giorniScaduti),
-    };
+	for (const row of rows) {
+		const q: QuotaInsoluta = {
+			quotaId: String(row.quotaId),
+			tenantId: String(row.tenantId),
+			tenantNome: String(row.tenantNome),
+			socioId: String(row.socioId),
+			socioNome: String(row.socioNome),
+			socioCognome: String(row.socioCognome),
+			socioEmail: row.socioEmail ? String(row.socioEmail) : null,
+			tipoQuota: String(row.tipoQuota),
+			importo: String(row.importo),
+			importoPagato: String(row.importoPagato),
+			stato: String(row.stato),
+			dataScadenza: row.dataScadenza ? new Date(String(row.dataScadenza)) : null,
+			giorniScaduti: Number(row.giorniScaduti),
+		};
 
-    if (!q.socioEmail) continue;
+		if (!q.socioEmail) continue;
 
-    let tenantMap = byTenantSocio.get(q.tenantId);
-    if (!tenantMap) {
-      tenantMap = new Map();
-      byTenantSocio.set(q.tenantId, tenantMap);
-    }
+		let tenantMap = byTenantSocio.get(q.tenantId);
+		if (!tenantMap) {
+			tenantMap = new Map();
+			byTenantSocio.set(q.tenantId, tenantMap);
+		}
 
-    let socioQuote = tenantMap.get(q.socioId);
-    if (!socioQuote) {
-      socioQuote = [];
-      tenantMap.set(q.socioId, socioQuote);
-    }
+		let socioQuote = tenantMap.get(q.socioId);
+		if (!socioQuote) {
+			socioQuote = [];
+			tenantMap.set(q.socioId, socioQuote);
+		}
 
-    socioQuote.push(q);
-    processed++;
-  }
+		socioQuote.push(q);
+		processed++;
+	}
 
-  // Send emails grouped by tenant
-  for (const [tenantId, socioMap] of byTenantSocio) {
-    try {
-      const emailProvider = await getEmailProvider(tenantId);
+	// Send emails grouped by tenant
+	for (const [tenantId, socioMap] of byTenantSocio) {
+		try {
+			const emailProvider = await getEmailProvider(tenantId);
 
-      const messages: Array<{
-        to: string;
-        subject: string;
-        html: string;
-      }> = [];
+			const messages: Array<{
+				to: string;
+				subject: string;
+				html: string;
+			}> = [];
 
-      for (const [_socioId, quoteList] of socioMap) {
-        const first = quoteList[0];
-        if (!first?.socioEmail) continue;
+			for (const [_socioId, quoteList] of socioMap) {
+				const first = quoteList[0];
+				if (!first?.socioEmail) continue;
 
-        messages.push({
-          to: first.socioEmail,
-          subject: `Promemoria Quote in Sospeso - ${first.tenantNome}`,
-          html: buildSollecitoEmail(
-            first.socioNome,
-            first.socioCognome,
-            first.tenantNome,
-            quoteList,
-          ),
-        });
-      }
+				messages.push({
+					to: first.socioEmail,
+					subject: `Promemoria Quote in Sospeso - ${first.tenantNome}`,
+					html: buildSollecitoEmail(
+						first.socioNome,
+						first.socioCognome,
+						first.tenantNome,
+						quoteList,
+					),
+				});
+			}
 
-      if (messages.length > 0) {
-        const result = await emailProvider.sendBatch(messages);
-        sent += result.results.filter((r) => r.status === "sent").length;
-        errors += result.results.filter((r) => r.error).length;
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Errore sconosciuto";
-      console.error(
-        `[solleciti-quote] Errore invio solleciti per tenant ${tenantId}: ${msg}`,
-      );
-      errors += socioMap.size;
-    }
-  }
+			if (messages.length > 0) {
+				const result = await emailProvider.sendBatch(messages);
+				sent += result.results.filter((r) => r.status === "sent").length;
+				errors += result.results.filter((r) => r.error).length;
+			}
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : "Errore sconosciuto";
+			console.error(`[solleciti-quote] Errore invio solleciti per tenant ${tenantId}: ${msg}`);
+			errors += socioMap.size;
+		}
+	}
 
-  console.log(
-    `[solleciti-quote] Completato: ${processed} quote processate, ${sent} email inviate, ${errors} errori`,
-  );
-
-  return { processed, sent, errors };
+	return { processed, sent, errors };
 }

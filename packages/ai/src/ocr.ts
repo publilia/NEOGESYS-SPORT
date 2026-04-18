@@ -4,19 +4,19 @@ import { getAIClient } from "./client";
  * Schema for the OCR result of a certificato medico.
  */
 export interface CertificatoOcrResult {
-  tipo: "non_agonistico" | "agonistico" | "idoneita_sportiva" | "sconosciuto";
-  nomePaziente: string | null;
-  cognomePaziente: string | null;
-  codiceFiscale: string | null;
-  dataNascita: string | null;
-  dataRilascio: string | null;
-  dataScadenza: string | null;
-  medicoNome: string | null;
-  strutturaRilascio: string | null;
-  disciplinaSportiva: string | null;
-  idoneo: boolean | null;
-  note: string | null;
-  confidenza: number; // 0-100
+	tipo: "non_agonistico" | "agonistico" | "idoneita_sportiva" | "sconosciuto";
+	nomePaziente: string | null;
+	cognomePaziente: string | null;
+	codiceFiscale: string | null;
+	dataNascita: string | null;
+	dataRilascio: string | null;
+	dataScadenza: string | null;
+	medicoNome: string | null;
+	strutturaRilascio: string | null;
+	disciplinaSportiva: string | null;
+	idoneo: boolean | null;
+	note: string | null;
+	confidenza: number; // 0-100
 }
 
 const OCR_SYSTEM_PROMPT = `Sei un sistema OCR specializzato nell'estrazione di dati da certificati medici sportivi italiani.
@@ -46,53 +46,49 @@ Rispondi SOLO con il JSON, senza markdown o testo aggiuntivo.`;
  * @returns Typed OCR result with extracted certificate fields
  */
 export async function processCertificato(
-  imageUrl: string,
-  tenantId: string,
+	imageUrl: string,
+	tenantId: string,
 ): Promise<CertificatoOcrResult> {
-  const client = await getAIClient(tenantId, "standard");
+	const client = await getAIClient(tenantId, "standard");
 
-  if (client.provider !== "anthropic" || !client.anthropic) {
-    throw new Error(
-      "OCR dei certificati richiede Claude Vision (provider Anthropic)",
-    );
-  }
+	if (client.provider !== "anthropic" || !client.anthropic) {
+		throw new Error("OCR dei certificati richiede Claude Vision (provider Anthropic)");
+	}
 
-  const response = await client.anthropic.messages.create({
-    model: client.model,
-    max_tokens: 1024,
-    system: OCR_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: {
-              type: "url",
-              url: imageUrl,
-            },
-          },
-          {
-            type: "text",
-            text: "Estrai i dati da questo certificato medico sportivo.",
-          },
-        ],
-      },
-    ],
-  });
+	const response = await client.anthropic.messages.create({
+		model: client.model,
+		max_tokens: 1024,
+		system: OCR_SYSTEM_PROMPT,
+		messages: [
+			{
+				role: "user",
+				content: [
+					{
+						type: "image",
+						source: {
+							type: "url",
+							url: imageUrl,
+						},
+					},
+					{
+						type: "text",
+						text: "Estrai i dati da questo certificato medico sportivo.",
+					},
+				],
+			},
+		],
+	});
 
-  const textBlock = response.content.find((block) => block.type === "text");
+	const textBlock = response.content.find((block) => block.type === "text");
 
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Nessuna risposta testuale ricevuta dal modello OCR");
-  }
+	if (!textBlock || textBlock.type !== "text") {
+		throw new Error("Nessuna risposta testuale ricevuta dal modello OCR");
+	}
 
-  try {
-    const parsed = JSON.parse(textBlock.text) as CertificatoOcrResult;
-    return parsed;
-  } catch {
-    throw new Error(
-      `Errore nel parsing della risposta OCR: ${textBlock.text.substring(0, 200)}`,
-    );
-  }
+	try {
+		const parsed = JSON.parse(textBlock.text) as CertificatoOcrResult;
+		return parsed;
+	} catch {
+		throw new Error(`Errore nel parsing della risposta OCR: ${textBlock.text.substring(0, 200)}`);
+	}
 }

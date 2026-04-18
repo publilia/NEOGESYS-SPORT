@@ -1,27 +1,27 @@
 // Types
 export type {
-  MicrosoftAuthConfig,
-  OneDriveProvider,
-  OneDriveFile,
-  OneDriveFileList,
-  ShareLink,
-  OutlookCalendarProvider,
-  OutlookCalendar,
-  OutlookCalendarList,
-  OutlookEvent,
-  OutlookEventList,
-  CreateOutlookEvent,
-  OutlookRecurrence,
-  Subscription,
+	MicrosoftAuthConfig,
+	OneDriveProvider,
+	OneDriveFile,
+	OneDriveFileList,
+	ShareLink,
+	OutlookCalendarProvider,
+	OutlookCalendar,
+	OutlookCalendarList,
+	OutlookEvent,
+	OutlookEventList,
+	CreateOutlookEvent,
+	OutlookRecurrence,
+	Subscription,
 } from "./types";
 
 // Auth
 export {
-  MicrosoftOAuthClient,
-  MicrosoftAuthError,
-  ONEDRIVE_SCOPES,
-  CALENDAR_SCOPES,
-  MAIL_SCOPES,
+	MicrosoftOAuthClient,
+	MicrosoftAuthError,
+	ONEDRIVE_SCOPES,
+	CALENDAR_SCOPES,
+	MAIL_SCOPES,
 } from "./auth";
 
 // OneDrive
@@ -32,6 +32,6 @@ export { OutlookCalendarService } from "./calendar";
 
 // Factory
 export {
-  getOneDriveProvider,
-  getOutlookCalendarProvider,
+	getOneDriveProvider,
+	getOutlookCalendarProvider,
 } from "./factory";

@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-	LayoutDashboard,
+	BarChart3,
 	Building2,
 	CreditCard,
-	BarChart3,
-	Server,
+	LayoutDashboard,
 	ScrollText,
+	Server,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navItems = [
 	{ href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -39,10 +39,7 @@ export function AdminSidebar() {
 			{/* ── Navigation ──────────────────────────────────────────────── */}
 			<nav className="flex-1 space-y-1 px-3 py-4">
 				{navItems.map((item) => {
-					const isActive =
-						item.href === "/"
-							? pathname === "/"
-							: pathname.startsWith(item.href);
+					const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
 					return (
 						<Link
@@ -54,9 +51,7 @@ export function AdminSidebar() {
 									: "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
 							}`}
 						>
-							<item.icon
-								className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-gray-400"}`}
-							/>
+							<item.icon className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-gray-400"}`} />
 							{item.label}
 						</Link>
 					);
@@ -71,9 +66,7 @@ export function AdminSidebar() {
 					</div>
 					<div className="min-w-0 flex-1">
 						<p className="truncate text-sm font-medium">Super Admin</p>
-						<p className="truncate text-xs text-gray-400">
-							admin@neogesys.sport
-						</p>
+						<p className="truncate text-xs text-gray-400">admin@neogesys.sport</p>
 					</div>
 				</div>
 			</div>

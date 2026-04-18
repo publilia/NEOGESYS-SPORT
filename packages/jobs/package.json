@@ -1,29 +1,30 @@
 {
-  "type": "module",
-  "name": "@neogesys/jobs",
-  "version": "0.1.0",
-  "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./certificati-alerts": "./src/certificati-alerts.ts",
-    "./solleciti-quote": "./src/solleciti-quote.ts",
-    "./churn-prediction": "./src/churn-prediction.ts",
-    "./calendar-sync": "./src/calendar-sync.ts",
-    "./storage-cleanup": "./src/storage-cleanup.ts"
-  },
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@neogesys/ai": "workspace:*",
-    "@neogesys/db": "workspace:*",
-    "@neogesys/integrations": "workspace:*",
-    "drizzle-orm": "^0.38.3"
-  },
-  "devDependencies": {
-    "@neogesys/tsconfig": "workspace:*",
-    "typescript": "^5.7.3"
-  }
+	"type": "module",
+	"name": "@neogesys/jobs",
+	"version": "0.1.0",
+	"private": true,
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./certificati-alerts": "./src/certificati-alerts.ts",
+		"./solleciti-quote": "./src/solleciti-quote.ts",
+		"./churn-prediction": "./src/churn-prediction.ts",
+		"./calendar-sync": "./src/calendar-sync.ts",
+		"./storage-cleanup": "./src/storage-cleanup.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@neogesys/ai": "workspace:*",
+		"@neogesys/db": "workspace:*",
+		"@neogesys/integrations": "workspace:*",
+		"drizzle-orm": "^0.38.3"
+	},
+	"devDependencies": {
+		"@neogesys/tsconfig": "workspace:*",
+		"@types/node": "^22.10.5",
+		"typescript": "^5.7.3"
+	}
 }

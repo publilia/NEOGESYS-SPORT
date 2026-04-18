@@ -1,12 +1,11 @@
-import { db, client } from "../client";
+import { client, db } from "../client";
 import * as schema from "../schema";
 
 /**
  * Pre-computed bcrypt hash for "password123".
  * In production, use a proper hashing library (e.g. @node-rs/argon2, bcrypt).
  */
-const DEMO_PASSWORD_HASH =
-	"$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu9mu";
+const DEMO_PASSWORD_HASH = "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu9mu";
 
 async function seed() {
 	// biome-ignore lint/suspicious/noConsoleLog: seed script output
@@ -31,9 +30,7 @@ async function seed() {
 				citta: "Roma",
 				provincia: "RM",
 			},
-			federazioni: [
-				{ sigla: "FIDAL", nome: "Federazione Italiana di Atletica Leggera" },
-			],
+			federazioni: [{ sigla: "FIDAL", nome: "Federazione Italiana di Atletica Leggera" }],
 			discipline: ["Atletica Leggera", "Nuoto", "Pallavolo"],
 			impostazioni: {
 				layout_menu: "sidebar",
@@ -41,6 +38,7 @@ async function seed() {
 			},
 		})
 		.returning();
+	if (!demoTenant) throw new Error("Seed: failed to create demo tenant");
 
 	// biome-ignore lint/suspicious/noConsoleLog: seed script output
 	console.log(`Tenant created: ${demoTenant.ragioneSociale} (${demoTenant.slug})`);
@@ -56,6 +54,7 @@ async function seed() {
 			emailVerified: true,
 		})
 		.returning();
+	if (!superAdmin) throw new Error("Seed: failed to create super admin");
 
 	// biome-ignore lint/suspicious/noConsoleLog: seed script output
 	console.log(`Super admin created: ${superAdmin.email}`);
@@ -71,6 +70,7 @@ async function seed() {
 			emailVerified: true,
 		})
 		.returning();
+	if (!tenantAdmin) throw new Error("Seed: failed to create tenant admin");
 
 	await db.insert(schema.utenteTenant).values({
 		utenteId: tenantAdmin.id,
@@ -310,6 +310,7 @@ async function seed() {
 			attivo: true,
 		})
 		.returning();
+	if (!annoSportivo) throw new Error("Seed: failed to create anno sportivo");
 
 	const [tipoQuotaIscrizione] = await db
 		.insert(schema.tipiQuota)
@@ -322,6 +323,7 @@ async function seed() {
 			attivo: true,
 		})
 		.returning();
+	if (!tipoQuotaIscrizione) throw new Error("Seed: failed to create tipo quota");
 
 	// Create quotes for the first 5 active soci
 	const activeSoci = insertedSoci.filter((s) => s.stato === "attivo").slice(0, 5);
@@ -339,10 +341,7 @@ async function seed() {
 		metodoPagamento: i < 3 ? "bonifico" : null,
 	}));
 
-	const insertedQuote = await db
-		.insert(schema.quote)
-		.values(quoteValues)
-		.returning();
+	const insertedQuote = await db.insert(schema.quote).values(quoteValues).returning();
 
 	// biome-ignore lint/suspicious/noConsoleLog: seed script output
 	console.log(`Quote created: ${insertedQuote.length}`);

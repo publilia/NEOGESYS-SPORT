@@ -1,11 +1,11 @@
-import { createVault } from "@neogesys/vault";
 import { db } from "@neogesys/db";
-import { eq, and } from "drizzle-orm";
 import { tenantIntegrations } from "@neogesys/db/schema";
-import type { EmailProvider, EmailProviderType } from "./types";
-import { ResendProvider } from "./resend";
+import { createVault } from "@neogesys/vault";
+import { and, eq } from "drizzle-orm";
 import { PostmarkProvider } from "./postmark";
+import { ResendProvider } from "./resend";
 import { SMTPProvider } from "./smtp";
+import type { EmailProvider, EmailProviderType } from "./types";
 
 /**
  * Retrieve the active email provider for a tenant.
@@ -15,74 +15,63 @@ import { SMTPProvider } from "./smtp";
  *
  * @throws Error if no active email integration is found
  */
-export async function getEmailProvider(
-  tenantId: string,
-): Promise<EmailProvider> {
-  const vault = createVault();
+export async function getEmailProvider(tenantId: string): Promise<EmailProvider> {
+	const vault = createVault();
 
-  // Find the active email integration for this tenant
-  const [integration] = await db
-    .select({
-      provider: tenantIntegrations.provider,
-      configurazione: tenantIntegrations.configurazione,
-    })
-    .from(tenantIntegrations)
-    .where(
-      and(
-        eq(tenantIntegrations.tenantId, tenantId),
-        eq(tenantIntegrations.tipo, "email"),
-        eq(tenantIntegrations.attivo, true),
-      ),
-    )
-    .limit(1);
+	// Find the active email integration for this tenant
+	const [integration] = await db
+		.select({
+			provider: tenantIntegrations.provider,
+			configurazione: tenantIntegrations.configurazione,
+		})
+		.from(tenantIntegrations)
+		.where(
+			and(
+				eq(tenantIntegrations.tenantId, tenantId),
+				eq(tenantIntegrations.tipo, "email"),
+				eq(tenantIntegrations.attivo, true),
+			),
+		)
+		.limit(1);
 
-  if (!integration) {
-    throw new Error(
-      `Nessuna integrazione email attiva trovata per il tenant ${tenantId}`,
-    );
-  }
+	if (!integration) {
+		throw new Error(`Nessuna integrazione email attiva trovata per il tenant ${tenantId}`);
+	}
 
-  const providerType = integration.provider as EmailProviderType;
-  const credentials = await vault.getCredentials(tenantId, providerType);
+	const providerType = integration.provider as EmailProviderType;
+	const credentials = await vault.getCredentials(tenantId, providerType);
 
-  if (!credentials) {
-    throw new Error(
-      `Credenziali non trovate per il provider email ${providerType} del tenant ${tenantId}`,
-    );
-  }
+	if (!credentials) {
+		throw new Error(
+			`Credenziali non trovate per il provider email ${providerType} del tenant ${tenantId}`,
+		);
+	}
 
-  const config = integration.configurazione as Record<string, string> | null;
-  const defaultFrom =
-    config?.defaultFrom ?? credentials.defaultFrom ?? "noreply@neogesys.sport";
+	const config = integration.configurazione as Record<string, string> | null;
+	const defaultFrom = config?.defaultFrom ?? credentials.defaultFrom ?? "noreply@neogesys.sport";
 
-  switch (providerType) {
-    case "resend":
-      return new ResendProvider(
-        credentials.apiKey ?? "",
-        defaultFrom,
-      );
+	switch (providerType) {
+		case "resend":
+			return new ResendProvider(credentials.apiKey ?? "", defaultFrom);
 
-    case "postmark":
-      return new PostmarkProvider(
-        credentials.serverToken ?? "",
-        defaultFrom,
-      );
+		case "postmark":
+			return new PostmarkProvider(credentials.serverToken ?? "", defaultFrom);
 
-    case "smtp":
-      return new SMTPProvider({
-        host: credentials.host ?? "",
-        port: credentials.port ?? "587",
-        user: credentials.user ?? "",
-        pass: credentials.pass ?? "",
-        secure: credentials.secure,
-        defaultFrom,
-      });
+		case "smtp":
+			return new SMTPProvider({
+				host: credentials.host ?? "",
+				port: credentials.port ?? "587",
+				user: credentials.user ?? "",
+				pass: credentials.pass ?? "",
+				secure: credentials.secure,
+				defaultFrom,
+			});
 
-    case "ses":
-      // SES would be implemented similarly with @aws-sdk/client-ses
-      throw new Error("SES provider non ancora implementato");
+		case "ses":
+			// SES would be implemented similarly with @aws-sdk/client-ses
+			throw new Error("SES provider non ancora implementato");
 
-    default:
-      throw new Error(`Provider email sconosciuto: ${providerType}`);
-  }
+		default:
+			throw new Error(`Provider email sconosciuto: ${providerType}`);
+	}
 }

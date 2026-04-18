@@ -1,11 +1,11 @@
 // Types
 export type {
-  CloudStorageProvider,
-  StorageProviderType,
-  UnifiedFile,
-  UnifiedFileList,
-  StorageQuota,
-  ShareResult,
+	CloudStorageProvider,
+	StorageProviderType,
+	UnifiedFile,
+	UnifiedFileList,
+	StorageQuota,
+	ShareResult,
 } from "./types";
 
 // Factory
