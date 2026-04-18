@@ -1,0 +1,206 @@
+services:
+
+  # ─────────────────────────── DATABASE ───────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: neogesys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: neogesys_sport
+      POSTGRES_USER: neogesys
+      POSTGRES_PASSWORD: neogesys_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neogesys -d neogesys_sport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - neogesys
+
+  # ─────────────────────────── CACHE ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: neogesys-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - neogesys
+
+  # ─────────────────────────── STORAGE ────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: neogesys-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minio_dev
+      MINIO_ROOT_PASSWORD: minio_dev_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neogesys
+
+  # ─────────────────────────── SEARCH ─────────────────────────────
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: neogesys-typesense
+    restart: unless-stopped
+    environment:
+      TYPESENSE_API_KEY: typesense_dev_key
+      TYPESENSE_DATA_DIR: /data
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense_data:/data
+    networks:
+      - neogesys
+
+  # ─────────────────────── DB MIGRATIONS ──────────────────────────
+  migrate:
+    image: node:22-alpine
+    container_name: neogesys-migrate
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://neogesys:neogesys_dev@postgres:5432/neogesys_sport
+    volumes:
+      - .:/app:ro
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@9.15.4 --activate &&
+        pnpm install --frozen-lockfile &&
+        pnpm --filter @neogesys/db migrate
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - neogesys
+    restart: "no"
+
+  # ─────────────────────────── API ────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: neogesys-api
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      PORT: "4000"
+      DATABASE_URL: postgresql://neogesys:neogesys_dev@postgres:5432/neogesys_sport
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minio_dev
+      MINIO_SECRET_KEY: minio_dev_secret
+      TYPESENSE_HOST: typesense
+      TYPESENSE_PORT: "8108"
+      TYPESENSE_API_KEY: typesense_dev_key
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neogesys
+
+  # ─────────────────────── WEB (Tenant App) ───────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: neogesys-web
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      API_URL: http://api:4000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - neogesys
+
+  # ─────────────────────── ADMIN (Super Admin) ────────────────────
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin
+    container_name: neogesys-admin
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      API_URL: http://api:4000
+    ports:
+      - "3001:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - neogesys
+
+  # ─────────────────────── DEMO (HTML statico) ────────────────────
+  demo:
+    image: nginx:alpine
+    container_name: neogesys-demo
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./demo:/usr/share/nginx/html:ro
+    networks:
+      - neogesys
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  typesense_data:
+
+networks:
+  neogesys:
+    driver: bridge

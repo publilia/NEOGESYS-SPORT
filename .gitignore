@@ -62,3 +62,4 @@ minio-data/
 # Misc
 *.pem
 *.key
+.env.docker
