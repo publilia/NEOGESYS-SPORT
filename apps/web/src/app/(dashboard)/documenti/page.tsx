@@ -1,45 +1,27 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, FormGrid, Input, Select } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
 import {
-	type ColumnDef,
-	type SortingState,
-	flexRender,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
-import {
+	Check,
 	ChevronLeft,
 	ChevronRight,
-	ClipboardList,
 	Download,
-	Eye,
-	File,
-	FileCheck,
 	FileText,
-	Receipt,
-	Search,
-	Shield,
-	ShieldCheck,
+	FolderPlus,
+	Pencil,
+	Trash2,
 	Upload,
 } from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-type TipoDocumento = "certificato" | "ricevuta" | "modulo" | "liberatoria" | "altro";
+type TipoDoc = "certificato" | "ricevuta" | "modulo" | "liberatoria" | "altro";
 
-interface Documento {
-	id: string;
-	nome: string;
-	tipo: TipoDocumento;
-	socio: string;
-	data: string;
-	dimensione: string;
-}
-
-const TIPO_LABELS: Record<TipoDocumento, string> = {
+const TIPO_LABELS: Record<TipoDoc, string> = {
 	certificato: "Certificato",
 	ricevuta: "Ricevuta",
 	modulo: "Modulo",
@@ -47,247 +29,196 @@ const TIPO_LABELS: Record<TipoDocumento, string> = {
 	altro: "Altro",
 };
 
-const TIPO_COLORS: Record<TipoDocumento, string> = {
-	certificato: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	ricevuta: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-	modulo: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-	liberatoria: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-	altro: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+interface DocFormState {
+	tipo: TipoDoc;
+	nome: string;
+	fileUrl: string;
+	socioId: string;
+	mimeType: string;
+	dimensioneBytes: string;
+}
+
+const EMPTY_FORM: DocFormState = {
+	tipo: "altro",
+	nome: "",
+	fileUrl: "",
+	socioId: "",
+	mimeType: "",
+	dimensioneBytes: "",
 };
 
-const TIPO_ICONS: Record<TipoDocumento, typeof FileText> = {
-	certificato: FileCheck,
-	ricevuta: Receipt,
-	modulo: ClipboardList,
-	liberatoria: ShieldCheck,
-	altro: File,
-};
-
-// Sample data - replace with tRPC query
-const SAMPLE_DOCUMENTI: Documento[] = [
-	{
-		id: "1",
-		nome: "Certificato medico - Rossi Mario",
-		tipo: "certificato",
-		socio: "Mario Rossi",
-		data: "2026-04-10",
-		dimensione: "245 KB",
-	},
-	{
-		id: "2",
-		nome: "Ricevuta quota associativa #2026-042",
-		tipo: "ricevuta",
-		socio: "Luca Bianchi",
-		data: "2026-04-08",
-		dimensione: "120 KB",
-	},
-	{
-		id: "3",
-		nome: "Modulo iscrizione Under 12",
-		tipo: "modulo",
-		socio: "Anna Verdi",
-		data: "2026-04-05",
-		dimensione: "380 KB",
-	},
-	{
-		id: "4",
-		nome: "Liberatoria per minore - Neri",
-		tipo: "liberatoria",
-		socio: "Giulia Neri",
-		data: "2026-04-03",
-		dimensione: "150 KB",
-	},
-	{
-		id: "5",
-		nome: "Certificato medico - Gialli Paolo",
-		tipo: "certificato",
-		socio: "Paolo Gialli",
-		data: "2026-03-28",
-		dimensione: "210 KB",
-	},
-	{
-		id: "6",
-		nome: "Documento identita - Blu Sara",
-		tipo: "altro",
-		socio: "Sara Blu",
-		data: "2026-03-25",
-		dimensione: "1.2 MB",
-	},
-	{
-		id: "7",
-		nome: "Ricevuta iscrizione corso nuoto",
-		tipo: "ricevuta",
-		socio: "Anna Verdi",
-		data: "2026-03-20",
-		dimensione: "95 KB",
-	},
-	{
-		id: "8",
-		nome: "Liberatoria utilizzo immagini",
-		tipo: "liberatoria",
-		socio: "Mario Rossi",
-		data: "2026-03-18",
-		dimensione: "180 KB",
-	},
-];
+function formatBytes(b: number | null | undefined): string {
+	if (!b) return "—";
+	if (b < 1024) return `${b} B`;
+	if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+	return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
 
 export default function DocumentiPage() {
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [tipoFilter, setTipoFilter] = useState<string>("tutti");
+	const [page, setPage] = useState(1);
+	const perPage = 20;
+	const [tipoFilter, setTipoFilter] = useState<TipoDoc | "">("");
 
-	const filteredData = useMemo(() => {
-		let data = SAMPLE_DOCUMENTI;
-		if (tipoFilter !== "tutti") {
-			data = data.filter((d) => d.tipo === tipoFilter);
-		}
-		return data;
-	}, [tipoFilter]);
+	const [modalOpen, setModalOpen] = useState(false);
+	const [editId, setEditId] = useState<string | null>(null);
+	const [form, setForm] = useState<DocFormState>(EMPTY_FORM);
+	const [uploading, setUploading] = useState(false);
+	const [formError, setFormError] = useState<string | null>(null);
 
-	const columns = useMemo<ColumnDef<Documento>[]>(
-		() => [
-			{
-				accessorKey: "nome",
-				header: "Nome",
-				cell: ({ row }) => {
-					const tipo = row.original.tipo;
-					const Icon = TIPO_ICONS[tipo];
-					return (
-						<div className="flex items-center gap-2">
-							<Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-							<span className="font-medium">{row.getValue("nome")}</span>
-						</div>
-					);
-				},
-			},
-			{
-				accessorKey: "tipo",
-				header: "Tipo",
-				cell: ({ row }) => {
-					const tipo = row.getValue("tipo") as TipoDocumento;
-					return (
-						<span
-							className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${TIPO_COLORS[tipo]}`}
-						>
-							{TIPO_LABELS[tipo]}
-						</span>
-					);
-				},
-			},
-			{
-				accessorKey: "socio",
-				header: "Socio Associato",
-				cell: ({ row }) => <span className="text-sm">{row.getValue("socio")}</span>,
-			},
-			{
-				accessorKey: "data",
-				header: "Data",
-				cell: ({ row }) => (
-					<span className="text-sm text-muted-foreground">
-						{new Date(row.getValue("data") as string).toLocaleDateString("it-IT")}
-					</span>
-				),
-			},
-			{
-				accessorKey: "dimensione",
-				header: "Dimensione",
-				cell: ({ row }) => (
-					<span className="text-sm text-muted-foreground">{row.getValue("dimensione")}</span>
-				),
-			},
-			{
-				id: "azioni",
-				header: "Azioni",
-				cell: () => (
-					<div className="flex items-center gap-1">
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
-							title="Anteprima"
-						>
-							<Eye className="h-4 w-4 text-muted-foreground" />
-						</button>
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
-							title="Scarica"
-						>
-							<Download className="h-4 w-4 text-muted-foreground" />
-						</button>
-					</div>
-				),
-			},
-		],
-		[],
-	);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; nome: string } | null>(null);
 
-	const table = useReactTable({
-		data: filteredData,
-		columns,
-		state: { sorting, globalFilter },
-		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		initialState: {
-			pagination: { pageSize: 20 },
+	const utils = trpc.useUtils();
+
+	const query = trpc.documenti.list.useQuery({
+		page,
+		perPage,
+		tipo: tipoFilter || undefined,
+	});
+
+	const sociQuery = trpc.soci.list.useQuery({ page: 1, perPage: 200 });
+
+	const createMutation = trpc.documenti.create.useMutation({
+		onSuccess: () => {
+			utils.documenti.list.invalidate();
+			toast.success("Documento salvato");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
 		},
 	});
 
+	const updateMutation = trpc.documenti.update.useMutation({
+		onSuccess: () => {
+			utils.documenti.list.invalidate();
+			toast.success("Documento aggiornato");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
+		},
+	});
+
+	const deleteMutation = trpc.documenti.delete.useMutation({
+		onSuccess: () => {
+			utils.documenti.list.invalidate();
+			toast.success("Documento eliminato");
+			setDeleteTarget(null);
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const presignMutation = trpc.documenti.getUploadUrl.useMutation();
+
+	const items = query.data?.items ?? [];
+	const total = query.data?.total ?? 0;
+	const totalPages = query.data?.totalPages ?? 1;
+
+	function openCreate() {
+		setEditId(null);
+		setForm(EMPTY_FORM);
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function openEdit(row: (typeof items)[number]) {
+		setEditId(row.id);
+		setForm({
+			tipo: row.tipo as TipoDoc,
+			nome: row.nome,
+			fileUrl: row.fileUrl,
+			socioId: row.socioId ?? "",
+			mimeType: row.mimeType ?? "",
+			dimensioneBytes: row.dimensioneBytes?.toString() ?? "",
+		});
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function closeModal() {
+		setModalOpen(false);
+		setEditId(null);
+		setFormError(null);
+		setUploading(false);
+	}
+
+	async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setUploading(true);
+		try {
+			const presigned = await presignMutation.mutateAsync({
+				fileName: file.name,
+				contentType: file.type || "application/octet-stream",
+			});
+			// Dev stub: we use the returned fileUrl as the stored location.
+			setForm((prev) => ({
+				...prev,
+				nome: prev.nome || file.name,
+				fileUrl: presigned.fileUrl,
+				mimeType: file.type || "application/octet-stream",
+				dimensioneBytes: String(file.size),
+			}));
+			toast.success(`File pronto: ${file.name}`);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Errore upload");
+		} finally {
+			setUploading(false);
+		}
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		setFormError(null);
+		if (!form.nome.trim() || !form.fileUrl.trim()) {
+			setFormError("Nome e file sono obbligatori.");
+			return;
+		}
+		if (editId) {
+			updateMutation.mutate({
+				id: editId,
+				nome: form.nome.trim(),
+				tipo: form.tipo,
+				socioId: form.socioId || null,
+			});
+		} else {
+			createMutation.mutate({
+				tipo: form.tipo,
+				nome: form.nome.trim(),
+				fileUrl: form.fileUrl.trim(),
+				socioId: form.socioId || undefined,
+				mimeType: form.mimeType || undefined,
+				dimensioneBytes: form.dimensioneBytes ? Number(form.dimensioneBytes) : undefined,
+			});
+		}
+	}
+
 	return (
-		<div className="space-y-6 p-6">
-			{/* Page header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">Documenti</h1>
-					<p className="text-muted-foreground">
-						Gestisci certificati, ricevute, moduli e documenti dei soci
-					</p>
+					<h1 className="page-title">Documenti</h1>
+					<p className="page-subtitle">{total} documenti archiviati</p>
 				</div>
-				<button
-					type="button"
-					className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-				>
-					<Upload className="h-4 w-4" />
-					Carica Documento
-				</button>
-			</div>
-
-			{/* Upload drop zone */}
-			<div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 text-center">
-				<div className="flex flex-col items-center gap-3">
-					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-						<Upload className="h-6 w-6 text-muted-foreground" />
-					</div>
-					<div>
-						<p className="text-sm font-medium text-foreground">
-							Trascina i file qui oppure clicca per caricare
-						</p>
-						<p className="text-xs text-muted-foreground">PDF, JPG, PNG fino a 10 MB</p>
-					</div>
+				<div className="page-actions">
+					<button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+						<Upload className="icon" /> Carica Documento
+					</button>
 				</div>
 			</div>
 
-			{/* Filters bar */}
-			<div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
-				<div className="relative flex-1">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<input
-						type="text"
-						placeholder="Cerca per nome documento, socio..."
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-						value={globalFilter}
-						onChange={(e) => setGlobalFilter(e.target.value)}
-					/>
-				</div>
+			<div className="filters-bar">
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+					className="select"
 					value={tipoFilter}
-					onChange={(e) => setTipoFilter(e.target.value)}
+					onChange={(e) => {
+						setTipoFilter(e.target.value as TipoDoc | "");
+						setPage(1);
+					}}
 				>
-					<option value="tutti">Tutti i tipi</option>
+					<option value="">Tutti i tipi</option>
 					<option value="certificato">Certificato</option>
 					<option value="ricevuta">Ricevuta</option>
 					<option value="modulo">Modulo</option>
@@ -296,106 +227,279 @@ export default function DocumentiPage() {
 				</select>
 			</div>
 
-			{/* Table */}
-			<div className="overflow-hidden rounded-lg border border-border bg-card">
-				<div className="overflow-x-auto">
-					<table className="w-full">
+			<div className="card">
+				<div className="table-container">
+					<table className="table">
 						<thead>
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id} className="border-b border-border bg-muted/50">
-									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-											onClick={header.column.getToggleSortingHandler()}
-											style={{ cursor: header.column.getCanSort() ? "pointer" : "default" }}
-										>
-											{header.isPlaceholder
-												? null
-												: flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
+							<tr>
+								<th>Nome</th>
+								<th>Tipo</th>
+								<th>Socio</th>
+								<th>Dimensione</th>
+								<th>Data</th>
+								<th style={{ textAlign: "right" }}>Azioni</th>
+							</tr>
 						</thead>
 						<tbody>
-							{table.getRowModel().rows.length === 0 ? (
+							{query.isLoading ? (
 								<tr>
 									<td
-										colSpan={columns.length}
-										className="px-4 py-8 text-center text-sm text-muted-foreground"
+										colSpan={6}
+										style={{
+											textAlign: "center",
+											padding: "3rem",
+											color: "hsl(var(--muted-foreground))",
+										}}
 									>
-										Nessun documento trovato
+										Caricamento...
+									</td>
+								</tr>
+							) : items.length === 0 ? (
+								<tr>
+									<td colSpan={6} style={{ padding: 0 }}>
+										<EmptyState
+											icon={FolderPlus}
+											title="Nessun documento"
+											description="Carica il primo documento per iniziare."
+											action={
+												<button
+													type="button"
+													className="btn btn-primary btn-sm"
+													onClick={openCreate}
+												>
+													<Upload className="icon" /> Carica
+												</button>
+											}
+										/>
 									</td>
 								</tr>
 							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										className="border-b border-border last:border-0 hover:bg-muted/30"
-									>
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} className="px-4 py-3 text-sm">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</td>
-										))}
+								items.map((d) => (
+									<tr key={d.id}>
+										<td>
+											<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+												<FileText
+													className="icon"
+													style={{ color: "hsl(var(--primary))" }}
+												/>
+												<span style={{ fontWeight: 500 }}>{d.nome}</span>
+											</div>
+										</td>
+										<td>
+											<span className="badge badge-outline">
+												{TIPO_LABELS[d.tipo as TipoDoc]}
+											</span>
+										</td>
+										<td>
+											{d.socioCognome ? `${d.socioCognome} ${d.socioNome}` : "—"}
+										</td>
+										<td
+											style={{
+												fontFamily: "monospace",
+												fontSize: "0.8125rem",
+												color: "hsl(var(--muted-foreground))",
+											}}
+										>
+											{formatBytes(d.dimensioneBytes)}
+										</td>
+										<td
+											style={{
+												fontFamily: "monospace",
+												fontSize: "0.8125rem",
+												color: "hsl(var(--muted-foreground))",
+											}}
+										>
+											{d.createdAt
+												? new Date(d.createdAt as unknown as string).toLocaleDateString(
+														"it-IT",
+													)
+												: "—"}
+										</td>
+										<td>
+											<div className="table-actions" style={{ justifyContent: "flex-end" }}>
+												<a
+													href={d.fileUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="btn btn-ghost btn-icon"
+													title="Scarica"
+												>
+													<Download className="icon" />
+												</a>
+												<button
+													type="button"
+													className="btn btn-ghost btn-icon"
+													onClick={() => openEdit(d)}
+													title="Modifica"
+												>
+													<Pencil className="icon" />
+												</button>
+												<button
+													type="button"
+													className="table-action"
+													onClick={() =>
+														setDeleteTarget({ id: d.id, nome: d.nome })
+													}
+													title="Elimina"
+												>
+													<Trash2 className="icon" style={{ color: "#dc2626" }} />
+												</button>
+											</div>
+										</td>
 									</tr>
 								))
 							)}
 						</tbody>
 					</table>
 				</div>
-
-				{/* Pagination */}
-				<div className="flex items-center justify-between border-t border-border px-4 py-3">
-					<p className="text-sm text-muted-foreground">
-						{table.getFilteredRowModel().rows.length} documenti totali
-					</p>
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
-						>
-							<ChevronLeft className="h-4 w-4" />
-						</button>
-						<span className="text-sm text-muted-foreground">
-							Pagina {table.getState().pagination.pageIndex + 1} di {table.getPageCount()}
+				{total > 0 && (
+					<div className="pagination">
+						<span>
+							Mostra {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} di {total}
 						</span>
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
-						>
-							<ChevronRight className="h-4 w-4" />
-						</button>
+						<div style={{ display: "flex", gap: "0.25rem" }}>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page === 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								<ChevronLeft className="icon-sm" />
+							</button>
+							<span
+								style={{
+									padding: "0 0.75rem",
+									display: "flex",
+									alignItems: "center",
+									fontSize: "0.875rem",
+								}}
+							>
+								{page} / {totalPages}
+							</span>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+							>
+								<ChevronRight className="icon-sm" />
+							</button>
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 
-			{/* GDPR Section */}
-			<div className="rounded-lg border border-border bg-card p-5">
-				<div className="flex items-center gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-						<Shield className="h-5 w-5" />
-					</div>
-					<div className="flex-1">
-						<h3 className="font-semibold text-foreground">Privacy e GDPR</h3>
-						<p className="text-sm text-muted-foreground">
-							Gestisci i consensi e le informative sulla privacy dei soci
-						</p>
-					</div>
-					<Link
-						href="/documenti/consensi"
-						className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-					>
-						<FileText className="h-4 w-4" />
-						Registro Consensi
-					</Link>
-				</div>
-			</div>
+			<Modal
+				open={modalOpen}
+				onClose={closeModal}
+				title={editId ? "Modifica documento" : "Carica documento"}
+				size="md"
+				footer={
+					<>
+						<button
+							type="button"
+							className="btn btn-outline btn-sm"
+							onClick={closeModal}
+							disabled={createMutation.isPending || updateMutation.isPending}
+						>
+							Annulla
+						</button>
+						<button
+							type="submit"
+							form="doc-form"
+							className="btn btn-primary btn-sm"
+							disabled={createMutation.isPending || updateMutation.isPending || uploading}
+						>
+							<Check className="icon" />{" "}
+							{createMutation.isPending || updateMutation.isPending ? "Salvataggio..." : "Salva"}
+						</button>
+					</>
+				}
+			>
+				<form id="doc-form" onSubmit={handleSubmit}>
+					{formError && (
+						<div
+							style={{
+								padding: "0.75rem 1rem",
+								background: "rgba(220,38,38,0.1)",
+								color: "#dc2626",
+								borderRadius: 6,
+								fontSize: "0.875rem",
+								marginBottom: "1rem",
+							}}
+						>
+							{formError}
+						</div>
+					)}
+					<FormGrid>
+						<Field label="Tipo" required>
+							<Select
+								value={form.tipo}
+								onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoDoc })}
+							>
+								<option value="certificato">Certificato</option>
+								<option value="ricevuta">Ricevuta</option>
+								<option value="modulo">Modulo</option>
+								<option value="liberatoria">Liberatoria</option>
+								<option value="altro">Altro</option>
+							</Select>
+						</Field>
+						<Field label="Socio">
+							<Select
+								value={form.socioId}
+								onChange={(e) => setForm({ ...form, socioId: e.target.value })}
+							>
+								<option value="">— Nessuno —</option>
+								{sociQuery.data?.items.map((s) => (
+									<option key={s.id} value={s.id}>
+										{s.cognome} {s.nome}
+									</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Nome file" required span={2}>
+							<Input
+								value={form.nome}
+								onChange={(e) => setForm({ ...form, nome: e.target.value })}
+								required
+							/>
+						</Field>
+						{!editId && (
+							<Field label="File" required span={2} hint="Clicca per selezionare il file">
+								<input
+									type="file"
+									className="input"
+									onChange={handleFileChange}
+									disabled={uploading}
+								/>
+								{form.fileUrl && (
+									<p
+										style={{
+											fontSize: "0.75rem",
+											color: "hsl(var(--muted-foreground))",
+											margin: "0.25rem 0 0",
+										}}
+									>
+										✓ {form.fileUrl} {form.dimensioneBytes && `(${formatBytes(Number(form.dimensioneBytes))})`}
+									</p>
+								)}
+							</Field>
+						)}
+					</FormGrid>
+				</form>
+			</Modal>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				onConfirm={() => {
+					if (deleteTarget) deleteMutation.mutate({ id: deleteTarget.id });
+				}}
+				title="Eliminare documento?"
+				message={`Il documento "${deleteTarget?.nome ?? ""}" sara' rimosso dall'archivio.`}
+				confirmLabel="Elimina"
+				loading={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

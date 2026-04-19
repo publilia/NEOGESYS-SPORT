@@ -1,402 +1,435 @@
 "use client";
 
+import { Field, FormGrid, Input } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
 import {
-	AlertTriangle,
-	Bot,
-	Calendar,
-	CheckCircle2,
-	Circle,
+	CheckCircle,
 	CreditCard,
-	FileText,
 	HardDrive,
 	Mail,
-	PlayCircle,
-	Search,
-	Settings,
-	Smartphone,
-	ToggleLeft,
-	ToggleRight,
-	Trophy,
+	Plug,
+	Settings2,
+	ShieldCheck,
+	Sparkles,
 	XCircle,
+	Zap,
 } from "lucide-react";
-import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
-type StatoIntegrazione = "connesso" | "disconnesso" | "errore";
-type TestResult = "ok" | "errore" | "non_testato";
+type TipoIntegrazione = "pagamento" | "comunicazione" | "federazione" | "storage";
 
-interface Provider {
-	id: string;
+interface ProviderMeta {
+	provider: string;
 	nome: string;
-	stato: StatoIntegrazione;
-	testResult: TestResult;
 	descrizione: string;
 }
 
-interface SezioneIntegrazione {
-	id: string;
-	titolo: string;
-	icona: string;
-	icon: typeof CreditCard;
-	providers: Provider[];
+interface CategorySpec {
+	tipo: TipoIntegrazione;
+	label: string;
+	Icon: LucideIcon;
 }
 
-const STATO_COLORS: Record<StatoIntegrazione, string> = {
-	connesso: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	disconnesso: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-	errore: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-};
-
-const STATO_LABELS: Record<StatoIntegrazione, string> = {
-	connesso: "Connesso",
-	disconnesso: "Disconnesso",
-	errore: "Errore",
-};
-
-const TEST_ICONS: Record<TestResult, typeof CheckCircle2> = {
-	ok: CheckCircle2,
-	errore: XCircle,
-	non_testato: Circle,
-};
-
-const TEST_COLORS: Record<TestResult, string> = {
-	ok: "text-green-600 dark:text-green-400",
-	errore: "text-red-600 dark:text-red-400",
-	non_testato: "text-gray-400 dark:text-gray-500",
-};
-
-const SEZIONI: SezioneIntegrazione[] = [
-	{
-		id: "pagamenti",
-		titolo: "Pagamenti",
-		icona: "credit-card",
-		icon: CreditCard,
-		providers: [
-			{
-				id: "stripe",
-				nome: "Stripe",
-				stato: "connesso",
-				testResult: "ok",
-				descrizione: "Pagamenti con carta di credito e addebito diretto",
-			},
-			{
-				id: "satispay",
-				nome: "SatisPay",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Pagamenti digitali tramite app SatisPay",
-			},
-		],
-	},
-	{
-		id: "email",
-		titolo: "Email",
-		icona: "mail",
-		icon: Mail,
-		providers: [
-			{
-				id: "resend",
-				nome: "Resend",
-				stato: "connesso",
-				testResult: "ok",
-				descrizione: "Servizio email transazionale moderno",
-			},
-			{
-				id: "ses",
-				nome: "Amazon SES",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Simple Email Service di Amazon Web Services",
-			},
-			{
-				id: "postmark",
-				nome: "Postmark",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Email transazionali ad alta deliverability",
-			},
-			{
-				id: "smtp",
-				nome: "SMTP Personalizzato",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Configurazione server SMTP personalizzato",
-			},
-		],
-	},
-	{
-		id: "sms_whatsapp",
-		titolo: "SMS / WhatsApp",
-		icona: "smartphone",
-		icon: Smartphone,
-		providers: [
-			{
-				id: "twilio",
-				nome: "Twilio",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "SMS e chiamate vocali globali",
-			},
-			{
-				id: "skebby",
-				nome: "Skebby",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Gateway SMS italiano",
-			},
-			{
-				id: "whatsapp",
-				nome: "WhatsApp Business",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Messaggi WhatsApp tramite API ufficiale",
-			},
-		],
-	},
-	{
-		id: "sdi",
-		titolo: "SDI - Fatturazione Elettronica",
-		icona: "file-text",
-		icon: FileText,
-		providers: [
-			{
-				id: "aruba",
-				nome: "Aruba",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Fatturazione elettronica tramite Aruba",
-			},
-			{
-				id: "fatture_in_cloud",
-				nome: "Fatture in Cloud",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Piattaforma di fatturazione online",
-			},
-			{
-				id: "acube",
-				nome: "Acube",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "API per fatturazione elettronica SDI",
-			},
-		],
-	},
-	{
-		id: "ai",
-		titolo: "AI - Intelligenza Artificiale",
-		icona: "bot",
-		icon: Bot,
-		providers: [
-			{
-				id: "anthropic",
-				nome: "Anthropic",
-				stato: "connesso",
-				testResult: "ok",
-				descrizione: "Modelli Claude per analisi predittiva e assistenza",
-			},
-			{
-				id: "openai",
-				nome: "OpenAI",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Modelli GPT per elaborazione testo",
-			},
-		],
-	},
-	{
-		id: "cloud_storage",
-		titolo: "Cloud Storage",
-		icona: "hard-drive",
-		icon: HardDrive,
-		providers: [
-			{
-				id: "google_drive",
-				nome: "Google Drive",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Archiviazione documenti su Google Drive",
-			},
-			{
-				id: "onedrive",
-				nome: "Microsoft OneDrive",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Archiviazione documenti su OneDrive",
-			},
-		],
-	},
-	{
-		id: "calendario",
-		titolo: "Calendario",
-		icona: "calendar",
-		icon: Calendar,
-		providers: [
-			{
-				id: "google_calendar",
-				nome: "Google Calendar",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Sincronizzazione eventi con Google Calendar",
-			},
-			{
-				id: "outlook",
-				nome: "Microsoft Outlook",
-				stato: "disconnesso",
-				testResult: "non_testato",
-				descrizione: "Sincronizzazione eventi con Outlook Calendar",
-			},
-		],
-	},
-	{
-		id: "ricerca",
-		titolo: "Ricerca",
-		icona: "search",
-		icon: Search,
-		providers: [
-			{
-				id: "typesense",
-				nome: "Typesense",
-				stato: "connesso",
-				testResult: "ok",
-				descrizione: "Motore di ricerca full-text ad alte prestazioni",
-			},
-		],
-	},
-	{
-		id: "federazioni",
-		titolo: "Federazioni",
-		icona: "trophy",
-		icon: Trophy,
-		providers: [
-			{
-				id: "export_csv",
-				nome: "Export CSV Federazioni",
-				stato: "connesso",
-				testResult: "ok",
-				descrizione: "Esportazione dati nel formato richiesto dalle federazioni sportive",
-			},
-		],
-	},
+const CATEGORIES: CategorySpec[] = [
+	{ tipo: "pagamento", label: "Pagamenti", Icon: CreditCard },
+	{ tipo: "comunicazione", label: "Comunicazioni", Icon: Mail },
+	{ tipo: "federazione", label: "Federazioni", Icon: Sparkles },
+	{ tipo: "storage", label: "Cloud Storage", Icon: HardDrive },
 ];
 
+const CREDENTIAL_FIELDS: Record<string, { key: string; label: string; secret?: boolean }[]> = {
+	stripe: [
+		{ key: "api_key", label: "Secret Key (sk_...)", secret: true },
+		{ key: "webhook_secret", label: "Webhook Secret", secret: true },
+	],
+	satispay: [
+		{ key: "api_key", label: "API Key", secret: true },
+		{ key: "key_id", label: "Key ID" },
+	],
+	paypal: [
+		{ key: "client_id", label: "Client ID" },
+		{ key: "client_secret", label: "Client Secret", secret: true },
+	],
+	mailgun: [
+		{ key: "api_key", label: "API Key", secret: true },
+		{ key: "domain", label: "Dominio mail" },
+	],
+	sendgrid: [{ key: "api_key", label: "API Key", secret: true }],
+	whatsapp: [
+		{ key: "phone_number_id", label: "Phone Number ID" },
+		{ key: "access_token", label: "Access Token", secret: true },
+	],
+	twilio: [
+		{ key: "account_sid", label: "Account SID" },
+		{ key: "auth_token", label: "Auth Token", secret: true },
+		{ key: "from_number", label: "Numero mittente" },
+	],
+	coni: [{ key: "api_key", label: "API Key CONI", secret: true }],
+	asi: [{ key: "api_key", label: "API Key ASI", secret: true }],
+	acsi: [{ key: "api_key", label: "API Key ACSI", secret: true }],
+	s3: [
+		{ key: "access_key_id", label: "Access Key ID" },
+		{ key: "secret_access_key", label: "Secret Access Key", secret: true },
+		{ key: "bucket", label: "Bucket" },
+		{ key: "region", label: "Region" },
+	],
+	minio: [
+		{ key: "endpoint", label: "Endpoint" },
+		{ key: "access_key", label: "Access Key" },
+		{ key: "secret_key", label: "Secret Key", secret: true },
+		{ key: "bucket", label: "Bucket" },
+	],
+};
+
 export default function IntegrazioniPage() {
-	const [toggleStates, setToggleStates] = useState<Record<string, boolean>>(() => {
-		const states: Record<string, boolean> = {};
-		SEZIONI.forEach((s) =>
-			s.providers.forEach((p) => {
-				states[p.id] = p.stato === "connesso";
-			}),
-		);
-		return states;
+	const utils = trpc.useUtils();
+
+	const providersQuery = trpc.integrazioni.getProviders.useQuery({});
+	const listQuery = trpc.integrazioni.list.useQuery();
+
+	const configureMut = trpc.integrazioni.configure.useMutation({
+		onSuccess: () => {
+			toast.success("Credenziali salvate");
+			utils.integrazioni.list.invalidate();
+			closeConfig();
+		},
+		onError: (err) => toast.error(err.message),
 	});
 
-	const handleToggle = (providerId: string) => {
-		setToggleStates((prev) => ({ ...prev, [providerId]: !prev[providerId] }));
+	const testMut = trpc.integrazioni.testConnection.useMutation({
+		onSuccess: (res) => {
+			if (res.esito === "ok") toast.success(`Connessione OK: ${res.messaggio ?? "pronta"}`);
+			else toast.error(`Connessione fallita: ${res.messaggio ?? "errore"}`);
+			utils.integrazioni.list.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const enableMut = trpc.integrazioni.enable.useMutation({
+		onSuccess: () => {
+			toast.success("Integrazione abilitata");
+			utils.integrazioni.list.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const disableMut = trpc.integrazioni.disable.useMutation({
+		onSuccess: () => {
+			toast.success("Integrazione disabilitata");
+			utils.integrazioni.list.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const configured = useMemo(() => {
+		const map: Record<string, { attivo: boolean; ultimoTestEsito?: string | null }> = {};
+		for (const it of listQuery.data ?? []) {
+			map[it.provider] = {
+				attivo: Boolean(it.attivo),
+				ultimoTestEsito: it.ultimoTestEsito as string | null,
+			};
+		}
+		return map;
+	}, [listQuery.data]);
+
+	const [configOpen, setConfigOpen] = useState(false);
+	const [configProvider, setConfigProvider] = useState<{
+		provider: string;
+		tipo: TipoIntegrazione;
+		nome: string;
+	} | null>(null);
+	const [credValues, setCredValues] = useState<Record<string, string>>({});
+
+	const openConfig = (provider: string, tipo: TipoIntegrazione, nome: string) => {
+		setConfigProvider({ provider, tipo, nome });
+		const fields = CREDENTIAL_FIELDS[provider] ?? [{ key: "api_key", label: "API Key", secret: true }];
+		const initial: Record<string, string> = {};
+		for (const f of fields) initial[f.key] = "";
+		setCredValues(initial);
+		setConfigOpen(true);
 	};
 
+	const closeConfig = () => {
+		setConfigOpen(false);
+		setConfigProvider(null);
+		setCredValues({});
+	};
+
+	const submitConfig = () => {
+		if (!configProvider) return;
+		const fields = CREDENTIAL_FIELDS[configProvider.provider] ?? [
+			{ key: "api_key", label: "API Key", secret: true },
+		];
+		const missing = fields.find((f) => !credValues[f.key]?.trim());
+		if (missing) {
+			toast.error(`Campo obbligatorio: ${missing.label}`);
+			return;
+		}
+		configureMut.mutate({
+			provider: configProvider.provider,
+			tipo: configProvider.tipo,
+			credentials: credValues,
+		});
+	};
+
+	const providersByTipo = providersQuery.data ?? {};
+
 	return (
-		<div className="space-y-6 p-6">
-			{/* Page header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">Integrazioni</h1>
-					<p className="text-muted-foreground">
-						Configura i servizi esterni collegati alla piattaforma
+					<h1 className="page-title">Integrazioni</h1>
+					<p className="page-subtitle">
+						Credenziali per tenant · Vault AES-256-GCM · No hardcoded keys
 					</p>
 				</div>
 			</div>
 
-			{/* Disclaimer */}
-			<div className="flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/10">
-				<AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600 dark:text-yellow-400" />
-				<p className="text-sm text-yellow-800 dark:text-yellow-200">
-					Le credenziali e i costi del servizio sono responsabilita del cliente. Ogni integrazione
-					richiede un account attivo presso il provider corrispondente.
-				</p>
+			<div
+				className="card"
+				style={{
+					marginBottom: "1.5rem",
+					borderColor: "hsl(var(--primary) / 0.3)",
+					background: "hsl(var(--primary) / 0.05)",
+				}}
+			>
+				<div
+					className="card-body"
+					style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}
+				>
+					<ShieldCheck
+						style={{
+							width: "1.5rem",
+							height: "1.5rem",
+							color: "hsl(var(--primary))",
+							flexShrink: 0,
+						}}
+					/>
+					<div>
+						<div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>
+							Vault credenziali sicuro
+						</div>
+						<div style={{ fontSize: "0.8125rem", color: "hsl(var(--muted-foreground))" }}>
+							Tutte le credenziali sono cifrate con AES-256-GCM e una chiave KMS per tenant.
+							Le API key non vengono mai esposte in chiaro, nemmeno negli export. Solo il ruolo{" "}
+							<code
+								style={{
+									background: "hsl(var(--muted))",
+									padding: "0.0625rem 0.25rem",
+									borderRadius: "0.25rem",
+									fontSize: "0.75rem",
+								}}
+							>
+								admin
+							</code>{" "}
+							può modificarle.
+						</div>
+					</div>
+				</div>
 			</div>
 
-			{/* Sections */}
-			<div className="space-y-8">
-				{SEZIONI.map((sezione) => {
-					const SectionIcon = sezione.icon;
-					return (
-						<div key={sezione.id}>
-							<div className="mb-4 flex items-center gap-2">
-								<SectionIcon className="h-5 w-5 text-primary" />
-								<h2 className="text-lg font-semibold text-foreground">{sezione.titolo}</h2>
-							</div>
-							<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-								{sezione.providers.map((provider) => {
-									const TestIcon = TEST_ICONS[provider.testResult];
-									const isEnabled = toggleStates[provider.id];
-									return (
+			{CATEGORIES.map((cat) => {
+				const CatIcon = cat.Icon;
+				const list = ((providersByTipo as unknown) as Record<string, ProviderMeta[]>)[cat.tipo] ?? [];
+				if (list.length === 0) return null;
+				return (
+					<div key={cat.tipo} style={{ marginBottom: "1.5rem" }}>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+								marginBottom: "0.75rem",
+							}}
+						>
+							<CatIcon className="icon-lg" style={{ color: "hsl(var(--primary))" }} />
+							<h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: 0 }}>
+								{cat.label}
+							</h2>
+						</div>
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+								gap: "0.75rem",
+							}}
+						>
+							{list.map((p) => {
+								const conf = configured[p.provider];
+								const attivo = conf?.attivo === true;
+								const esito = conf?.ultimoTestEsito;
+								return (
+									<div key={p.provider} className="card">
 										<div
-											key={provider.id}
-											className={`rounded-xl border bg-card p-5 ${
-												isEnabled ? "border-primary/30" : "border-border"
-											}`}
+											className="card-body"
+											style={{
+												display: "flex",
+												flexDirection: "column",
+												gap: "0.75rem",
+												padding: "1rem",
+											}}
 										>
-											<div className="mb-3 flex items-start justify-between">
-												<div>
-													<h3 className="font-semibold text-foreground">{provider.nome}</h3>
-													<p className="mt-0.5 text-xs text-muted-foreground">
-														{provider.descrizione}
-													</p>
+											<div
+												style={{
+													display: "flex",
+													justifyContent: "space-between",
+													alignItems: "flex-start",
+													gap: "0.5rem",
+												}}
+											>
+												<div style={{ minWidth: 0 }}>
+													<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>
+														{p.nome}
+													</div>
+													<div
+														style={{
+															fontSize: "0.8125rem",
+															color: "hsl(var(--muted-foreground))",
+														}}
+													>
+														{p.descrizione}
+													</div>
 												</div>
-												<span
-													className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATO_COLORS[provider.stato]}`}
-												>
-													{STATO_LABELS[provider.stato]}
-												</span>
+												{attivo ? (
+													<span className="badge badge-success" style={{ flexShrink: 0 }}>
+														<CheckCircle className="icon-sm" /> Attivo
+													</span>
+												) : conf ? (
+													<span className="badge badge-warning" style={{ flexShrink: 0 }}>
+														Configurato
+													</span>
+												) : (
+													<span className="badge" style={{ flexShrink: 0 }}>
+														Non attivo
+													</span>
+												)}
 											</div>
-
-											<div className="mb-4 flex items-center gap-2">
-												<TestIcon className={`h-4 w-4 ${TEST_COLORS[provider.testResult]}`} />
-												<span className="text-xs text-muted-foreground">
-													{provider.testResult === "ok"
-														? "Test superato"
-														: provider.testResult === "errore"
-															? "Test fallito"
-															: "Non testato"}
-												</span>
-											</div>
-
-											<div className="flex items-center gap-2">
-												<button
-													type="button"
-													className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+											{esito === "fail" && (
+												<div
+													style={{
+														fontSize: "0.75rem",
+														color: "hsl(var(--destructive))",
+														display: "flex",
+														alignItems: "center",
+														gap: "0.25rem",
+													}}
 												>
-													<Settings className="h-3.5 w-3.5" />
-													Configura
-												</button>
-												<button
-													type="button"
-													className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-												>
-													<PlayCircle className="h-3.5 w-3.5" />
-													Testa
-												</button>
-												<button
-													type="button"
-													className="ml-auto inline-flex items-center"
-													onClick={() => handleToggle(provider.id)}
-													title={isEnabled ? "Disattiva" : "Attiva"}
-												>
-													{isEnabled ? (
-														<ToggleRight className="h-6 w-6 text-primary" />
-													) : (
-														<ToggleLeft className="h-6 w-6 text-muted-foreground" />
-													)}
-												</button>
+													<XCircle className="icon-sm" /> Ultimo test fallito
+												</div>
+											)}
+											<div style={{ display: "flex", gap: "0.375rem" }}>
+												{conf ? (
+													<>
+														<button
+															type="button"
+															className="btn btn-outline btn-sm"
+															style={{ flex: 1 }}
+															onClick={() =>
+																openConfig(p.provider, cat.tipo, p.nome)
+															}
+														>
+															<Settings2 className="icon-sm" /> Configura
+														</button>
+														<button
+															type="button"
+															className="btn btn-ghost btn-sm"
+															title="Testa connessione"
+															disabled={testMut.isPending}
+															onClick={() =>
+																testMut.mutate({ provider: p.provider })
+															}
+														>
+															<Zap className="icon-sm" /> Test
+														</button>
+														{attivo ? (
+															<button
+																type="button"
+																className="btn btn-ghost btn-sm"
+																disabled={disableMut.isPending}
+																onClick={() =>
+																	disableMut.mutate({ provider: p.provider })
+																}
+															>
+																Off
+															</button>
+														) : (
+															<button
+																type="button"
+																className="btn btn-ghost btn-sm"
+																disabled={enableMut.isPending}
+																onClick={() =>
+																	enableMut.mutate({ provider: p.provider })
+																}
+															>
+																On
+															</button>
+														)}
+													</>
+												) : (
+													<button
+														type="button"
+														className="btn btn-primary btn-sm"
+														style={{ flex: 1 }}
+														onClick={() => openConfig(p.provider, cat.tipo, p.nome)}
+													>
+														<Plug className="icon-sm" /> Collega
+													</button>
+												)}
 											</div>
 										</div>
-									);
-								})}
-							</div>
+									</div>
+								);
+							})}
 						</div>
-					);
-				})}
-			</div>
+					</div>
+				);
+			})}
+
+			{/* Configure Modal */}
+			<Modal
+				open={configOpen}
+				onClose={closeConfig}
+				title={configProvider ? `Configura ${configProvider.nome}` : "Configura"}
+				subtitle="Le credenziali sono cifrate con AES-256-GCM nel vault del tenant"
+				size="md"
+				footer={
+					<>
+						<button type="button" className="btn btn-outline btn-sm" onClick={closeConfig}>
+							Annulla
+						</button>
+						<button
+							type="button"
+							className="btn btn-primary btn-sm"
+							onClick={submitConfig}
+							disabled={configureMut.isPending}
+						>
+							Salva nel vault
+						</button>
+					</>
+				}
+			>
+				{configProvider && (
+					<FormGrid>
+						{(CREDENTIAL_FIELDS[configProvider.provider] ?? [
+							{ key: "api_key", label: "API Key", secret: true },
+						]).map((f) => (
+							<Field key={f.key} label={f.label} required span={2}>
+								<Input
+									type={f.secret ? "password" : "text"}
+									value={credValues[f.key] ?? ""}
+									onChange={(e) =>
+										setCredValues((v) => ({ ...v, [f.key]: e.target.value }))
+									}
+									autoComplete="off"
+								/>
+							</Field>
+						))}
+					</FormGrid>
+				)}
+			</Modal>
 		</div>
 	);
 }

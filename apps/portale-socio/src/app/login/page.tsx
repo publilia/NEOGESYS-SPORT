@@ -1,5 +1,6 @@
 "use client";
 
+import { NeogesysLogoFull } from "@/components/brand/neogesys-mark";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useState } from "react";
@@ -40,12 +41,45 @@ export default function PortaleLoginPage() {
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background px-4">
 			<div className="w-full max-w-md space-y-8">
-				{/* Tenant branding */}
+				{/* Brand — quasar NEOGESYS Universal Suite + pill "PORTALE SOCIO".
+				    Riusa il trattamento visivo del web app (cosmic panel
+				    #13102A + glow magenta/viola + tagline "Universal Suite"
+				    leggibile a 48px). Sotto il logo compare una pill che
+				    identifica l'app "Portale Socio" invece della classica
+				    "Sport" — mette i soci nel contesto giusto senza confondere
+				    con il gestionale operativo. */}
 				<div className="flex flex-col items-center space-y-3">
-					<div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-						<span className="text-2xl font-bold">PS</span>
+					<div
+						style={{
+							background: "#13102A",
+							color: "#FFF6D9",
+							borderRadius: "0.875rem",
+							padding: "1.25rem 1.75rem",
+							boxShadow:
+								"0 0 0 1px rgba(139, 63, 229, 0.25), 0 0 32px rgba(237, 63, 158, 0.15)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						<NeogesysLogoFull size={220} />
 					</div>
-					<h1 className="text-2xl font-bold text-foreground">Portale Socio</h1>
+					<span
+						style={{
+							display: "inline-block",
+							padding: "0.25rem 0.75rem",
+							borderRadius: "9999px",
+							fontSize: "0.6875rem",
+							fontWeight: 800,
+							letterSpacing: "0.08em",
+							textTransform: "uppercase",
+							color: "#FFF6D9",
+							background: "linear-gradient(135deg, #8B3FE5 0%, #ED3F9E 100%)",
+							boxShadow: "0 0 12px rgba(237, 63, 158, 0.35)",
+						}}
+					>
+						Portale Socio
+					</span>
 					<p className="text-sm text-muted-foreground">Accedi alla tua area personale</p>
 				</div>
 

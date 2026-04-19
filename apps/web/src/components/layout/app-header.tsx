@@ -1,14 +1,19 @@
 "use client";
 
+import { NeogesysLogoHorizontal } from "@/components/brand/neogesys-mark";
 import { PaletteSelector } from "@/components/palette-selector";
+import { QuasarMenu } from "@/components/quasar-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TenantMenu } from "@/components/layout/tenant-menu";
+import { NEOGESYS_SECTOR } from "@/lib/brand";
+import { getRoleInfo, useCurrentUser } from "@/lib/current-user";
 import { useUIStore } from "@/lib/store";
 import {
 	Bell,
 	ChevronDown,
+	Inbox,
 	LogOut,
 	Menu,
-	MessageSquare,
 	Search,
 	Settings,
 	User,
@@ -21,12 +26,13 @@ interface AppHeaderProps {
 
 export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 	const { setCommandPaletteOpen } = useUIStore();
+	const { current } = useCurrentUser();
+	const roleInfo = getRoleInfo(current.role);
 	const [showNotifications, setShowNotifications] = useState(false);
 	const [showProfile, setShowProfile] = useState(false);
 	const notifRef = useRef<HTMLDivElement>(null);
 	const profileRef = useRef<HTMLDivElement>(null);
 
-	// Close dropdowns on outside click
 	useEffect(() => {
 		const handler = (e: MouseEvent) => {
 			if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -41,86 +47,75 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 	}, []);
 
 	return (
-		<header className="sticky top-0 z-40 flex h-14 items-center border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-			{/* Left: Hamburger + Logo */}
-			<div className="flex items-center gap-3">
+		<header className="app-header">
+			{/* Left: Hamburger + Logo + Tenant */}
+			<div className="header-left">
 				<button
 					type="button"
 					onClick={onToggleSidebar}
-					className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted lg:flex"
-					aria-label="Toggle menu"
+					className="btn btn-ghost btn-icon"
+					aria-label="Menu"
 				>
-					<Menu className="h-5 w-5 text-foreground" />
+					<Menu className="icon-lg" />
 				</button>
 
-				<div className="flex items-center gap-2">
-					<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-						NS
-					</div>
-					<span className="hidden text-sm font-semibold text-foreground sm:inline-block">
-						NeoGesys Sport
+				<a href="/" className="logo logo-horizontal" aria-label={`NEOGESYS ${NEOGESYS_SECTOR}`}>
+					<span className="logo-horizontal-wrap" aria-hidden="true">
+						<NeogesysLogoHorizontal size="100%" ariaHidden />
 					</span>
-				</div>
+					<span className="logo-sector">{NEOGESYS_SECTOR}</span>
+				</a>
+
+				{/* Menu tenant — info, piano, switcher per super_admin.
+				    Sostituisce la vecchia label statica. */}
+				<TenantMenu />
 			</div>
 
 			{/* Center: Command palette trigger */}
-			<div className="mx-4 flex-1">
-				<button
-					type="button"
-					onClick={() => setCommandPaletteOpen(true)}
-					className="mx-auto flex h-9 w-full max-w-md items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-sm text-muted-foreground hover:bg-muted"
-				>
-					<Search className="h-4 w-4" />
-					<span className="flex-1 text-left">Cerca...</span>
-					<kbd className="hidden rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
-						⌘K
-					</kbd>
-				</button>
-			</div>
+			<button
+				type="button"
+				onClick={() => setCommandPaletteOpen(true)}
+				className="header-search"
+			>
+				<Search className="icon" />
+				<span>Cerca soci, corsi, azioni...</span>
+				<kbd>⌘K</kbd>
+			</button>
 
 			{/* Right: Actions */}
-			<div className="flex items-center gap-1">
+			<div className="header-right">
 				{/* Notifications */}
 				<div ref={notifRef} className="relative">
 					<button
 						type="button"
 						onClick={() => setShowNotifications(!showNotifications)}
-						className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
+						className="btn btn-ghost btn-icon"
 						aria-label="Notifiche"
 					>
-						<Bell className="h-5 w-5 text-foreground" />
-						<span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-							3
-						</span>
+						<Bell className="icon-lg" />
+						<span className="notification-dot">3</span>
 					</button>
 
 					{showNotifications && (
-						<div className="absolute right-0 top-full mt-2 w-80 rounded-lg border border-border bg-popover p-4 shadow-lg">
-							<h3 className="mb-3 text-sm font-semibold text-popover-foreground">Notifiche</h3>
-							<div className="space-y-3">
-								{[
-									{
-										text: "3 certificati medici in scadenza",
-										time: "2 ore fa",
-									},
-									{
-										text: "Nuovo socio registrato: Laura Bianchi",
-										time: "5 ore fa",
-									},
-									{
-										text: "Pagamento ricevuto da Mario Rossi",
-										time: "1 giorno fa",
-									},
-								].map((n, i) => (
-									<div key={i} className="flex items-start gap-3 rounded-md p-2 hover:bg-muted">
-										<div className="mt-1 h-2 w-2 rounded-full bg-primary" />
-										<div>
-											<p className="text-sm text-popover-foreground">{n.text}</p>
-											<p className="text-xs text-muted-foreground">{n.time}</p>
-										</div>
-									</div>
-								))}
-							</div>
+						<div className="popover" style={{ top: "3.5rem", right: 0, width: "20rem" }}>
+							<div className="popover-label">Notifiche</div>
+							{[
+								{ text: "3 certificati medici in scadenza", time: "2 ore fa" },
+								{ text: "Nuovo socio registrato: Laura Bianchi", time: "5 ore fa" },
+								{ text: "Pagamento ricevuto da Mario Rossi", time: "1 giorno fa" },
+							].map((n, i) => (
+								<button
+									key={i}
+									type="button"
+									className="popover-item"
+									style={{ flexDirection: "column", alignItems: "flex-start", gap: "0.25rem" }}
+								>
+									<span style={{ fontSize: "0.8125rem" }}>{n.text}</span>
+									<span style={{ fontSize: "0.6875rem", color: "hsl(var(--muted-foreground))" }}>
+										{n.time}
+									</span>
+								</button>
+							))}
 						</div>
 					)}
 				</div>
@@ -128,10 +123,11 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 				{/* Messages */}
 				<button
 					type="button"
-					className="hidden h-9 w-9 items-center justify-center rounded-md hover:bg-muted sm:inline-flex"
+					className="btn btn-ghost btn-icon"
 					aria-label="Messaggi"
+					title="Messaggi"
 				>
-					<MessageSquare className="h-5 w-5 text-foreground" />
+					<Inbox className="icon-lg" />
 				</button>
 
 				{/* Palette selector */}
@@ -141,50 +137,98 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 				<ThemeToggle />
 
 				{/* Profile dropdown */}
-				<div ref={profileRef} className="relative ml-1">
+				<div ref={profileRef} className="relative">
 					<button
 						type="button"
 						onClick={() => setShowProfile(!showProfile)}
-						className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						className="btn btn-ghost"
+						style={{ padding: "0.25rem 0.5rem 0.25rem 0.25rem", gap: "0.5rem" }}
 					>
-						<div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-							MR
+						<div className="avatar">{current.initials}</div>
+						<div
+							style={{
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "flex-start",
+								lineHeight: 1.15,
+								minWidth: 0,
+							}}
+						>
+							<span style={{ fontSize: "0.8125rem", fontWeight: 500 }}>{current.name}</span>
+							<span className={`badge ${roleInfo.badgeCls}`} style={{ fontSize: "0.625rem", padding: "0 0.375rem", lineHeight: "1rem" }}>
+								{roleInfo.label}
+							</span>
 						</div>
-						<ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
+						<ChevronDown className="icon-sm" />
 					</button>
 
 					{showProfile && (
-						<div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-popover py-1 shadow-lg">
-							<div className="border-b border-border px-4 py-3">
-								<p className="text-sm font-medium text-popover-foreground">Mario Rossi</p>
-								<p className="text-xs text-muted-foreground">mario@asdnapoli.it</p>
-							</div>
-							<button
-								type="button"
-								className="flex w-full items-center gap-2 px-4 py-2 text-sm text-popover-foreground hover:bg-muted"
+						<div className="popover" style={{ top: "3.5rem", right: 0, width: "17rem" }}>
+							<div
+								style={{
+									padding: "0.75rem",
+									display: "flex",
+									gap: "0.625rem",
+									alignItems: "center",
+								}}
 							>
-								<User className="h-4 w-4" />
-								Profilo
-							</button>
-							<button
-								type="button"
-								className="flex w-full items-center gap-2 px-4 py-2 text-sm text-popover-foreground hover:bg-muted"
-							>
-								<Settings className="h-4 w-4" />
-								Impostazioni
-							</button>
-							<div className="border-t border-border">
-								<button
-									type="button"
-									className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-muted"
-								>
-									<LogOut className="h-4 w-4" />
-									Esci
-								</button>
+								<div className="avatar" style={{ width: "2.5rem", height: "2.5rem" }}>
+									{current.initials}
+								</div>
+								<div style={{ minWidth: 0, flex: 1 }}>
+									<div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{current.name}</div>
+									<div
+										style={{
+											fontSize: "0.75rem",
+											color: "hsl(var(--muted-foreground))",
+											whiteSpace: "nowrap",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+										}}
+									>
+										{current.email}
+									</div>
+									<span
+										className={`badge ${roleInfo.badgeCls}`}
+										style={{ fontSize: "0.625rem", marginTop: "0.25rem" }}
+									>
+										{roleInfo.label}
+									</span>
+								</div>
 							</div>
+							<div
+								style={{
+									fontSize: "0.75rem",
+									color: "hsl(var(--muted-foreground))",
+									padding: "0 0.75rem 0.5rem",
+								}}
+							>
+								{roleInfo.description}
+							</div>
+							<div className="popover-divider" />
+							<button type="button" className="popover-item">
+								<User className="icon" /> Il mio profilo
+							</button>
+							<a href="/impostazioni" className="popover-item">
+								<Settings className="icon" /> Impostazioni
+							</a>
+							<div className="popover-divider" />
+							<a
+								href="/login"
+								className="popover-item"
+								style={{ color: "hsl(var(--destructive))" }}
+							>
+								<LogOut className="icon" /> Cambia ruolo / Esci
+							</a>
 						</div>
 					)}
 				</div>
+
+				{/* Quasar menu — a destra dell'avatar utente.
+				    Centralizza crediti AI, piano attivo, stato sistema, stack,
+				    aggiornamenti e changelog. Voluto qui per essere l'ultimo
+				    punto visivo della barra: "la stella della NEOGESYS suite". */}
+				<QuasarMenu />
 			</div>
 		</header>
 	);

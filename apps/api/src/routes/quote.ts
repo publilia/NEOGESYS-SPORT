@@ -1,26 +1,44 @@
+import {
+	anniSportivi,
+	primaNotaMovimenti,
+	quote,
+	soci,
+	tenants,
+	tipiQuota,
+} from "@neogesys/db";
 import { TRPCError } from "@trpc/server";
-import { sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, isNotNull, lt, lte, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc/index";
 
 // ─── Input Schemas ───────────────────────────────────────────────────────────
 
+const statoEnum = z.enum(["da_pagare", "parziale", "pagato", "esonerato"]);
+const metodoEnum = z.enum(["contanti", "bonifico", "pos", "stripe", "satispay"]);
+
 const listInput = z.object({
 	page: z.number().int().min(1).default(1),
 	perPage: z.number().int().min(1).max(100).default(20),
-	stato: z.enum(["emessa", "pagata", "scaduta", "annullata"]).optional(),
+	stato: statoEnum.optional(),
 	socioId: z.string().uuid().optional(),
 	annoSportivoId: z.string().uuid().optional(),
 });
 
 const createQuotaInput = z.object({
 	socioId: z.string().uuid(),
-	tipoQuotaId: z.string().uuid().optional(),
+	tipoQuotaId: z.string().uuid(),
 	annoSportivoId: z.string().uuid().optional(),
-	descrizione: z.string().max(500),
 	importo: z.number().min(0),
 	dataEmissione: z.string().datetime().optional(),
 	dataScadenza: z.string().datetime().optional(),
+	note: z.string().optional(),
+});
+
+const updateQuotaInput = z.object({
+	id: z.string().uuid(),
+	importo: z.number().min(0).optional(),
+	dataScadenza: z.string().datetime().nullable().optional(),
+	stato: statoEnum.optional(),
 	note: z.string().optional(),
 });
 
@@ -28,8 +46,8 @@ const registraPagamentoInput = z.object({
 	quotaId: z.string().uuid(),
 	importoPagato: z.number().min(0),
 	dataPagamento: z.string().datetime().optional(),
-	metodoPagamento: z.enum(["contanti", "bonifico", "carta", "satispay", "altro"]),
-	riferimentoPagamento: z.string().optional(),
+	metodoPagamento: metodoEnum,
+	stripePaymentId: z.string().optional(),
 	note: z.string().optional(),
 });
 
@@ -51,163 +69,224 @@ function requireTenant(tenantId: string | undefined): string {
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const quoteRouter = router({
-	/**
-	 * List quote with pagination and filters.
-	 */
 	list: protectedProcedure.input(listInput).query(async ({ ctx, input }) => {
 		const tenantId = requireTenant(ctx.tenant?.id);
 		const { page, perPage } = input;
 		const offset = (page - 1) * perPage;
 
-		const result = await ctx.db.execute(sql`
-      SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
-        count(*) OVER() AS total_count
-      FROM quote q
-      JOIN soci s ON s.id = q.socio_id
-      WHERE q.tenant_id = ${tenantId}
-        ${input.stato ? sql`AND q.stato = ${input.stato}` : sql``}
-        ${input.socioId ? sql`AND q.socio_id = ${input.socioId}` : sql``}
-        ${input.annoSportivoId ? sql`AND q.anno_sportivo_id = ${input.annoSportivoId}` : sql``}
-      ORDER BY q.data_emissione DESC
-      LIMIT ${perPage} OFFSET ${offset}
-    `);
+		const conds = [eq(quote.tenantId, tenantId)];
+		if (input.stato) conds.push(eq(quote.stato, input.stato));
+		if (input.socioId) conds.push(eq(quote.socioId, input.socioId));
+		if (input.annoSportivoId) conds.push(eq(quote.annoSportivoId, input.annoSportivoId));
 
-		const rows = result as unknown as Array<Record<string, unknown>>;
-		const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
+		const [items, totalRows] = await Promise.all([
+			ctx.db
+				.select({
+					id: quote.id,
+					tenantId: quote.tenantId,
+					socioId: quote.socioId,
+					tipoQuotaId: quote.tipoQuotaId,
+					annoSportivoId: quote.annoSportivoId,
+					importo: quote.importo,
+					importoPagato: quote.importoPagato,
+					stato: quote.stato,
+					dataEmissione: quote.dataEmissione,
+					dataScadenza: quote.dataScadenza,
+					dataPagamento: quote.dataPagamento,
+					metodoPagamento: quote.metodoPagamento,
+					note: quote.note,
+					createdAt: quote.createdAt,
+					socioNome: soci.nome,
+					socioCognome: soci.cognome,
+					socioEmail: soci.email,
+					tipoQuotaNome: tipiQuota.nome,
+					tipoQuotaTipo: tipiQuota.tipo,
+				})
+				.from(quote)
+				.innerJoin(soci, eq(quote.socioId, soci.id))
+				.leftJoin(tipiQuota, eq(quote.tipoQuotaId, tipiQuota.id))
+				.where(and(...conds))
+				.orderBy(desc(quote.dataEmissione))
+				.limit(perPage)
+				.offset(offset),
+			ctx.db
+				.select({ value: count() })
+				.from(quote)
+				.where(and(...conds)),
+		]);
+		const total = totalRows[0]?.value ?? 0;
 
 		return {
-			items: rows.map(({ total_count, ...r }) => r),
-			total,
+			items,
+			total: Number(total),
 			page,
 			perPage,
-			totalPages: Math.ceil(total / perPage),
+			totalPages: Math.ceil(Number(total) / perPage),
 		};
 	}),
 
-	/**
-	 * Get a single quota by ID.
-	 */
 	getById: protectedProcedure
 		.input(z.object({ id: z.string().uuid() }))
 		.query(async ({ ctx, input }) => {
 			const tenantId = requireTenant(ctx.tenant?.id);
-
-			const result = await ctx.db.execute(sql`
-        SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
-          s.codice_fiscale AS socio_codice_fiscale
-        FROM quote q
-        JOIN soci s ON s.id = q.socio_id
-        WHERE q.id = ${input.id} AND q.tenant_id = ${tenantId}
-        LIMIT 1
-      `);
-
-			const rows = result as unknown as Array<Record<string, unknown>>;
-			if (rows.length === 0) {
-				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-			}
-
-			return rows[0];
+			const [row] = await ctx.db
+				.select({
+					id: quote.id,
+					socioId: quote.socioId,
+					tipoQuotaId: quote.tipoQuotaId,
+					annoSportivoId: quote.annoSportivoId,
+					importo: quote.importo,
+					importoPagato: quote.importoPagato,
+					stato: quote.stato,
+					dataEmissione: quote.dataEmissione,
+					dataScadenza: quote.dataScadenza,
+					dataPagamento: quote.dataPagamento,
+					metodoPagamento: quote.metodoPagamento,
+					note: quote.note,
+					createdAt: quote.createdAt,
+					updatedAt: quote.updatedAt,
+					socioNome: soci.nome,
+					socioCognome: soci.cognome,
+					socioCodiceFiscale: soci.codiceFiscale,
+					tipoQuotaNome: tipiQuota.nome,
+					tipoQuotaTipo: tipiQuota.tipo,
+				})
+				.from(quote)
+				.innerJoin(soci, eq(quote.socioId, soci.id))
+				.leftJoin(tipiQuota, eq(quote.tipoQuotaId, tipiQuota.id))
+				.where(and(eq(quote.id, input.id), eq(quote.tenantId, tenantId)))
+				.limit(1);
+			if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			return row;
 		}),
 
-	/**
-	 * Create (emit) a new quota.
-	 */
 	create: protectedProcedure.input(createQuotaInput).mutation(async ({ ctx, input }) => {
 		const tenantId = requireTenant(ctx.tenant?.id);
 
-		// Verify socio belongs to tenant
-		const socioCheck = await ctx.db.execute(sql`
-      SELECT id FROM soci WHERE id = ${input.socioId} AND tenant_id = ${tenantId} LIMIT 1
-    `);
-		if ((socioCheck as unknown as Array<unknown>).length === 0) {
-			throw new TRPCError({ code: "NOT_FOUND", message: "Socio non trovato." });
-		}
+		const [socio] = await ctx.db
+			.select({ id: soci.id })
+			.from(soci)
+			.where(and(eq(soci.id, input.socioId), eq(soci.tenantId, tenantId)))
+			.limit(1);
+		if (!socio) throw new TRPCError({ code: "NOT_FOUND", message: "Socio non trovato." });
 
-		const result = await ctx.db.execute(sql`
-      INSERT INTO quote (tenant_id, socio_id, tipo_quota_id, anno_sportivo_id,
-        descrizione, importo, data_emissione, data_scadenza, stato, note)
-      VALUES (
-        ${tenantId}, ${input.socioId}, ${input.tipoQuotaId ?? null},
-        ${input.annoSportivoId ?? null}, ${input.descrizione}, ${input.importo},
-        ${input.dataEmissione ?? new Date().toISOString()},
-        ${input.dataScadenza ?? null}, 'emessa', ${input.note ?? null}
-      )
-      RETURNING *
-    `);
+		const [tipo] = await ctx.db
+			.select({ id: tipiQuota.id })
+			.from(tipiQuota)
+			.where(and(eq(tipiQuota.id, input.tipoQuotaId), eq(tipiQuota.tenantId, tenantId)))
+			.limit(1);
+		if (!tipo) throw new TRPCError({ code: "NOT_FOUND", message: "Tipo quota non trovato." });
 
-		const rows = result as unknown as Array<Record<string, unknown>>;
-		return rows[0];
+		const [row] = await ctx.db
+			.insert(quote)
+			.values({
+				tenantId,
+				socioId: input.socioId,
+				tipoQuotaId: input.tipoQuotaId,
+				annoSportivoId: input.annoSportivoId ?? null,
+				importo: String(input.importo),
+				importoPagato: "0",
+				stato: "da_pagare",
+				dataEmissione: input.dataEmissione ? new Date(input.dataEmissione) : new Date(),
+				dataScadenza: input.dataScadenza ? new Date(input.dataScadenza) : null,
+				note: input.note ?? null,
+			})
+			.returning();
+		return row;
 	}),
 
-	/**
-	 * Record a payment for a quota.
-	 */
+	update: protectedProcedure.input(updateQuotaInput).mutation(async ({ ctx, input }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
+		const { id, ...data } = input;
+		const patch: Record<string, unknown> = { updatedAt: new Date() };
+		if (data.importo !== undefined) patch.importo = String(data.importo);
+		if (data.dataScadenza !== undefined)
+			patch.dataScadenza = data.dataScadenza ? new Date(data.dataScadenza) : null;
+		if (data.stato !== undefined) patch.stato = data.stato;
+		if (data.note !== undefined) patch.note = data.note;
+
+		const [updated] = await ctx.db
+			.update(quote)
+			.set(patch)
+			.where(and(eq(quote.id, id), eq(quote.tenantId, tenantId)))
+			.returning();
+		if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+		return updated;
+	}),
+
+	delete: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
+		.mutation(async ({ ctx, input }) => {
+			const tenantId = requireTenant(ctx.tenant?.id);
+			const [deleted] = await ctx.db
+				.delete(quote)
+				.where(and(eq(quote.id, input.id), eq(quote.tenantId, tenantId)))
+				.returning({ id: quote.id });
+			if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			return { success: true };
+		}),
+
 	registraPagamento: protectedProcedure
 		.input(registraPagamentoInput)
 		.mutation(async ({ ctx, input }) => {
 			const tenantId = requireTenant(ctx.tenant?.id);
 
-			// Verify quota exists and belongs to tenant
-			const quotaResult = await ctx.db.execute(sql`
-        SELECT id, importo, stato, socio_id, descrizione FROM quote
-        WHERE id = ${input.quotaId} AND tenant_id = ${tenantId}
-        LIMIT 1
-      `);
-
-			const quotaRows = quotaResult as unknown as Array<Record<string, unknown>>;
-			if (quotaRows.length === 0) {
-				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-			}
-
-			const quota = quotaRows[0]!;
-			if (quota.stato === "pagata") {
+			const [q] = await ctx.db
+				.select()
+				.from(quote)
+				.where(and(eq(quote.id, input.quotaId), eq(quote.tenantId, tenantId)))
+				.limit(1);
+			if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			if (q.stato === "pagato")
 				throw new TRPCError({ code: "BAD_REQUEST", message: "Quota gia' pagata." });
+
+			const totalePagato = Number(q.importoPagato) + input.importoPagato;
+			const importo = Number(q.importo);
+			const nuovoStato: "pagato" | "parziale" =
+				totalePagato >= importo ? "pagato" : "parziale";
+			const dataPag = input.dataPagamento ? new Date(input.dataPagamento) : new Date();
+
+			const [updated] = await ctx.db
+				.update(quote)
+				.set({
+					stato: nuovoStato,
+					importoPagato: String(totalePagato),
+					dataPagamento: nuovoStato === "pagato" ? dataPag : null,
+					metodoPagamento: input.metodoPagamento,
+					stripePaymentId: input.stripePaymentId ?? null,
+					note: input.note
+						? q.note
+							? `${q.note}\n${input.note}`
+							: input.note
+						: q.note,
+					updatedAt: new Date(),
+				})
+				.where(eq(quote.id, input.quotaId))
+				.returning();
+
+			// Create matching accounting entry
+			if (nuovoStato === "pagato" || nuovoStato === "parziale") {
+				const [tq] = await ctx.db
+					.select({ nome: tipiQuota.nome })
+					.from(tipiQuota)
+					.where(eq(tipiQuota.id, q.tipoQuotaId))
+					.limit(1);
+				await ctx.db.insert(primaNotaMovimenti).values({
+					tenantId,
+					tipo: "entrata",
+					causale: `Pagamento quota ${tq?.nome ?? ""}`.trim(),
+					descrizione: `Metodo: ${input.metodoPagamento}`,
+					importo: String(input.importoPagato),
+					data: dataPag,
+					categoriaContabile: "quote_associative",
+					quotaId: input.quotaId,
+					socioId: q.socioId,
+				});
 			}
 
-			// Update quota with payment info
-			const result = await ctx.db.execute(sql`
-        UPDATE quote SET
-          stato = 'pagata',
-          importo_pagato = ${input.importoPagato},
-          data_pagamento = ${input.dataPagamento ?? new Date().toISOString()},
-          metodo_pagamento = ${input.metodoPagamento},
-          riferimento_pagamento = ${input.riferimentoPagamento ?? null},
-          note = COALESCE(note || E'\n', '') || COALESCE(${input.note ?? null}, ''),
-          updated_at = NOW()
-        WHERE id = ${input.quotaId} AND tenant_id = ${tenantId}
-        RETURNING *
-      `);
-
-			// Automatically create a prima_nota_movimenti entry for accounting
-			const updatedRows = result as unknown as Array<Record<string, unknown>>;
-			const updatedQuota = updatedRows[0];
-
-			if (updatedQuota) {
-				await ctx.db.execute(sql`
-          INSERT INTO prima_nota_movimenti
-            (tenant_id, tipo, causale, descrizione, importo, data,
-             categoria_contabile, quota_id, socio_id)
-          VALUES (
-            ${tenantId},
-            'entrata',
-            ${`Quota: ${String(updatedQuota.descrizione ?? "")}`},
-            ${`Pagamento con ${input.metodoPagamento}${input.riferimentoPagamento ? ` - rif. ${input.riferimentoPagamento}` : ""}`},
-            ${input.importoPagato},
-            ${input.dataPagamento ?? new Date().toISOString()},
-            'quote_associative',
-            ${input.quotaId},
-            ${quota.socio_id ? String(quota.socio_id) : null}
-          )
-        `);
-			}
-
-			const rows = result as unknown as Array<Record<string, unknown>>;
-			return rows[0];
+			return updated;
 		}),
 
-	/**
-	 * Get overdue payments (scadenzario).
-	 */
 	getScadenzario: protectedProcedure
 		.input(
 			z.object({
@@ -219,130 +298,172 @@ export const quoteRouter = router({
 			const tenantId = requireTenant(ctx.tenant?.id);
 			const offset = (input.page - 1) * input.perPage;
 
-			const result = await ctx.db.execute(sql`
-        SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
-          s.email AS socio_email, s.telefono AS socio_telefono,
-          count(*) OVER() AS total_count
-        FROM quote q
-        JOIN soci s ON s.id = q.socio_id
-        WHERE q.tenant_id = ${tenantId}
-          AND q.stato = 'emessa'
-          AND q.data_scadenza < NOW()
-        ORDER BY q.data_scadenza ASC
-        LIMIT ${input.perPage} OFFSET ${offset}
-      `);
+			const now = new Date();
+			const conds = [
+				eq(quote.tenantId, tenantId),
+				eq(quote.stato, "da_pagare"),
+				isNotNull(quote.dataScadenza),
+				lt(quote.dataScadenza, now),
+			];
 
-			const rows = result as unknown as Array<Record<string, unknown>>;
-			const total = rows.length > 0 ? Number(rows[0]?.total_count ?? 0) : 0;
+			const [items, totalRows] = await Promise.all([
+				ctx.db
+					.select({
+						id: quote.id,
+						importo: quote.importo,
+						importoPagato: quote.importoPagato,
+						dataScadenza: quote.dataScadenza,
+						stato: quote.stato,
+						socioId: quote.socioId,
+						socioNome: soci.nome,
+						socioCognome: soci.cognome,
+						socioEmail: soci.email,
+						socioTelefono: soci.telefono,
+					})
+					.from(quote)
+					.innerJoin(soci, eq(quote.socioId, soci.id))
+					.where(and(...conds))
+					.orderBy(quote.dataScadenza)
+					.limit(input.perPage)
+					.offset(offset),
+				ctx.db
+					.select({ value: count() })
+					.from(quote)
+					.where(and(...conds)),
+			]);
+			const total = totalRows[0]?.value ?? 0;
 
 			return {
-				items: rows.map(({ total_count, ...r }) => r),
-				total,
+				items,
+				total: Number(total),
 				page: input.page,
 				perPage: input.perPage,
-				totalPages: Math.ceil(total / input.perPage),
+				totalPages: Math.ceil(Number(total) / input.perPage),
 			};
 		}),
 
-	/**
-	 * Generate a PDF receipt URL for a paid quota.
-	 */
 	generaRicevuta: protectedProcedure
 		.input(z.object({ quotaId: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
 			const tenantId = requireTenant(ctx.tenant?.id);
 
-			const quotaResult = await ctx.db.execute(sql`
-        SELECT q.*, s.nome AS socio_nome, s.cognome AS socio_cognome,
-          s.codice_fiscale AS socio_codice_fiscale,
-          t.ragione_sociale, t.partita_iva, t.codice_fiscale AS tenant_cf,
-          t.sede_legale
-        FROM quote q
-        JOIN soci s ON s.id = q.socio_id
-        JOIN tenants t ON t.id = q.tenant_id
-        WHERE q.id = ${input.quotaId} AND q.tenant_id = ${tenantId}
-        LIMIT 1
-      `);
-
-			const rows = quotaResult as unknown as Array<Record<string, unknown>>;
-			if (rows.length === 0) {
-				throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
-			}
-
-			const quota = rows[0]!;
-			if (quota.stato !== "pagata") {
+			const [row] = await ctx.db
+				.select({
+					quota: quote,
+					socioNome: soci.nome,
+					socioCognome: soci.cognome,
+					socioCodiceFiscale: soci.codiceFiscale,
+					tenantRagioneSociale: tenants.ragioneSociale,
+					tenantPartitaIva: tenants.partitaIva,
+					tenantCodiceFiscale: tenants.codiceFiscale,
+					tenantSedeLegale: tenants.sedeLegale,
+				})
+				.from(quote)
+				.innerJoin(soci, eq(quote.socioId, soci.id))
+				.innerJoin(tenants, eq(quote.tenantId, tenants.id))
+				.where(and(eq(quote.id, input.quotaId), eq(quote.tenantId, tenantId)))
+				.limit(1);
+			if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Quota non trovata." });
+			if (row.quota.stato !== "pagato") {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "La ricevuta puo' essere generata solo per quote pagate.",
 				});
 			}
 
-			// TODO: Generate PDF via a PDF service (e.g. puppeteer, pdfkit)
-			// and upload to object storage. Return the URL.
-			return {
-				success: true,
-				message: "Generazione ricevuta avviata.",
-				url: null as string | null, // Will be populated once PDF service is implemented
-			};
+			// TODO: wire into a real PDF generator. For now mark the ricevutaUrl
+			// with a placeholder so the UI can render a download button.
+			const url = `/api/ricevute/${input.quotaId}.pdf`;
+			await ctx.db
+				.update(quote)
+				.set({ ricevutaUrl: url, updatedAt: new Date() })
+				.where(eq(quote.id, input.quotaId));
+			return { success: true, url };
 		}),
 
-	/**
-	 * Income statistics by period and discipline.
-	 */
 	stats: protectedProcedure.input(statsInput).query(async ({ ctx, input }) => {
 		const tenantId = requireTenant(ctx.tenant?.id);
 
-		const [totals, byDisciplina, byMese] = await Promise.all([
-			// Overall totals
-			ctx.db.execute(sql`
-        SELECT
-          count(*) FILTER (WHERE stato = 'pagata') AS quote_pagate,
-          count(*) FILTER (WHERE stato = 'emessa') AS quote_emesse,
-          count(*) FILTER (WHERE stato = 'scaduta') AS quote_scadute,
-          COALESCE(SUM(importo) FILTER (WHERE stato = 'pagata'), 0) AS totale_incassato,
-          COALESCE(SUM(importo) FILTER (WHERE stato = 'emessa'), 0) AS totale_da_incassare
-        FROM quote
-        WHERE tenant_id = ${tenantId}
-          ${input.periodoInizio ? sql`AND data_emissione >= ${input.periodoInizio}` : sql``}
-          ${input.periodoFine ? sql`AND data_emissione <= ${input.periodoFine}` : sql``}
-          ${input.annoSportivoId ? sql`AND anno_sportivo_id = ${input.annoSportivoId}` : sql``}
-      `),
+		const baseConds = [eq(quote.tenantId, tenantId)];
+		if (input.annoSportivoId) baseConds.push(eq(quote.annoSportivoId, input.annoSportivoId));
+		if (input.periodoInizio)
+			baseConds.push(gte(quote.dataEmissione, new Date(input.periodoInizio)));
+		if (input.periodoFine)
+			baseConds.push(lte(quote.dataEmissione, new Date(input.periodoFine)));
 
-			// By discipline
-			ctx.db.execute(sql`
-        SELECT s.disciplina,
-          count(*) AS count,
-          COALESCE(SUM(q.importo) FILTER (WHERE q.stato = 'pagata'), 0) AS incassato
-        FROM quote q
-        JOIN soci s ON s.id = q.socio_id
-        WHERE q.tenant_id = ${tenantId}
-          ${input.periodoInizio ? sql`AND q.data_emissione >= ${input.periodoInizio}` : sql``}
-          ${input.periodoFine ? sql`AND q.data_emissione <= ${input.periodoFine}` : sql``}
-        GROUP BY s.disciplina
-        ORDER BY incassato DESC
-      `),
+		const totals = await ctx.db
+			.select({
+				stato: quote.stato,
+				count: count(),
+				totale: sum(quote.importo),
+				totalePagato: sum(quote.importoPagato),
+			})
+			.from(quote)
+			.where(and(...baseConds))
+			.groupBy(quote.stato);
 
-			// Monthly trend
-			ctx.db.execute(sql`
-        SELECT
-          date_trunc('month', data_pagamento) AS mese,
-          count(*) AS count,
-          COALESCE(SUM(importo), 0) AS incassato
-        FROM quote
-        WHERE tenant_id = ${tenantId}
-          AND stato = 'pagata'
-          AND data_pagamento IS NOT NULL
-          ${input.periodoInizio ? sql`AND data_pagamento >= ${input.periodoInizio}` : sql``}
-          ${input.periodoFine ? sql`AND data_pagamento <= ${input.periodoFine}` : sql``}
-        GROUP BY mese
-        ORDER BY mese
-      `),
-		]);
+		const byDisciplina = await ctx.db
+			.select({
+				disciplina: soci.disciplina,
+				count: count(),
+				incassato: sum(quote.importoPagato),
+			})
+			.from(quote)
+			.innerJoin(soci, eq(quote.socioId, soci.id))
+			.where(and(...baseConds))
+			.groupBy(soci.disciplina);
+
+		const byMese = await ctx.db.execute(sql`
+			SELECT
+				date_trunc('month', data_pagamento) AS mese,
+				count(*)::text AS count,
+				COALESCE(SUM(importo_pagato), 0)::text AS incassato
+			FROM quote
+			WHERE tenant_id = ${tenantId}
+				AND stato IN ('pagato', 'parziale')
+				AND data_pagamento IS NOT NULL
+				${input.periodoInizio ? sql`AND data_pagamento >= ${input.periodoInizio}` : sql``}
+				${input.periodoFine ? sql`AND data_pagamento <= ${input.periodoFine}` : sql``}
+			GROUP BY mese
+			ORDER BY mese
+		`);
 
 		return {
-			totals: (totals as unknown as Array<Record<string, unknown>>)[0] ?? {},
-			byDisciplina: byDisciplina as unknown as Array<Record<string, unknown>>,
-			byMese: byMese as unknown as Array<Record<string, unknown>>,
+			totals: totals.map((t) => ({
+				stato: t.stato,
+				count: Number(t.count),
+				totale: Number(t.totale ?? 0),
+				totalePagato: Number(t.totalePagato ?? 0),
+			})),
+			byDisciplina: byDisciplina.map((d) => ({
+				disciplina: d.disciplina ?? "Senza disciplina",
+				count: Number(d.count),
+				incassato: Number(d.incassato ?? 0),
+			})),
+			byMese: (byMese as unknown as Array<{ mese: string; count: string; incassato: string }>)
+				.map((r) => ({
+					mese: r.mese,
+					count: Number(r.count),
+					incassato: Number(r.incassato),
+				})),
 		};
+	}),
+
+	listTipiQuota: protectedProcedure.query(async ({ ctx }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
+		return ctx.db
+			.select()
+			.from(tipiQuota)
+			.where(and(eq(tipiQuota.tenantId, tenantId), eq(tipiQuota.attivo, true)))
+			.orderBy(tipiQuota.nome);
+	}),
+
+	listAnniSportivi: protectedProcedure.query(async ({ ctx }) => {
+		const tenantId = requireTenant(ctx.tenant?.id);
+		return ctx.db
+			.select()
+			.from(anniSportivi)
+			.where(eq(anniSportivi.tenantId, tenantId))
+			.orderBy(desc(anniSportivi.dataInizio));
 	}),
 });

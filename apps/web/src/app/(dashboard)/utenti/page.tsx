@@ -1,379 +1,519 @@
 "use client";
 
-import {
-	type ColumnDef,
-	type SortingState,
-	flexRender,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, FormGrid, Input, Select } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
 import {
 	ChevronLeft,
 	ChevronRight,
-	Search,
+	Plus,
 	Shield,
-	ToggleLeft,
-	ToggleRight,
-	UserPlus,
+	Trash2,
+	UserCheck,
+	UserCog,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-type RuoloUtente = "admin" | "segreteria" | "istruttore" | "visualizzatore";
-type StatoUtente = "attivo" | "disabilitato";
+type Ruolo = "admin" | "segreteria" | "contabile" | "istruttore" | "atleta" | "genitore";
 
-interface Utente {
-	id: string;
+const RUOLO_LABEL: Record<Ruolo, { label: string; cls: string }> = {
+	admin: { label: "Admin", cls: "badge-primary" },
+	segreteria: { label: "Segreteria", cls: "badge-success" },
+	contabile: { label: "Contabile", cls: "badge-warning" },
+	istruttore: { label: "Istruttore", cls: "badge" },
+	atleta: { label: "Atleta", cls: "badge-outline" },
+	genitore: { label: "Genitore", cls: "badge-outline" },
+};
+
+const RUOLI: Ruolo[] = ["admin", "segreteria", "contabile", "istruttore", "atleta", "genitore"];
+
+interface InviteForm {
+	email: string;
 	nome: string;
 	cognome: string;
-	email: string;
-	ruolo: RuoloUtente;
-	stato: StatoUtente;
-	ultimoAccesso: string;
+	telefono: string;
+	ruolo: Ruolo;
 }
 
-const RUOLO_LABELS: Record<RuoloUtente, string> = {
-	admin: "Admin",
-	segreteria: "Segreteria",
-	istruttore: "Istruttore",
-	visualizzatore: "Visualizzatore",
+const EMPTY_INVITE: InviteForm = {
+	email: "",
+	nome: "",
+	cognome: "",
+	telefono: "",
+	ruolo: "segreteria",
 };
 
-const RUOLO_COLORS: Record<RuoloUtente, string> = {
-	admin: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-	segreteria: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-	istruttore: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	visualizzatore: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-};
-
-const STATO_LABELS: Record<StatoUtente, string> = {
-	attivo: "Attivo",
-	disabilitato: "Disabilitato",
-};
-
-const STATO_COLORS: Record<StatoUtente, string> = {
-	attivo: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	disabilitato: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-};
-
-// Sample data - replace with tRPC query
-const SAMPLE_UTENTI: Utente[] = [
-	{
-		id: "1",
-		nome: "Marco",
-		cognome: "Amministratore",
-		email: "marco@associazione.it",
-		ruolo: "admin",
-		stato: "attivo",
-		ultimoAccesso: "2026-04-17T10:30:00",
-	},
-	{
-		id: "2",
-		nome: "Laura",
-		cognome: "Segretaria",
-		email: "laura@associazione.it",
-		ruolo: "segreteria",
-		stato: "attivo",
-		ultimoAccesso: "2026-04-17T09:15:00",
-	},
-	{
-		id: "3",
-		nome: "Paolo",
-		cognome: "Rossi",
-		email: "paolo.rossi@associazione.it",
-		ruolo: "istruttore",
-		stato: "attivo",
-		ultimoAccesso: "2026-04-16T18:45:00",
-	},
-	{
-		id: "4",
-		nome: "Chiara",
-		cognome: "Neri",
-		email: "chiara.neri@associazione.it",
-		ruolo: "istruttore",
-		stato: "attivo",
-		ultimoAccesso: "2026-04-16T17:00:00",
-	},
-	{
-		id: "5",
-		nome: "Giuseppe",
-		cognome: "Verdi",
-		email: "giuseppe.verdi@associazione.it",
-		ruolo: "visualizzatore",
-		stato: "attivo",
-		ultimoAccesso: "2026-04-15T14:20:00",
-	},
-	{
-		id: "6",
-		nome: "Francesca",
-		cognome: "Blu",
-		email: "francesca.blu@associazione.it",
-		ruolo: "istruttore",
-		stato: "disabilitato",
-		ultimoAccesso: "2026-03-20T11:00:00",
-	},
-];
+function fmtDate(d: string | Date | null | undefined): string {
+	if (!d) return "Mai";
+	const date = typeof d === "string" ? new Date(d) : d;
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffMin = Math.floor(diffMs / 60000);
+	if (diffMin < 1) return "Online ora";
+	if (diffMin < 60) return `${diffMin} min fa`;
+	if (diffMin < 1440) return `${Math.floor(diffMin / 60)} ore fa`;
+	const diffDays = Math.floor(diffMin / 1440);
+	if (diffDays < 30) return `${diffDays} giorni fa`;
+	return date.toLocaleDateString("it-IT");
+}
 
 export default function UtentiPage() {
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [ruoloFilter, setRuoloFilter] = useState<string>("tutti");
-	const [toggleStates, setToggleStates] = useState<Record<string, boolean>>(() => {
-		const states: Record<string, boolean> = {};
-		SAMPLE_UTENTI.forEach((u) => {
-			states[u.id] = u.stato === "attivo";
-		});
-		return states;
+	const utils = trpc.useUtils();
+
+	const [page, setPage] = useState(1);
+	const perPage = 20;
+	const [search, setSearch] = useState("");
+	const [filterRuolo, setFilterRuolo] = useState<"" | Ruolo>("");
+	const [filterAttivo, setFilterAttivo] = useState<"" | "true" | "false">("");
+
+	const listQuery = trpc.utenti.list.useQuery({
+		page,
+		perPage,
+		search: search || undefined,
+		ruolo: filterRuolo === "" ? undefined : filterRuolo,
+		attivo: filterAttivo === "" ? undefined : filterAttivo === "true",
 	});
 
-	const filteredData = useMemo(() => {
-		let data = SAMPLE_UTENTI;
-		if (ruoloFilter !== "tutti") {
-			data = data.filter((u) => u.ruolo === ruoloFilter);
-		}
-		return data;
-	}, [ruoloFilter]);
+	const inviteMut = trpc.utenti.invite.useMutation({
+		onSuccess: () => {
+			toast.success("Utente invitato");
+			utils.utenti.list.invalidate();
+			closeInvite();
+		},
+		onError: (err) => toast.error(err.message),
+	});
 
-	const handleToggle = (userId: string) => {
-		setToggleStates((prev) => ({ ...prev, [userId]: !prev[userId] }));
+	const changeRoleMut = trpc.utenti.changeRole.useMutation({
+		onSuccess: () => {
+			toast.success("Ruolo aggiornato");
+			utils.utenti.list.invalidate();
+			closeRoleModal();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const deactivateMut = trpc.utenti.deactivate.useMutation({
+		onSuccess: () => {
+			toast.success("Utente disattivato");
+			utils.utenti.list.invalidate();
+			setConfirmDeactivateId(null);
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const reactivateMut = trpc.utenti.reactivate.useMutation({
+		onSuccess: () => {
+			toast.success("Utente riattivato");
+			utils.utenti.list.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const [inviteOpen, setInviteOpen] = useState(false);
+	const [inviteForm, setInviteForm] = useState<InviteForm>(EMPTY_INVITE);
+	const [roleModal, setRoleModal] = useState<{ id: string; nome: string; current: Ruolo } | null>(
+		null,
+	);
+	const [newRuolo, setNewRuolo] = useState<Ruolo>("segreteria");
+	const [confirmDeactivateId, setConfirmDeactivateId] = useState<string | null>(null);
+
+	const openInvite = () => {
+		setInviteForm(EMPTY_INVITE);
+		setInviteOpen(true);
+	};
+	const closeInvite = () => {
+		setInviteOpen(false);
+		setInviteForm(EMPTY_INVITE);
+	};
+	const submitInvite = () => {
+		if (!inviteForm.email.trim() || !inviteForm.nome.trim() || !inviteForm.cognome.trim()) {
+			toast.error("Email, nome e cognome sono obbligatori");
+			return;
+		}
+		inviteMut.mutate({
+			email: inviteForm.email.trim().toLowerCase(),
+			nome: inviteForm.nome.trim(),
+			cognome: inviteForm.cognome.trim(),
+			telefono: inviteForm.telefono.trim() || undefined,
+			ruolo: inviteForm.ruolo,
+		});
 	};
 
-	const columns = useMemo<ColumnDef<Utente>[]>(
-		() => [
-			{
-				accessorKey: "nome",
-				header: "Nome",
-			},
-			{
-				accessorKey: "cognome",
-				header: "Cognome",
-				cell: ({ row }) => <span className="font-medium">{row.getValue("cognome")}</span>,
-			},
-			{
-				accessorKey: "email",
-				header: "Email",
-				cell: ({ row }) => (
-					<span className="text-sm text-muted-foreground">{row.getValue("email")}</span>
-				),
-			},
-			{
-				accessorKey: "ruolo",
-				header: "Ruolo",
-				cell: ({ row }) => {
-					const ruolo = row.getValue("ruolo") as RuoloUtente;
-					return (
-						<span
-							className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${RUOLO_COLORS[ruolo]}`}
-						>
-							{RUOLO_LABELS[ruolo]}
-						</span>
-					);
-				},
-			},
-			{
-				accessorKey: "stato",
-				header: "Stato",
-				cell: ({ row }) => {
-					const stato = row.getValue("stato") as StatoUtente;
-					return (
-						<span
-							className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATO_COLORS[stato]}`}
-						>
-							{STATO_LABELS[stato]}
-						</span>
-					);
-				},
-			},
-			{
-				accessorKey: "ultimoAccesso",
-				header: "Ultimo Accesso",
-				cell: ({ row }) => (
-					<span className="text-sm text-muted-foreground">
-						{new Date(row.getValue("ultimoAccesso") as string).toLocaleString("it-IT", {
-							day: "2-digit",
-							month: "2-digit",
-							year: "numeric",
-							hour: "2-digit",
-							minute: "2-digit",
-						})}
-					</span>
-				),
-			},
-			{
-				id: "azioni",
-				header: "Azioni",
-				cell: ({ row }) => (
-					<div className="flex items-center gap-2">
-						<select
-							className="h-7 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-							defaultValue={row.original.ruolo}
-						>
-							<option value="admin">Admin</option>
-							<option value="segreteria">Segreteria</option>
-							<option value="istruttore">Istruttore</option>
-							<option value="visualizzatore">Visualizzatore</option>
-						</select>
-						<button
-							type="button"
-							className="inline-flex items-center"
-							onClick={() => handleToggle(row.original.id)}
-							title={toggleStates[row.original.id] ? "Disabilita" : "Abilita"}
-						>
-							{toggleStates[row.original.id] ? (
-								<ToggleRight className="h-5 w-5 text-primary" />
-							) : (
-								<ToggleLeft className="h-5 w-5 text-muted-foreground" />
-							)}
-						</button>
-					</div>
-				),
-			},
-		],
-		[toggleStates],
-	);
+	const openRoleModal = (id: string, nome: string, current: Ruolo) => {
+		setRoleModal({ id, nome, current });
+		setNewRuolo(current);
+	};
+	const closeRoleModal = () => setRoleModal(null);
+	const submitRoleChange = () => {
+		if (!roleModal) return;
+		if (newRuolo === roleModal.current) {
+			toast.error("Ruolo invariato");
+			return;
+		}
+		changeRoleMut.mutate({
+			utenteId: roleModal.id,
+			nuovoRuolo: newRuolo,
+		});
+	};
 
-	const table = useReactTable({
-		data: filteredData,
-		columns,
-		state: { sorting, globalFilter },
-		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		initialState: {
-			pagination: { pageSize: 20 },
-		},
-	});
+	const items = listQuery.data?.items ?? [];
+	const totalPages = listQuery.data?.totalPages ?? 1;
+	const total = listQuery.data?.total ?? 0;
+	const activeCount = items.filter((u) => u.attivo).length;
 
 	return (
-		<div className="space-y-6 p-6">
-			{/* Page header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<div className="mb-1 flex items-center gap-2">
-						<Shield className="h-5 w-5 text-primary" />
-						<h1 className="text-3xl font-bold tracking-tight text-foreground">Utenti</h1>
-					</div>
-					<p className="text-muted-foreground">
-						Gestisci gli utenti e i permessi di accesso alla piattaforma
+					<h1 className="page-title">Utenti</h1>
+					<p className="page-subtitle">
+						Gestione accessi e ruoli · {total} utenti · {activeCount} attivi nella pagina
 					</p>
 				</div>
-				<button
-					type="button"
-					className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-				>
-					<UserPlus className="h-4 w-4" />
-					Invita Utente
-				</button>
+				<div className="page-actions">
+					<button type="button" className="btn btn-primary btn-sm" onClick={openInvite}>
+						<Plus className="icon" /> Invita Utente
+					</button>
+				</div>
 			</div>
 
-			{/* Filters bar */}
-			<div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
-				<div className="relative flex-1">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<input
-						type="text"
-						placeholder="Cerca per nome, cognome, email..."
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-						value={globalFilter}
-						onChange={(e) => setGlobalFilter(e.target.value)}
-					/>
-				</div>
+			<div className="filters-bar">
+				<input
+					className="input"
+					placeholder="Cerca per nome o email..."
+					value={search}
+					onChange={(e) => {
+						setPage(1);
+						setSearch(e.target.value);
+					}}
+				/>
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={ruoloFilter}
-					onChange={(e) => setRuoloFilter(e.target.value)}
+					className="select"
+					value={filterRuolo}
+					onChange={(e) => {
+						setPage(1);
+						setFilterRuolo(e.target.value as "" | Ruolo);
+					}}
 				>
-					<option value="tutti">Tutti i ruoli</option>
-					<option value="admin">Admin</option>
-					<option value="segreteria">Segreteria</option>
-					<option value="istruttore">Istruttore</option>
-					<option value="visualizzatore">Visualizzatore</option>
+					<option value="">Tutti i ruoli</option>
+					{RUOLI.map((r) => (
+						<option key={r} value={r}>
+							{RUOLO_LABEL[r].label}
+						</option>
+					))}
+				</select>
+				<select
+					className="select"
+					value={filterAttivo}
+					onChange={(e) => {
+						setPage(1);
+						setFilterAttivo(e.target.value as "" | "true" | "false");
+					}}
+				>
+					<option value="">Tutti gli stati</option>
+					<option value="true">Attivi</option>
+					<option value="false">Disattivati</option>
 				</select>
 			</div>
 
-			{/* Table */}
-			<div className="overflow-hidden rounded-lg border border-border bg-card">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id} className="border-b border-border bg-muted/50">
-									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-											onClick={header.column.getToggleSortingHandler()}
-											style={{ cursor: header.column.getCanSort() ? "pointer" : "default" }}
-										>
-											{header.isPlaceholder
-												? null
-												: flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
-						</thead>
-						<tbody>
-							{table.getRowModel().rows.length === 0 ? (
+			<div className="card">
+				{listQuery.isLoading ? (
+					<div style={{ padding: "2rem", textAlign: "center" }}>Caricamento…</div>
+				) : items.length === 0 ? (
+					<EmptyState title="Nessun utente" description="Nessun utente trovato con i filtri correnti." />
+				) : (
+					<div className="table-container">
+						<table className="table">
+							<thead>
 								<tr>
-									<td
-										colSpan={columns.length}
-										className="px-4 py-8 text-center text-sm text-muted-foreground"
-									>
-										Nessun utente trovato
-									</td>
+									<th>Utente</th>
+									<th>Email</th>
+									<th>Ruolo</th>
+									<th>Ultimo accesso</th>
+									<th>Stato</th>
+									<th style={{ textAlign: "right" }}>Azioni</th>
 								</tr>
-							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										className="border-b border-border last:border-0 hover:bg-muted/30"
-									>
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} className="px-4 py-3 text-sm">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+							</thead>
+							<tbody>
+								{items.map((u) => {
+									const ruolo = u.ruolo as Ruolo;
+									const badge = RUOLO_LABEL[ruolo] ?? {
+										label: ruolo,
+										cls: "badge-outline",
+									};
+									const fullName = `${u.nome ?? ""} ${u.cognome ?? ""}`.trim() || u.email;
+									const initials = fullName
+										.split(" ")
+										.filter(Boolean)
+										.map((n) => n[0])
+										.slice(0, 2)
+										.join("")
+										.toUpperCase();
+									return (
+										<tr key={u.id}>
+											<td>
+												<div
+													style={{
+														display: "flex",
+														alignItems: "center",
+														gap: "0.625rem",
+													}}
+												>
+													<div
+														className="avatar"
+														style={{
+															width: "2rem",
+															height: "2rem",
+															fontSize: "0.75rem",
+														}}
+													>
+														{initials || "?"}
+													</div>
+													<span style={{ fontWeight: 500 }}>{fullName}</span>
+												</div>
 											</td>
-										))}
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-
-				{/* Pagination */}
-				<div className="flex items-center justify-between border-t border-border px-4 py-3">
-					<p className="text-sm text-muted-foreground">
-						{table.getFilteredRowModel().rows.length} utenti totali
-					</p>
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
-						>
-							<ChevronLeft className="h-4 w-4" />
-						</button>
-						<span className="text-sm text-muted-foreground">
-							Pagina {table.getState().pagination.pageIndex + 1} di {table.getPageCount()}
-						</span>
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
-						>
-							<ChevronRight className="h-4 w-4" />
-						</button>
+											<td
+												style={{
+													fontSize: "0.8125rem",
+													color: "hsl(var(--muted-foreground))",
+													fontFamily: "monospace",
+												}}
+											>
+												{u.email}
+											</td>
+											<td>
+												<span className={`badge ${badge.cls}`}>
+													<UserCog className="icon-sm" /> {badge.label}
+												</span>
+											</td>
+											<td
+												style={{
+													fontSize: "0.8125rem",
+													color: "hsl(var(--muted-foreground))",
+												}}
+											>
+												{fmtDate(u.ultimoAccesso as unknown as string | null)}
+											</td>
+											<td>
+												{u.attivo ? (
+													<span className="badge badge-success">Attivo</span>
+												) : (
+													<span className="badge badge-destructive">Disattivato</span>
+												)}
+											</td>
+											<td>
+												<div
+													className="table-actions"
+													style={{ justifyContent: "flex-end" }}
+												>
+													<button
+														type="button"
+														className="btn btn-ghost btn-icon"
+														title="Cambia ruolo"
+														onClick={() => openRoleModal(u.id, fullName, ruolo)}
+													>
+														<Shield className="icon" />
+													</button>
+													{u.attivo ? (
+														<button
+															type="button"
+															className="btn btn-ghost btn-icon"
+															title="Disattiva"
+															onClick={() => setConfirmDeactivateId(u.id)}
+														>
+															<Trash2 className="icon" />
+														</button>
+													) : (
+														<button
+															type="button"
+															className="btn btn-ghost btn-icon"
+															title="Riattiva"
+															onClick={() => reactivateMut.mutate({ utenteId: u.id })}
+														>
+															<UserCheck className="icon" />
+														</button>
+													)}
+												</div>
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
 					</div>
-				</div>
+				)}
+
+				{totalPages > 1 && (
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							padding: "0.75rem 1rem",
+							borderTop: "1px solid hsl(var(--border))",
+						}}
+					>
+						<span
+							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
+						>
+							Pagina {page} di {totalPages}
+						</span>
+						<div style={{ display: "flex", gap: "0.5rem" }}>
+							<button
+								type="button"
+								className="btn btn-ghost btn-icon"
+								disabled={page <= 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								<ChevronLeft className="icon" />
+							</button>
+							<button
+								type="button"
+								className="btn btn-ghost btn-icon"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+							>
+								<ChevronRight className="icon" />
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
+
+			{/* Invite Modal */}
+			<Modal
+				open={inviteOpen}
+				onClose={closeInvite}
+				title="Invita nuovo utente"
+				size="md"
+				footer={
+					<>
+						<button type="button" className="btn btn-outline btn-sm" onClick={closeInvite}>
+							Annulla
+						</button>
+						<button
+							type="button"
+							className="btn btn-primary btn-sm"
+							onClick={submitInvite}
+							disabled={inviteMut.isPending}
+						>
+							Invia invito
+						</button>
+					</>
+				}
+			>
+				<FormGrid>
+					<Field label="Nome" required span={1}>
+						<Input
+							value={inviteForm.nome}
+							onChange={(e) => setInviteForm((f) => ({ ...f, nome: e.target.value }))}
+						/>
+					</Field>
+					<Field label="Cognome" required span={1}>
+						<Input
+							value={inviteForm.cognome}
+							onChange={(e) => setInviteForm((f) => ({ ...f, cognome: e.target.value }))}
+						/>
+					</Field>
+					<Field label="Email" required span={2}>
+						<Input
+							type="email"
+							value={inviteForm.email}
+							onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
+						/>
+					</Field>
+					<Field label="Telefono" span={1}>
+						<Input
+							value={inviteForm.telefono}
+							onChange={(e) => setInviteForm((f) => ({ ...f, telefono: e.target.value }))}
+						/>
+					</Field>
+					<Field label="Ruolo" required span={1}>
+						<Select
+							value={inviteForm.ruolo}
+							onChange={(e) =>
+								setInviteForm((f) => ({ ...f, ruolo: e.target.value as Ruolo }))
+							}
+						>
+							{RUOLI.map((r) => (
+								<option key={r} value={r}>
+									{RUOLO_LABEL[r].label}
+								</option>
+							))}
+						</Select>
+					</Field>
+				</FormGrid>
+			</Modal>
+
+			{/* Change Role Modal */}
+			<Modal
+				open={roleModal !== null}
+				onClose={closeRoleModal}
+				title="Cambia ruolo utente"
+				size="sm"
+				footer={
+					<>
+						<button
+							type="button"
+							className="btn btn-outline btn-sm"
+							onClick={closeRoleModal}
+						>
+							Annulla
+						</button>
+						<button
+							type="button"
+							className="btn btn-primary btn-sm"
+							onClick={submitRoleChange}
+							disabled={changeRoleMut.isPending}
+						>
+							Applica
+						</button>
+					</>
+				}
+			>
+				{roleModal && (
+					<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+						<div>
+							<strong>{roleModal.nome}</strong>
+							<div
+								style={{
+									fontSize: "0.8125rem",
+									color: "hsl(var(--muted-foreground))",
+									marginTop: "0.25rem",
+								}}
+							>
+								Ruolo attuale: <strong>{RUOLO_LABEL[roleModal.current].label}</strong>
+							</div>
+						</div>
+						<Field label="Nuovo ruolo" required>
+							<Select value={newRuolo} onChange={(e) => setNewRuolo(e.target.value as Ruolo)}>
+								{RUOLI.map((r) => (
+									<option key={r} value={r}>
+										{RUOLO_LABEL[r].label}
+									</option>
+								))}
+							</Select>
+						</Field>
+					</div>
+				)}
+			</Modal>
+
+			<ConfirmDialog
+				open={confirmDeactivateId !== null}
+				onClose={() => setConfirmDeactivateId(null)}
+				onConfirm={() => {
+					if (confirmDeactivateId)
+						deactivateMut.mutate({ utenteId: confirmDeactivateId });
+				}}
+				title="Disattivare utente?"
+				message="L'utente non potrà più accedere al tenant. Puoi riattivarlo in qualsiasi momento."
+				variant="warning"
+				confirmLabel="Disattiva"
+				loading={deactivateMut.isPending}
+			/>
 		</div>
 	);
 }

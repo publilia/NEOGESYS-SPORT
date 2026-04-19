@@ -1,5 +1,6 @@
 import { AdminSidebar } from "@/components/admin-sidebar";
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
 	title: "NEOGESYS Sport - Super Admin",

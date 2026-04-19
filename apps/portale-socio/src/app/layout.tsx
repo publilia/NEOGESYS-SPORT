@@ -1,6 +1,7 @@
 import { PortaleHeader } from "@/components/portale-header";
 import { PortaleNav } from "@/components/portale-nav";
 import type { Metadata } from "next";
+import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Inter } from "next/font/google";
 

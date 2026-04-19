@@ -58,8 +58,12 @@ export async function tenantMiddleware(req: FastifyRequest, reply: FastifyReply)
 	const host = req.headers.host;
 	const subdomain = extractSubdomain(host);
 
-	// If no subdomain (e.g. localhost dev), check for x-tenant-slug header (dev only)
-	const slug = subdomain ?? (req.headers["x-tenant-slug"] as string | undefined) ?? null;
+	// If no subdomain (e.g. localhost dev), check for x-tenant-slug or x-dev-tenant-slug header (dev only)
+	const slug =
+		subdomain ??
+		(req.headers["x-tenant-slug"] as string | undefined) ??
+		(req.headers["x-dev-tenant-slug"] as string | undefined) ??
+		null;
 
 	// Skip super-admin subdomain -- those routes handle their own auth/tenant logic
 	if (slug === "admin") {

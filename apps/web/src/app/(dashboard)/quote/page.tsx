@@ -1,295 +1,761 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Download, Euro, Search } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
+import {
+	AlertCircle,
+	ArrowDownRight,
+	ArrowUpRight,
+	Check,
+	CheckCircle,
+	ChevronLeft,
+	ChevronRight,
+	Clock,
+	CreditCard,
+	Download,
+	Euro,
+	Plus,
+	Receipt,
+	Trash2,
+	TrendingUp,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
-interface Quota {
-	id: string;
-	socio: string;
-	tipo: string;
-	importo: number;
-	dataEmissione: string;
-	dataScadenza: string;
-	stato: "pagata" | "in_attesa" | "scaduta" | "parziale";
+type StatoQuota = "da_pagare" | "parziale" | "pagato" | "esonerato";
+type MetodoPagamento = "contanti" | "bonifico" | "pos" | "stripe" | "satispay";
+type StatColor = "primary" | "success" | "warning" | "destructive";
+
+const STATO_BADGE: Record<StatoQuota, { cls: string; label: string }> = {
+	pagato: { cls: "badge-success", label: "Pagato" },
+	da_pagare: { cls: "badge", label: "Da Pagare" },
+	parziale: { cls: "badge-warning", label: "Parziale" },
+	esonerato: { cls: "badge", label: "Esonerato" },
+};
+
+function money(v: string | number | null | undefined): string {
+	const n = typeof v === "string" ? Number(v) : (v ?? 0);
+	return new Intl.NumberFormat("it-IT", {
+		style: "currency",
+		currency: "EUR",
+	}).format(n || 0);
 }
 
-const STATI_LABELS: Record<string, string> = {
-	pagata: "Pagata",
-	in_attesa: "In attesa",
-	scaduta: "Scaduta",
-	parziale: "Parziale",
+function StatCard({
+	title,
+	value,
+	trend,
+	dir,
+	Icon,
+	color,
+}: {
+	title: string;
+	value: string;
+	trend: string;
+	dir: "up" | "down" | "warn";
+	Icon: LucideIcon;
+	color: StatColor;
+}) {
+	const colorStyles: Record<StatColor, React.CSSProperties> = {
+		primary: { background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" },
+		success: { background: "hsl(var(--success) / 0.15)", color: "hsl(var(--success))" },
+		warning: { background: "hsl(var(--warning) / 0.15)", color: "hsl(var(--warning))" },
+		destructive: { background: "hsl(var(--destructive) / 0.15)", color: "hsl(var(--destructive))" },
+	};
+	const Arrow = dir === "up" ? ArrowUpRight : dir === "down" ? ArrowDownRight : AlertCircle;
+	return (
+		<div className="card stat-card">
+			<div className="stat-card-head">
+				<span className="stat-card-title">{title}</span>
+				<div className="stat-icon" style={colorStyles[color]}>
+					<Icon className="icon" />
+				</div>
+			</div>
+			<div className="stat-value">{value}</div>
+			<div className={`stat-trend ${dir}`}>
+				<Arrow className="icon-sm" />
+				<span>{trend}</span>
+			</div>
+		</div>
+	);
+}
+
+interface CreateFormState {
+	socioId: string;
+	tipoQuotaId: string;
+	annoSportivoId: string;
+	importo: string;
+	dataScadenza: string;
+	note: string;
+}
+const EMPTY_CREATE: CreateFormState = {
+	socioId: "",
+	tipoQuotaId: "",
+	annoSportivoId: "",
+	importo: "",
+	dataScadenza: "",
+	note: "",
 };
 
-const STATI_COLORS: Record<string, string> = {
-	pagata: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	in_attesa: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-	scaduta: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-	parziale: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-};
-
-const SAMPLE_QUOTE: Quota[] = [
-	{
-		id: "1",
-		socio: "Mario Rossi",
-		tipo: "Quota Annuale",
-		importo: 250,
-		dataEmissione: "2026-01-15",
-		dataScadenza: "2026-12-31",
-		stato: "pagata",
-	},
-	{
-		id: "2",
-		socio: "Luca Bianchi",
-		tipo: "Quota Mensile",
-		importo: 50,
-		dataEmissione: "2026-04-01",
-		dataScadenza: "2026-04-30",
-		stato: "in_attesa",
-	},
-	{
-		id: "3",
-		socio: "Anna Verdi",
-		tipo: "Quota Annuale",
-		importo: 250,
-		dataEmissione: "2025-06-01",
-		dataScadenza: "2026-05-31",
-		stato: "scaduta",
-	},
-	{
-		id: "4",
-		socio: "Giulia Neri",
-		tipo: "Iscrizione Corso",
-		importo: 120,
-		dataEmissione: "2026-03-01",
-		dataScadenza: "2026-06-30",
-		stato: "pagata",
-	},
-	{
-		id: "5",
-		socio: "Paolo Gialli",
-		tipo: "Quota Mensile",
-		importo: 50,
-		dataEmissione: "2026-04-01",
-		dataScadenza: "2026-04-30",
-		stato: "parziale",
-	},
-	{
-		id: "6",
-		socio: "Sara Blu",
-		tipo: "Quota Annuale",
-		importo: 250,
-		dataEmissione: "2026-02-01",
-		dataScadenza: "2027-01-31",
-		stato: "pagata",
-	},
-];
+interface PayFormState {
+	importoPagato: string;
+	metodoPagamento: MetodoPagamento;
+	dataPagamento: string;
+	note: string;
+}
 
 export default function QuotePage() {
-	const [search, setSearch] = useState("");
-	const [statoFilter, setStatoFilter] = useState("tutti");
-	const [periodoFilter, setPeriodoFilter] = useState("tutti");
-	const [page, setPage] = useState(0);
-	const pageSize = 20;
+	const [page, setPage] = useState(1);
+	const perPage = 20;
+	const [stato, setStato] = useState<StatoQuota | "">("");
 
-	const filtered = useMemo(() => {
-		let data = SAMPLE_QUOTE;
-		if (statoFilter !== "tutti") {
-			data = data.filter((q) => q.stato === statoFilter);
+	const [createOpen, setCreateOpen] = useState(false);
+	const [createForm, setCreateForm] = useState<CreateFormState>(EMPTY_CREATE);
+	const [createError, setCreateError] = useState<string | null>(null);
+
+	const [payTarget, setPayTarget] = useState<{
+		id: string;
+		socio: string;
+		residuo: number;
+		importo: number;
+	} | null>(null);
+	const [payForm, setPayForm] = useState<PayFormState>({
+		importoPagato: "",
+		metodoPagamento: "contanti",
+		dataPagamento: "",
+		note: "",
+	});
+	const [payError, setPayError] = useState<string | null>(null);
+
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+
+	const utils = trpc.useUtils();
+
+	const query = trpc.quote.list.useQuery({
+		page,
+		perPage,
+		stato: stato || undefined,
+	});
+	const statsQuery = trpc.quote.stats.useQuery({});
+	const tipiQuotaQuery = trpc.quote.listTipiQuota.useQuery();
+	const anniQuery = trpc.quote.listAnniSportivi.useQuery();
+	const sociSearch = trpc.soci.list.useQuery({ page: 1, perPage: 100, stato: "attivo" });
+
+	const createMutation = trpc.quote.create.useMutation({
+		onSuccess: () => {
+			utils.quote.list.invalidate();
+			utils.quote.stats.invalidate();
+			toast.success("Quota emessa");
+			setCreateOpen(false);
+			setCreateForm(EMPTY_CREATE);
+		},
+		onError: (err) => {
+			setCreateError(err.message);
+			toast.error(err.message);
+		},
+	});
+
+	const payMutation = trpc.quote.registraPagamento.useMutation({
+		onSuccess: () => {
+			utils.quote.list.invalidate();
+			utils.quote.stats.invalidate();
+			toast.success("Pagamento registrato");
+			setPayTarget(null);
+		},
+		onError: (err) => {
+			setPayError(err.message);
+			toast.error(err.message);
+		},
+	});
+
+	const deleteMutation = trpc.quote.delete.useMutation({
+		onSuccess: () => {
+			utils.quote.list.invalidate();
+			utils.quote.stats.invalidate();
+			toast.success("Quota eliminata");
+			setDeleteTarget(null);
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const ricevutaMutation = trpc.quote.generaRicevuta.useMutation({
+		onSuccess: (res) => {
+			if (res.url) {
+				toast.success("Ricevuta generata");
+				window.open(res.url, "_blank");
+			}
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const stats = useMemo(() => {
+		if (!statsQuery.data) {
+			return { incassato: 0, daIncassare: 0, scadute: 0, nrPagate: 0, nrAperte: 0 };
 		}
-		if (search) {
-			const s = search.toLowerCase();
-			data = data.filter(
-				(q) => q.socio.toLowerCase().includes(s) || q.tipo.toLowerCase().includes(s),
-			);
+		let incassato = 0;
+		let daIncassare = 0;
+		let nrPagate = 0;
+		let nrAperte = 0;
+		for (const t of statsQuery.data.totals) {
+			if (t.stato === "pagato") {
+				incassato += t.totalePagato;
+				nrPagate += t.count;
+			}
+			if (t.stato === "parziale") {
+				incassato += t.totalePagato;
+				daIncassare += t.totale - t.totalePagato;
+				nrAperte += t.count;
+			}
+			if (t.stato === "da_pagare") {
+				daIncassare += t.totale;
+				nrAperte += t.count;
+			}
 		}
-		return data;
-	}, [search, statoFilter]);
+		return { incassato, daIncassare, scadute: 0, nrPagate, nrAperte };
+	}, [statsQuery.data]);
 
-	const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
-	const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+	const items = query.data?.items ?? [];
+	const total = query.data?.total ?? 0;
+	const totalPages = query.data?.totalPages ?? 1;
 
-	const totaleIncassato = SAMPLE_QUOTE.filter((q) => q.stato === "pagata").reduce(
-		(sum, q) => sum + q.importo,
-		0,
-	);
+	function handleCreate(e: React.FormEvent) {
+		e.preventDefault();
+		setCreateError(null);
+		if (!createForm.socioId || !createForm.tipoQuotaId || !createForm.importo) {
+			setCreateError("Socio, tipo quota e importo sono obbligatori.");
+			return;
+		}
+		createMutation.mutate({
+			socioId: createForm.socioId,
+			tipoQuotaId: createForm.tipoQuotaId,
+			annoSportivoId: createForm.annoSportivoId || undefined,
+			importo: Number(createForm.importo),
+			dataScadenza: createForm.dataScadenza
+				? new Date(createForm.dataScadenza).toISOString()
+				: undefined,
+			note: createForm.note.trim() || undefined,
+		});
+	}
 
-	const totaleDovuto = SAMPLE_QUOTE.filter(
-		(q) => q.stato === "in_attesa" || q.stato === "scaduta",
-	).reduce((sum, q) => sum + q.importo, 0);
+	function openPay(row: (typeof items)[number]) {
+		const importo = Number(row.importo);
+		const pagato = Number(row.importoPagato ?? 0);
+		const residuo = importo - pagato;
+		setPayTarget({
+			id: row.id,
+			socio: `${row.socioCognome} ${row.socioNome}`,
+			residuo,
+			importo,
+		});
+		setPayForm({
+			importoPagato: residuo.toFixed(2),
+			metodoPagamento: "contanti",
+			dataPagamento: new Date().toISOString().slice(0, 10),
+			note: "",
+		});
+		setPayError(null);
+	}
+
+	function handlePay(e: React.FormEvent) {
+		e.preventDefault();
+		if (!payTarget) return;
+		setPayError(null);
+		const amount = Number(payForm.importoPagato);
+		if (!amount || amount <= 0) {
+			setPayError("Importo non valido.");
+			return;
+		}
+		payMutation.mutate({
+			quotaId: payTarget.id,
+			importoPagato: amount,
+			metodoPagamento: payForm.metodoPagamento,
+			dataPagamento: payForm.dataPagamento
+				? new Date(payForm.dataPagamento).toISOString()
+				: undefined,
+			note: payForm.note.trim() || undefined,
+		});
+	}
 
 	return (
-		<div className="space-y-6 p-6">
-			{/* Header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">Quote e Pagamenti</h1>
-					<p className="text-muted-foreground">Gestisci le quote associative e i pagamenti</p>
-				</div>
-				<button
-					type="button"
-					className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-				>
-					<Download className="h-4 w-4" />
-					Export
-				</button>
-			</div>
-
-			{/* Summary cards */}
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<div className="rounded-lg border border-border bg-card p-4">
-					<p className="text-sm text-muted-foreground">Totale Incassato</p>
-					<p className="mt-1 text-2xl font-bold text-green-600">
-						&euro; {totaleIncassato.toLocaleString("it-IT")}
+					<h1 className="page-title">Quote</h1>
+					<p className="page-subtitle">
+						{total} quote · {stats.nrPagate} pagate · {stats.nrAperte} aperte
 					</p>
 				</div>
-				<div className="rounded-lg border border-border bg-card p-4">
-					<p className="text-sm text-muted-foreground">Da Incassare</p>
-					<p className="mt-1 text-2xl font-bold text-orange-600">
-						&euro; {totaleDovuto.toLocaleString("it-IT")}
-					</p>
-				</div>
-				<div className="rounded-lg border border-border bg-card p-4">
-					<p className="text-sm text-muted-foreground">Quote Pagate</p>
-					<p className="mt-1 text-2xl font-bold text-foreground">
-						{SAMPLE_QUOTE.filter((q) => q.stato === "pagata").length}
-					</p>
-				</div>
-				<div className="rounded-lg border border-border bg-card p-4">
-					<p className="text-sm text-muted-foreground">Quote Scadute</p>
-					<p className="mt-1 text-2xl font-bold text-destructive">
-						{SAMPLE_QUOTE.filter((q) => q.stato === "scaduta").length}
-					</p>
+				<div className="page-actions">
+					<button
+						type="button"
+						className="btn btn-primary btn-sm"
+						onClick={() => {
+							setCreateForm(EMPTY_CREATE);
+							setCreateError(null);
+							setCreateOpen(true);
+						}}
+					>
+						<Plus className="icon" /> Emetti Quota
+					</button>
 				</div>
 			</div>
 
-			{/* Filters */}
-			<div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
-				<div className="relative flex-1">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<input
-						type="text"
-						placeholder="Cerca per socio o tipo..."
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</div>
+			<div className="stat-grid">
+				<StatCard
+					title="Incassato"
+					value={money(stats.incassato)}
+					trend={`${stats.nrPagate} quote pagate`}
+					dir="up"
+					Icon={CheckCircle}
+					color="success"
+				/>
+				<StatCard
+					title="Da Incassare"
+					value={money(stats.daIncassare)}
+					trend={`${stats.nrAperte} quote aperte`}
+					dir="warn"
+					Icon={Clock}
+					color="warning"
+				/>
+				<StatCard
+					title="Tasso Incasso"
+					value={`${
+						stats.incassato + stats.daIncassare > 0
+							? Math.round((stats.incassato / (stats.incassato + stats.daIncassare)) * 100)
+							: 0
+					}%`}
+					trend="sul totale emesso"
+					dir="up"
+					Icon={TrendingUp}
+					color="primary"
+				/>
+				<StatCard
+					title="Ticket Medio"
+					value={money(
+						stats.nrPagate + stats.nrAperte > 0
+							? (stats.incassato + stats.daIncassare) / (stats.nrPagate + stats.nrAperte)
+							: 0,
+					)}
+					trend="quota media"
+					dir="up"
+					Icon={Euro}
+					color="primary"
+				/>
+			</div>
+
+			<div className="filters-bar">
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={statoFilter}
-					onChange={(e) => setStatoFilter(e.target.value)}
+					className="select"
+					value={stato}
+					onChange={(e) => {
+						setStato(e.target.value as StatoQuota | "");
+						setPage(1);
+					}}
 				>
-					<option value="tutti">Tutti gli stati</option>
-					<option value="pagata">Pagata</option>
-					<option value="in_attesa">In attesa</option>
-					<option value="scaduta">Scaduta</option>
+					<option value="">Tutti gli stati</option>
+					<option value="pagato">Pagato</option>
+					<option value="da_pagare">Da Pagare</option>
 					<option value="parziale">Parziale</option>
-				</select>
-				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={periodoFilter}
-					onChange={(e) => setPeriodoFilter(e.target.value)}
-				>
-					<option value="tutti">Tutti i periodi</option>
-					<option value="mese_corrente">Mese corrente</option>
-					<option value="trimestre">Ultimo trimestre</option>
-					<option value="anno">Anno corrente</option>
+					<option value="esonerato">Esonerato</option>
 				</select>
 			</div>
 
-			{/* Table */}
-			<div className="overflow-hidden rounded-lg border border-border bg-card">
-				<div className="overflow-x-auto">
-					<table className="w-full">
+			<div className="card">
+				<div className="table-container">
+					<table className="table">
 						<thead>
-							<tr className="border-b border-border bg-muted/50">
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Socio
-								</th>
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Tipo
-								</th>
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Importo
-								</th>
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Emissione
-								</th>
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Scadenza
-								</th>
-								<th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-									Stato
-								</th>
+							<tr>
+								<th>Socio</th>
+								<th>Tipo Quota</th>
+								<th>Importo</th>
+								<th>Pagato</th>
+								<th>Stato</th>
+								<th>Scadenza</th>
+								<th style={{ textAlign: "right" }}>Azioni</th>
 							</tr>
 						</thead>
 						<tbody>
-							{paged.length === 0 ? (
+							{query.isLoading ? (
 								<tr>
-									<td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
-										Nessuna quota trovata
+									<td
+										colSpan={7}
+										style={{
+											textAlign: "center",
+											padding: "3rem",
+											color: "hsl(var(--muted-foreground))",
+										}}
+									>
+										Caricamento...
+									</td>
+								</tr>
+							) : query.isError ? (
+								<tr>
+									<td
+										colSpan={7}
+										style={{ textAlign: "center", padding: "3rem", color: "#dc2626" }}
+									>
+										Errore: {query.error.message}
+									</td>
+								</tr>
+							) : items.length === 0 ? (
+								<tr>
+									<td colSpan={7} style={{ padding: 0 }}>
+										<EmptyState
+											icon={Receipt}
+											title="Nessuna quota"
+											description="Emetti la prima quota per iniziare."
+											action={
+												<button
+													type="button"
+													className="btn btn-primary btn-sm"
+													onClick={() => setCreateOpen(true)}
+												>
+													<Plus className="icon" /> Emetti Quota
+												</button>
+											}
+										/>
 									</td>
 								</tr>
 							) : (
-								paged.map((quota) => (
-									<tr
-										key={quota.id}
-										className="border-b border-border last:border-0 hover:bg-muted/30"
-									>
-										<td className="px-4 py-3 text-sm font-medium text-foreground">{quota.socio}</td>
-										<td className="px-4 py-3 text-sm text-foreground">{quota.tipo}</td>
-										<td className="px-4 py-3 text-sm font-medium text-foreground">
-											<span className="inline-flex items-center gap-1">
-												<Euro className="h-3.5 w-3.5" />
-												{quota.importo.toLocaleString("it-IT")}
-											</span>
-										</td>
-										<td className="px-4 py-3 text-sm text-muted-foreground">
-											{new Date(quota.dataEmissione).toLocaleDateString("it-IT")}
-										</td>
-										<td className="px-4 py-3 text-sm text-muted-foreground">
-											{new Date(quota.dataScadenza).toLocaleDateString("it-IT")}
-										</td>
-										<td className="px-4 py-3 text-sm">
-											<span
-												className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATI_COLORS[quota.stato]}`}
+								items.map((q) => {
+									const b = STATO_BADGE[q.stato as StatoQuota];
+									const pagato = Number(q.importoPagato ?? 0);
+									return (
+										<tr key={q.id}>
+											<td style={{ fontWeight: 500 }}>
+												{q.socioCognome} {q.socioNome}
+											</td>
+											<td>{q.tipoQuotaNome ?? "—"}</td>
+											<td style={{ fontWeight: 600 }}>{money(q.importo)}</td>
+											<td
+												style={{
+													color: pagato > 0 ? "#059669" : "hsl(var(--muted-foreground))",
+												}}
 											>
-												{STATI_LABELS[quota.stato]}
-											</span>
-										</td>
-									</tr>
-								))
+												{money(pagato)}
+											</td>
+											<td>
+												<span className={`badge ${b.cls}`}>{b.label}</span>
+											</td>
+											<td
+												style={{
+													fontFamily: "monospace",
+													fontSize: "0.8125rem",
+													color: "hsl(var(--muted-foreground))",
+												}}
+											>
+												{q.dataScadenza
+													? new Date(q.dataScadenza as unknown as string).toLocaleDateString(
+															"it-IT",
+														)
+													: "—"}
+											</td>
+											<td>
+												<div className="table-actions" style={{ justifyContent: "flex-end" }}>
+													{q.stato !== "pagato" && q.stato !== "esonerato" ? (
+														<button
+															type="button"
+															className="btn btn-primary btn-sm"
+															onClick={() => openPay(q)}
+														>
+															<CreditCard className="icon-sm" /> Incassa
+														</button>
+													) : q.stato === "pagato" ? (
+														<button
+															type="button"
+															className="table-action"
+															title="Genera ricevuta"
+															onClick={() => ricevutaMutation.mutate({ quotaId: q.id })}
+															disabled={ricevutaMutation.isPending}
+														>
+															<Download className="icon" />
+														</button>
+													) : null}
+													<button
+														type="button"
+														className="table-action"
+														title="Elimina"
+														onClick={() =>
+															setDeleteTarget({
+																id: q.id,
+																label: `${q.socioCognome} ${q.socioNome} - ${money(q.importo)}`,
+															})
+														}
+													>
+														<Trash2 className="icon" style={{ color: "#dc2626" }} />
+													</button>
+												</div>
+											</td>
+										</tr>
+									);
+								})
 							)}
 						</tbody>
 					</table>
 				</div>
-
-				{/* Pagination */}
-				<div className="flex items-center justify-between border-t border-border px-4 py-3">
-					<p className="text-sm text-muted-foreground">{filtered.length} quote totali</p>
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => setPage((p) => Math.max(0, p - 1))}
-							disabled={page === 0}
-						>
-							<ChevronLeft className="h-4 w-4" />
-						</button>
-						<span className="text-sm text-muted-foreground">
-							Pagina {page + 1} di {totalPages}
+				{total > 0 && (
+					<div className="pagination">
+						<span>
+							Mostra {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} di {total} quote
 						</span>
+						<div style={{ display: "flex", gap: "0.25rem" }}>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page === 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								<ChevronLeft className="icon-sm" />
+							</button>
+							<span
+								style={{
+									padding: "0 0.75rem",
+									display: "flex",
+									alignItems: "center",
+									fontSize: "0.875rem",
+								}}
+							>
+								{page} / {totalPages}
+							</span>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+							>
+								<ChevronRight className="icon-sm" />
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* Create Quota Modal */}
+			<Modal
+				open={createOpen}
+				onClose={() => setCreateOpen(false)}
+				title="Emetti quota"
+				subtitle="Crea una nuova quota associativa"
+				size="md"
+				footer={
+					<>
 						<button
 							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-							disabled={page >= totalPages - 1}
+							className="btn btn-outline btn-sm"
+							onClick={() => setCreateOpen(false)}
+							disabled={createMutation.isPending}
 						>
-							<ChevronRight className="h-4 w-4" />
+							Annulla
 						</button>
-					</div>
-				</div>
-			</div>
+						<button
+							type="submit"
+							form="create-quota"
+							className="btn btn-primary btn-sm"
+							disabled={createMutation.isPending}
+						>
+							<Check className="icon" /> {createMutation.isPending ? "Salvataggio..." : "Emetti"}
+						</button>
+					</>
+				}
+			>
+				<form id="create-quota" onSubmit={handleCreate}>
+					{createError && (
+						<div
+							style={{
+								padding: "0.75rem 1rem",
+								background: "rgba(220,38,38,0.1)",
+								color: "#dc2626",
+								borderRadius: 6,
+								fontSize: "0.875rem",
+								marginBottom: "1rem",
+							}}
+						>
+							{createError}
+						</div>
+					)}
+					<FormGrid>
+						<Field label="Socio" required span={2}>
+							<Select
+								value={createForm.socioId}
+								onChange={(e) => setCreateForm({ ...createForm, socioId: e.target.value })}
+								required
+							>
+								<option value="">Seleziona socio...</option>
+								{sociSearch.data?.items.map((s) => (
+									<option key={s.id} value={s.id}>
+										{s.cognome} {s.nome} {s.codiceTessera ? `· ${s.codiceTessera}` : ""}
+									</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Tipo Quota" required>
+							<Select
+								value={createForm.tipoQuotaId}
+								onChange={(e) => {
+									const id = e.target.value;
+									const tipo = tipiQuotaQuery.data?.find((t) => t.id === id);
+									setCreateForm({
+										...createForm,
+										tipoQuotaId: id,
+										importo: tipo ? String(tipo.importo ?? createForm.importo) : createForm.importo,
+									});
+								}}
+								required
+							>
+								<option value="">Seleziona tipo...</option>
+								{tipiQuotaQuery.data?.map((t) => (
+									<option key={t.id} value={t.id}>
+										{t.nome} ({t.tipo})
+									</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Anno Sportivo">
+							<Select
+								value={createForm.annoSportivoId}
+								onChange={(e) =>
+									setCreateForm({ ...createForm, annoSportivoId: e.target.value })
+								}
+							>
+								<option value="">—</option>
+								{anniQuery.data?.map((a) => (
+									<option key={a.id} value={a.id}>
+										{a.nome}
+									</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Importo (EUR)" required>
+							<Input
+								type="number"
+								step="0.01"
+								min="0"
+								value={createForm.importo}
+								onChange={(e) => setCreateForm({ ...createForm, importo: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Data Scadenza">
+							<Input
+								type="date"
+								value={createForm.dataScadenza}
+								onChange={(e) => setCreateForm({ ...createForm, dataScadenza: e.target.value })}
+							/>
+						</Field>
+						<Field label="Note" span={2}>
+							<Textarea
+								value={createForm.note}
+								onChange={(e) => setCreateForm({ ...createForm, note: e.target.value })}
+							/>
+						</Field>
+					</FormGrid>
+				</form>
+			</Modal>
+
+			{/* Pay Modal */}
+			<Modal
+				open={!!payTarget}
+				onClose={() => setPayTarget(null)}
+				title="Registra pagamento"
+				subtitle={payTarget ? `${payTarget.socio} · Residuo ${money(payTarget.residuo)}` : ""}
+				size="sm"
+				footer={
+					<>
+						<button
+							type="button"
+							className="btn btn-outline btn-sm"
+							onClick={() => setPayTarget(null)}
+							disabled={payMutation.isPending}
+						>
+							Annulla
+						</button>
+						<button
+							type="submit"
+							form="pay-form"
+							className="btn btn-primary btn-sm"
+							disabled={payMutation.isPending}
+						>
+							<CreditCard className="icon" />{" "}
+							{payMutation.isPending ? "Registrazione..." : "Registra"}
+						</button>
+					</>
+				}
+			>
+				<form id="pay-form" onSubmit={handlePay}>
+					{payError && (
+						<div
+							style={{
+								padding: "0.75rem 1rem",
+								background: "rgba(220,38,38,0.1)",
+								color: "#dc2626",
+								borderRadius: 6,
+								fontSize: "0.875rem",
+								marginBottom: "1rem",
+							}}
+						>
+							{payError}
+						</div>
+					)}
+					<FormGrid>
+						<Field label="Importo" required span={2}>
+							<Input
+								type="number"
+								step="0.01"
+								min="0"
+								value={payForm.importoPagato}
+								onChange={(e) => setPayForm({ ...payForm, importoPagato: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Metodo" required>
+							<Select
+								value={payForm.metodoPagamento}
+								onChange={(e) =>
+									setPayForm({
+										...payForm,
+										metodoPagamento: e.target.value as MetodoPagamento,
+									})
+								}
+							>
+								<option value="contanti">Contanti</option>
+								<option value="bonifico">Bonifico</option>
+								<option value="pos">POS</option>
+								<option value="stripe">Stripe</option>
+								<option value="satispay">Satispay</option>
+							</Select>
+						</Field>
+						<Field label="Data">
+							<Input
+								type="date"
+								value={payForm.dataPagamento}
+								onChange={(e) => setPayForm({ ...payForm, dataPagamento: e.target.value })}
+							/>
+						</Field>
+						<Field label="Note" span={2}>
+							<Textarea
+								value={payForm.note}
+								onChange={(e) => setPayForm({ ...payForm, note: e.target.value })}
+							/>
+						</Field>
+					</FormGrid>
+				</form>
+			</Modal>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				onConfirm={() => {
+					if (deleteTarget) deleteMutation.mutate({ id: deleteTarget.id });
+				}}
+				title="Eliminare quota?"
+				message={`La quota "${deleteTarget?.label ?? ""}" verra' rimossa definitivamente.`}
+				confirmLabel="Elimina"
+				loading={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

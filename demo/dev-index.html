@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEOGESYS SPORT · Dev Dashboard — Riepilogo completo</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111820;
+      --panel-soft: #0f1620;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-soft: rgba(59, 130, 246, 0.12);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a855f7;
+      --code-bg: #0a1118;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5;
+    }
+    body { padding: 2rem 1rem 4rem; }
+    .container { max-width: 1280px; margin: 0 auto; }
+
+    header.top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .brand-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 2.75rem; padding: 0 0.875rem; border-radius: 0.625rem;
+      background: #13102A; color: #FFF6D9;
+      box-shadow: 0 0 0 1px rgba(139, 63, 229, 0.25), 0 0 24px rgba(237, 63, 158, 0.14);
+      overflow: hidden;
+    }
+    .brand-mark > svg { height: 1.625rem; width: auto; display: block; }
+    .brand-sector {
+      display: inline-flex; align-items: center;
+      padding: 0.1875rem 0.625rem; border-radius: 9999px;
+      font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #FFF6D9;
+      background: linear-gradient(135deg, #8B3FE5 0%, #ED3F9E 100%);
+      box-shadow: 0 0 12px rgba(237, 63, 158, 0.35);
+      white-space: nowrap;
+    }
+    .brand h1 { font-size: 1.5rem; font-weight: 700; }
+    .brand p { font-size: 0.875rem; color: var(--text-muted); }
+    .brand .build-badge {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      margin-top: 0.375rem; font-size: 0.75rem;
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+      color: var(--text-muted);
+    }
+    .bb-version {
+      color: var(--primary); font-weight: 600;
+      padding: 0.0625rem 0.375rem; border-radius: 0.25rem;
+      background: var(--primary-soft);
+    }
+    .bb-sep { opacity: 0.5; }
+    .bb-datetime { color: var(--text); }
+    .bb-channel {
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--warning); font-weight: 600; font-size: 0.6875rem;
+    }
+    .top-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.5rem 0.875rem; border-radius: 0.5rem; border: 1px solid var(--border);
+      background: var(--panel); color: var(--text); text-decoration: none;
+      font-size: 0.8125rem; font-weight: 500; transition: all 0.15s;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: white; }
+    .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+
+    .section { margin-bottom: 2.5rem; }
+    .section-head {
+      display: flex; align-items: center; gap: 0.625rem;
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-head h2 { font-size: 1.125rem; font-weight: 600; }
+    .section-head .icon-wrap {
+      width: 1.75rem; height: 1.75rem; border-radius: 0.375rem;
+      background: var(--primary-soft); color: var(--primary);
+      display: grid; place-items: center; font-size: 1rem;
+    }
+    .section-head .desc { color: var(--text-muted); font-size: 0.8125rem; margin-left: auto; }
+
+    .grid { display: grid; gap: 0.875rem; }
+    .grid-2 { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 0.625rem; padding: 1rem; transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #2d3a4d; }
+    .card-title {
+      font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .card-desc { color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 0.75rem; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.125rem 0.5rem; border-radius: 9999px;
+      font-size: 0.6875rem; font-weight: 500;
+      background: #1e2838; color: var(--text);
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .badge-primary { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .badge-purple { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+    .badge-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+    .link {
+      color: var(--primary); text-decoration: none; font-family: monospace;
+      font-size: 0.8125rem; word-break: break-all;
+    }
+    .link:hover { text-decoration: underline; }
+
+    code, .kbd {
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+      background: var(--code-bg); border: 1px solid var(--border);
+      padding: 0.125rem 0.375rem; border-radius: 0.25rem;
+      font-size: 0.75rem; color: #e2e8f0;
+    }
+    .code-block {
+      background: var(--code-bg); border: 1px solid var(--border);
+      padding: 0.625rem 0.75rem; border-radius: 0.375rem;
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 0.75rem; margin-top: 0.5rem;
+      white-space: pre-wrap; word-break: break-all; color: #cbd5e1;
+    }
+
+    .role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; }
+    .role-card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 0.625rem; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .role-card-head {
+      padding: 1rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 0.75rem;
+    }
+    .role-icon {
+      width: 2.5rem; height: 2.5rem; border-radius: 0.5rem;
+      display: grid; place-items: center; font-size: 1.25rem; flex-shrink: 0;
+    }
+    .role-info { flex: 1; min-width: 0; }
+    .role-name { font-weight: 600; font-size: 1rem; margin-bottom: 0.125rem; }
+    .role-code { font-size: 0.75rem; color: var(--text-muted); font-family: monospace; }
+    .role-hierarchy {
+      font-size: 0.625rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;
+    }
+    .role-card-body { padding: 1rem; flex: 1; }
+    .role-perms {
+      font-size: 0.8125rem; color: var(--text-muted);
+      margin-bottom: 0.75rem; line-height: 1.5;
+    }
+    .role-perms strong { color: var(--text); }
+    .role-pages {
+      display: flex; flex-wrap: wrap; gap: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .role-pages code {
+      font-size: 0.6875rem; padding: 0.125rem 0.375rem;
+    }
+    .role-actions {
+      padding: 0.75rem 1rem; background: var(--panel-soft);
+      border-top: 1px solid var(--border);
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .role-actions .btn { flex: 1; justify-content: center; font-size: 0.75rem; padding: 0.375rem 0.625rem; }
+
+    .srv-row {
+      display: grid; grid-template-columns: auto 1fr auto auto; gap: 0.875rem;
+      padding: 0.75rem; align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .srv-row:last-child { border-bottom: none; }
+    .srv-icon {
+      width: 2rem; height: 2rem; border-radius: 0.375rem;
+      display: grid; place-items: center; font-size: 1rem;
+      background: var(--primary-soft); color: var(--primary);
+    }
+    .srv-name { font-weight: 500; font-size: 0.875rem; }
+    .srv-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+    .table {
+      width: 100%; border-collapse: collapse;
+      background: var(--panel); border-radius: 0.5rem;
+      overflow: hidden; border: 1px solid var(--border);
+    }
+    .table th, .table td {
+      padding: 0.625rem 0.875rem; text-align: left; font-size: 0.8125rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .table th {
+      background: var(--panel-soft); font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .table td code { font-size: 0.6875rem; }
+
+    .check { color: var(--success); font-weight: bold; }
+    .cross { color: var(--danger); }
+    .minus { color: var(--text-muted); }
+
+    .alert {
+      padding: 0.875rem 1rem; border-radius: 0.5rem;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      font-size: 0.8125rem;
+      display: flex; gap: 0.75rem; align-items: flex-start;
+    }
+    .alert-icon {
+      width: 1.25rem; height: 1.25rem; border-radius: 50%;
+      background: var(--primary); color: white; display: grid; place-items: center;
+      flex-shrink: 0; font-size: 0.75rem; font-weight: bold; margin-top: 0.0625rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="top">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 40" role="img" aria-label="NEOGESYS"><title>NEOGESYS</title><defs><radialGradient id="qc-dix" cx=".5" cy=".5" r=".5"><stop offset="0%" stop-color="#FFF6D9"/><stop offset="35%" stop-color="#FFF6D9" stop-opacity=".9"/><stop offset="100%" stop-color="#FFF6D9" stop-opacity="0"/></radialGradient><linearGradient id="qj-dix" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#FFF6D9" stop-opacity="0"/><stop offset="50%" stop-color="#FFF6D9" stop-opacity=".9"/><stop offset="100%" stop-color="#FFF6D9"/></linearGradient><linearGradient id="qd-dix" x1="0" y1=".5" x2="1" y2=".5"><stop offset="0%" stop-color="#8B3FE5"/><stop offset="50%" stop-color="#ED3F9E"/><stop offset="100%" stop-color="#8B3FE5"/></linearGradient></defs><g transform="translate(4 4)"><path d="M15.6 15 Q15.9 9 16 2 Q16.1 9 16.4 15 Z" fill="url(#qj-dix)"/><path d="M15.6 17 Q15.9 22 16 28 Q16.1 22 16.4 17 Z" fill="url(#qj-dix)" opacity=".9"/><ellipse cx="16" cy="16" rx="12" ry="3.4" transform="rotate(-22 16 16)" fill="none" stroke="url(#qd-dix)" stroke-width="1.1"/><ellipse cx="16" cy="16" rx="8.5" ry="2.3" transform="rotate(-22 16 16)" fill="none" stroke="#ED3F9E" stroke-width=".55" stroke-opacity=".6" stroke-dasharray=".7 1.1"/><circle cx="16" cy="16" r="3.6" fill="url(#qc-dix)"/><circle cx="16" cy="16" r="1.1" fill="#FFF6D9"/><circle cx="22.4" cy="19.4" r=".95" fill="#3BD0F2"/></g><g transform="translate(44 34)" fill="currentColor"><path d="M9.45 0L2.92 0L2.92-25.87L9.97-25.87L18.56-10.87L18.56-25.87L25.08-25.87L25.08 0L18.07 0L9.45-15.00L9.45 0Z"/><path d="M51.29 0L33.18 0L33.18-25.87L51.29-25.87L51.29-19.98L39.71-19.98L39.71-16.12L50.17-16.12L50.17-10.24L39.71-10.24L39.71-5.89L51.29-5.89L51.29 0Z"/><path d="M57.96-6.60L57.96-6.60L57.96-19.27Q57.96-25.87 64.56-25.87L64.56-25.87L72.96-25.87Q79.56-25.87 79.56-19.27L79.56-19.27L79.56-6.60Q79.56 0 72.96 0L72.96 0L64.56 0Q57.96 0 57.96-6.60ZM64.49-19.57L64.49-6.30Q64.49-5.89 64.90-5.89L64.90-5.89L72.62-5.89Q73.04-5.89 73.04-6.30L73.04-6.30L73.04-19.57Q73.04-19.98 72.62-19.98L72.62-19.98L64.90-19.98Q64.49-19.98 64.49-19.57L64.49-19.57Z"/><path d="M86.91-6.60L86.91-6.60L86.91-19.27Q86.91-25.87 93.51-25.87L93.51-25.87L104.08-25.87L107.01-23.62L107.01-19.98L93.85-19.98Q93.43-19.98 93.43-19.57L93.43-19.57L93.43-6.30Q93.43-5.89 93.85-5.89L93.85-5.89L101.23-5.89L101.23-10.24L97.00-10.24L97.00-16.12L107.76-16.12L107.76 0L93.51 0Q86.91 0 86.91-6.60Z"/><path d="M133.21 0L115.10 0L115.10-25.87L133.21-25.87L133.21-19.98L121.63-19.98L121.63-16.12L132.09-16.12L132.09-10.24L121.63-10.24L121.63-5.89L133.21-5.89L133.21 0Z"/><path d="M142.06 0L139.14-2.25L139.14-5.89L150.80-5.89Q151.21-5.89 151.21-6.30L151.21-6.30L151.21-8.85Q151.21-9.37 150.76-9.45L150.76-9.45L143.82-10.87Q139.14-11.77 139.14-17.13L139.14-17.13L139.14-19.27Q139.14-25.87 145.74-25.87L145.74-25.87L154.06-25.87L156.98-23.62L156.98-19.98L146.07-19.98Q145.66-19.98 145.66-19.57L145.66-19.57L145.66-17.17Q145.66-16.68 146.11-16.57L146.11-16.57L153.05-15.22Q157.73-14.25 157.73-8.92L157.73-8.92L157.73-6.60Q157.73 0 151.14 0L151.14 0L142.06 0Z"/><path d="M170.41-8.92L162.42-24.67L163.17-25.87L168.76-25.87L173.67-15.93L178.58-25.87L184.17-25.87L184.92-24.67L176.93-8.92L176.93 0L170.41 0L170.41-8.92Z"/><path d="M192.53 0L189.60-2.25L189.60-5.89L201.26-5.89Q201.68-5.89 201.68-6.30L201.68-6.30L201.68-8.85Q201.68-9.37 201.23-9.45L201.23-9.45L194.29-10.87Q189.60-11.77 189.60-17.13L189.60-17.13L189.60-19.27Q189.60-25.87 196.20-25.87L196.20-25.87L204.53-25.87L207.45-23.62L207.45-19.98L196.54-19.98Q196.13-19.98 196.13-19.57L196.13-19.57L196.13-17.17Q196.13-16.68 196.58-16.57L196.58-16.57L203.51-15.22Q208.20-14.25 208.20-8.92L208.20-8.92L208.20-6.60Q208.20 0 201.60 0L201.60 0L192.53 0Z"/></g></svg>
+        </div>
+        <span class="brand-sector">Sport</span>
+        <div>
+          <h1>Dev Dashboard</h1>
+          <p>Riepilogo completo ambiente di sviluppo · Docker Compose · Multi-tenant</p>
+          <p class="build-badge">
+            <span class="bb-version">v2026.4.1</span>
+            <span class="bb-sep">·</span>
+            <span class="bb-datetime">Release 19 aprile 2026, 15:00 UTC</span>
+            <span class="bb-sep">·</span>
+            <span class="bb-channel">dev</span>
+          </p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a href="roles-index.html" class="btn">📋 Demo statica HTML</a>
+        <a href="http://localhost:3000/" target="_blank" class="btn btn-primary">🚀 Apri Dev</a>
+      </div>
+    </header>
+
+    <!-- QUICK LOGIN PER RUOLO -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">🔐</div>
+        <h2>Accesso rapido ai ruoli (gerarchia completa)</h2>
+        <span class="desc">Click sul pulsante "Login rapido" per entrare come quel ruolo</span>
+      </div>
+
+      <div class="role-grid">
+
+        <!-- SUPER ADMIN -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(239,68,68,0.15); color: var(--danger);">👑</div>
+            <div class="role-info">
+              <div class="role-name">Super Admin</div>
+              <div class="role-code">super_admin</div>
+              <div class="role-hierarchy">Livello gerarchia: 0 · Massimo privilegio</div>
+            </div>
+            <span class="badge badge-danger">L0</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Accesso totale</strong>: sezione <strong style="color: var(--danger);">Piattaforma</strong> (gestione tenant, billing, system health, audit log) + tutte le pagine del gestionale tenant (impersonation). Dashboard differenziata con metriche cross-tenant (MRR, churn, soci totali).
+            </div>
+            <div class="role-pages" style="margin-bottom: 0.375rem;">
+              <span class="badge badge-danger" style="font-size:0.625rem; margin-right:0.25rem;">PIATTAFORMA</span>
+              <code style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3);">/tenants</code>
+              <code style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3);">/billing</code>
+              <code style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3);">/system</code>
+              <code style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3);">/audit</code>
+            </div>
+            <div class="role-pages">
+              <span class="badge badge-outline" style="font-size:0.625rem; margin-right:0.25rem;">TENANT</span>
+              <code>/</code> <code>/soci</code> <code>/quote</code> <code>/calendario</code>
+              <code>/corsi</code> <code>/eventi</code> <code>/documenti</code> <code>/comunicazioni</code>
+              <code>/contabilita</code> <code>/integrazioni</code> <code>/impostazioni</code> <code>/utenti</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=super_admin" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="super_admin.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- ADMIN TENANT -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(59,130,246,0.15); color: var(--primary);">👨‍💼</div>
+            <div class="role-info">
+              <div class="role-name">Admin Tenant</div>
+              <div class="role-code">admin_tenant</div>
+              <div class="role-hierarchy">Livello gerarchia: 1 · Proprietario società</div>
+            </div>
+            <span class="badge badge-primary">L1</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Accesso completo</strong> alla società: soci, corsi, quote, certificati, eventi, contabilità, comunicazioni, documenti, integrazioni, impostazioni, vault credenziali.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/soci</code> <code>/quote</code> <code>/calendario</code>
+              <code>/corsi</code> <code>/eventi</code> <code>/documenti</code> <code>/comunicazioni</code>
+              <code>/contabilita</code> <code>/integrazioni</code> <code>/impostazioni</code> <code>/utenti</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=admin_tenant" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="admin-tenant.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- COORDINATORE -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);">👨‍🎓</div>
+            <div class="role-info">
+              <div class="role-name">Coordinatore</div>
+              <div class="role-code">coordinatore</div>
+              <div class="role-hierarchy">Livello gerarchia: 2 · Gestione operativa</div>
+            </div>
+            <span class="badge badge-warning">L2</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Gestione operativa</strong>: soci, corsi, eventi, quote, comunicazioni, documenti. Senza contabilità, integrazioni, utenti, impostazioni tenant.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/soci</code> <code>/quote</code> <code>/calendario</code>
+              <code>/corsi</code> <code>/eventi</code> <code>/comunicazioni</code> <code>/documenti</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=coordinatore" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="coordinatore.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- OPERATORE -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(16,185,129,0.15); color: var(--success);">📋</div>
+            <div class="role-info">
+              <div class="role-name">Operatore / Segreteria</div>
+              <div class="role-code">operatore</div>
+              <div class="role-hierarchy">Livello gerarchia: 3 · Front office</div>
+            </div>
+            <span class="badge badge-success">L3</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Segreteria</strong>: iscrizioni, anagrafica soci, incassi quote, calendario corsi, comunicazioni. Niente contabilità avanzata o documenti riservati.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/soci</code> <code>/quote</code> <code>/calendario</code>
+              <code>/corsi</code> <code>/eventi</code> <code>/comunicazioni</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=operatore" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="segreteria.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- TESORIERE -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);">💰</div>
+            <div class="role-info">
+              <div class="role-name">Tesoriere</div>
+              <div class="role-code">tesoriere</div>
+              <div class="role-hierarchy">Livello gerarchia: 3 · Amministrazione</div>
+            </div>
+            <span class="badge badge-warning">L3</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Contabilità</strong>: quote, incassi, prima nota, fatturazione SDI, ricevute, reportistica finanziaria. Niente gestione soci/corsi.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/quote</code> <code>/contabilita</code> <code>/documenti</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=tesoriere" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="contabile.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- ISTRUTTORE -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(148,163,184,0.15); color: #94a3b8;">🏋️</div>
+            <div class="role-info">
+              <div class="role-name">Istruttore</div>
+              <div class="role-code">istruttore</div>
+              <div class="role-hierarchy">Livello gerarchia: 4 · Operativo sul campo</div>
+            </div>
+            <span class="badge">L4</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Accesso limitato</strong>: visualizza iscritti ai propri corsi, registra presenze, accede a certificati medici dei soci assegnati, scarica documenti corso.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/corsi</code> <code>/calendario</code>
+              <code>/soci</code> <code>/documenti</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=istruttore" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="istruttore.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+        <!-- USER / SOCIO -->
+        <div class="role-card">
+          <div class="role-card-head">
+            <div class="role-icon" style="background: rgba(168,85,247,0.15); color: var(--purple);">👤</div>
+            <div class="role-info">
+              <div class="role-name">User / Socio</div>
+              <div class="role-code">user</div>
+              <div class="role-hierarchy">Livello gerarchia: 5 · Utente finale</div>
+            </div>
+            <span class="badge badge-purple">L5</span>
+          </div>
+          <div class="role-card-body">
+            <div class="role-perms">
+              <strong>Vista personale</strong>: profilo, corsi iscritti, quote personali, certificati medici propri, comunicazioni ricevute.
+            </div>
+            <div class="role-pages">
+              <code>/</code> <code>/corsi</code> <code>/quote</code>
+              <code>/documenti</code> <code>/comunicazioni</code>
+            </div>
+          </div>
+          <div class="role-actions">
+            <a href="http://localhost:3000/login?role=user" target="_blank" class="btn btn-primary">🚀 Login rapido</a>
+            <a href="user.html" class="btn">📄 Demo HTML</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="alert" style="margin-top: 1rem; background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.25);">
+        <div class="alert-icon" style="background: var(--danger);">!</div>
+        <div>
+          <strong style="color: var(--danger);">Differenza Super Admin vs Admin Tenant:</strong>
+          il <code>super_admin</code> vede una sezione <strong>Piattaforma</strong> dedicata nella sidebar (in rosso) con
+          <a href="http://localhost:3000/tenants" target="_blank" class="link">/tenants</a> (8 società),
+          <a href="http://localhost:3000/billing" target="_blank" class="link">/billing</a> (MRR piattaforma),
+          <a href="http://localhost:3000/system" target="_blank" class="link">/system</a> (health dei servizi) e
+          <a href="http://localhost:3000/audit" target="_blank" class="link">/audit</a> (log cross-tenant).
+          La dashboard home per super_admin mostra metriche cross-tenant (MRR, churn, soci totali) anziché quelle della singola società.
+          L'<code>admin_tenant</code> invece vede <strong>solo</strong> la sezione Gestione del proprio tenant.
+        </div>
+      </div>
+
+      <div class="alert" style="margin-top: 0.75rem;">
+        <div class="alert-icon">i</div>
+        <div>
+          <strong>Tip dev:</strong> puoi anche incollare direttamente l'URL
+          <code>http://localhost:3000/login?role=&lt;nome_ruolo&gt;</code> per entrare come qualunque ruolo senza usare il picker.
+          Il ruolo è salvato in <code>localStorage</code> con chiave <code>neogesys-current-user</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVIZI DOCKER -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">🐳</div>
+        <h2>Servizi Docker Compose</h2>
+        <span class="desc">7 container attivi · stack full-service</span>
+      </div>
+      <div class="card" style="padding: 0;">
+
+        <div class="srv-row">
+          <div class="srv-icon">▲</div>
+          <div>
+            <div class="srv-name">Web App (Next.js 15 · Turbopack)</div>
+            <div class="srv-desc">Gestionale multi-ruolo · React 19 · App Router</div>
+          </div>
+          <a href="http://localhost:3000" target="_blank" class="link">http://localhost:3000</a>
+          <span class="badge badge-success">● Up</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(168,85,247,0.15); color: var(--purple);">⚙</div>
+          <div>
+            <div class="srv-name">Admin Platform (Next.js)</div>
+            <div class="srv-desc">Super admin dashboard · tenant, billing, system</div>
+          </div>
+          <a href="http://localhost:3001" target="_blank" class="link">http://localhost:3001</a>
+          <span class="badge badge-success">● Up</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(16,185,129,0.15); color: var(--success);">⚡</div>
+          <div>
+            <div class="srv-name">API (Fastify + tRPC)</div>
+            <div class="srv-desc">Backend · health endpoint · multi-tenant PostgreSQL</div>
+          </div>
+          <a href="http://localhost:4000/health" target="_blank" class="link">http://localhost:4000/health</a>
+          <span class="badge badge-success">● Up</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);">📄</div>
+          <div>
+            <div class="srv-name">Demo HTML (nginx)</div>
+            <div class="srv-desc">Prototipi statici per ciascun ruolo · single-file HTML</div>
+          </div>
+          <a href="http://localhost:8080/roles-index.html" target="_blank" class="link">http://localhost:8080/roles-index.html</a>
+          <span class="badge badge-success">● Up</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(59,130,246,0.15); color: var(--primary);">🐘</div>
+          <div>
+            <div class="srv-name">PostgreSQL 16</div>
+            <div class="srv-desc">Database multi-tenant · RLS + schema per tenant</div>
+          </div>
+          <span class="link">localhost:5433 (interno 5432)</span>
+          <span class="badge badge-success">● Healthy</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(239,68,68,0.15); color: var(--danger);">🔴</div>
+          <div>
+            <div class="srv-name">Redis 7</div>
+            <div class="srv-desc">Cache · sessioni · coda job BullMQ</div>
+          </div>
+          <span class="link">localhost:6379</span>
+          <span class="badge badge-success">● Healthy</span>
+        </div>
+
+        <div class="srv-row">
+          <div class="srv-icon" style="background: rgba(168,85,247,0.15); color: var(--purple);">🗄️</div>
+          <div>
+            <div class="srv-name">MinIO (S3-compatible)</div>
+            <div class="srv-desc">Storage documenti · bucket "neogesys-docs"</div>
+          </div>
+          <div>
+            <a href="http://localhost:9001" target="_blank" class="link">console :9001</a>
+            <div class="srv-desc" style="font-family: monospace; font-size: 0.6875rem;">api :9000</div>
+          </div>
+          <span class="badge badge-success">● Up</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CREDENZIALI -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">🔑</div>
+        <h2>Credenziali di accesso (dev)</h2>
+        <span class="desc">Tutti i secret sono in <code>docker-compose.yml</code></span>
+      </div>
+
+      <div class="grid grid-2">
+
+        <!-- MINIO CREDS -->
+        <div class="card">
+          <div class="card-title">
+            🗄️ MinIO Console
+            <span class="badge badge-purple">Storage</span>
+          </div>
+          <div class="card-desc">Gestione bucket S3-compatible · accedere a <a href="http://localhost:9001" target="_blank" class="link">localhost:9001</a></div>
+          <table class="table">
+            <tbody>
+              <tr><td>User</td><td><code>minio_dev</code></td></tr>
+              <tr><td>Password</td><td><code>minio_dev_secret</code></td></tr>
+              <tr><td>Access Key</td><td><code>minio_dev</code></td></tr>
+              <tr><td>Secret Key</td><td><code>minio_dev_secret</code></td></tr>
+              <tr><td>Bucket</td><td><code>neogesys-docs</code></td></tr>
+              <tr><td>Endpoint (interno)</td><td><code>http://minio:9000</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- POSTGRES CREDS -->
+        <div class="card">
+          <div class="card-title">
+            🐘 PostgreSQL
+            <span class="badge badge-primary">Database</span>
+          </div>
+          <div class="card-desc">Database multi-tenant · usare con psql, DBeaver o TablePlus</div>
+          <table class="table">
+            <tbody>
+              <tr><td>Host</td><td><code>localhost</code></td></tr>
+              <tr><td>Port</td><td><code>5433</code></td></tr>
+              <tr><td>Database</td><td><code>neogesys_sport</code></td></tr>
+              <tr><td>User</td><td><code>neogesys</code></td></tr>
+              <tr><td>Password</td><td><code>neogesys_dev</code></td></tr>
+            </tbody>
+          </table>
+          <div class="code-block">postgresql://neogesys:neogesys_dev@localhost:5433/neogesys_sport</div>
+        </div>
+
+        <!-- REDIS -->
+        <div class="card">
+          <div class="card-title">
+            🔴 Redis
+            <span class="badge badge-danger">Cache/Queue</span>
+          </div>
+          <div class="card-desc">Cache TTL · coda BullMQ · rate limiting</div>
+          <table class="table">
+            <tbody>
+              <tr><td>Host</td><td><code>localhost</code></td></tr>
+              <tr><td>Port</td><td><code>6379</code></td></tr>
+              <tr><td>Password</td><td><code class="minus">— (no auth in dev)</code></td></tr>
+            </tbody>
+          </table>
+          <div class="code-block">redis://localhost:6379</div>
+        </div>
+
+        <!-- APP SECRETS -->
+        <div class="card">
+          <div class="card-title">
+            🔐 App Secrets
+            <span class="badge badge-warning">DEV ONLY</span>
+          </div>
+          <div class="card-desc">Secret di sessione/JWT — da ruotare in produzione!</div>
+          <table class="table">
+            <tbody>
+              <tr><td>BETTER_AUTH_SECRET</td><td><code>dev_secret_change_in_production_32chars</code></td></tr>
+              <tr><td>NEXT_PUBLIC_API_URL</td><td><code>http://localhost:4000</code></td></tr>
+              <tr><td>NEXT_PUBLIC_APP_URL</td><td><code>http://localhost:3000</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PAGINE DEV -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">📄</div>
+        <h2>Pagine del gestionale (dev · http://localhost:3000)</h2>
+        <span class="desc">17 route · shell con header + sidebar</span>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Titolo</th>
+            <th style="color: var(--danger);">Super</th>
+            <th>Admin</th>
+            <th>Coord.</th>
+            <th>Operat.</th>
+            <th>Tesor.</th>
+            <th>Istrut.</th>
+            <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: rgba(239,68,68,0.06);">
+            <td colspan="9" style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color: var(--danger); padding: 0.5rem 0.875rem;">
+              🛡️ Sezione Piattaforma · solo super_admin
+            </td>
+          </tr>
+          <tr><td><a href="http://localhost:3000/tenants" target="_blank" class="link">/tenants</a></td><td>Gestione tenant (8 società)</td>
+              <td class="check">✓</td>
+              <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/billing" target="_blank" class="link">/billing</a></td><td>Billing piattaforma · MRR · piani</td>
+              <td class="check">✓</td>
+              <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/system" target="_blank" class="link">/system</a></td><td>System Health · uptime · servizi</td>
+              <td class="check">✓</td>
+              <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/audit" target="_blank" class="link">/audit</a></td><td>Audit Log cross-tenant (GDPR)</td>
+              <td class="check">✓</td>
+              <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+
+          <tr style="background: rgba(59,130,246,0.05);">
+            <td colspan="9" style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color: var(--primary); padding: 0.5rem 0.875rem;">
+              🏢 Sezione Gestione tenant · società
+            </td>
+          </tr>
+          <tr><td><a href="http://localhost:3000/" target="_blank" class="link">/</a></td><td>Dashboard (differenziata per ruolo)</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/soci" target="_blank" class="link">/soci</a></td><td>Anagrafica soci</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/quote" target="_blank" class="link">/quote</a></td><td>Quote iscrizione</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/calendario" target="_blank" class="link">/calendario</a></td><td>Calendario corsi ed eventi</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/corsi" target="_blank" class="link">/corsi</a></td><td>Corsi e discipline</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/eventi" target="_blank" class="link">/eventi</a></td><td>Eventi e tornei</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/documenti" target="_blank" class="link">/documenti</a></td><td>Documenti e certificati</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/comunicazioni" target="_blank" class="link">/comunicazioni</a></td><td>Email/SMS/WhatsApp</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/contabilita" target="_blank" class="link">/contabilita</a></td><td>Prima nota e fatture</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/integrazioni" target="_blank" class="link">/integrazioni</a></td><td>Vault credenziali</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/impostazioni" target="_blank" class="link">/impostazioni</a></td><td>Impostazioni tenant</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/utenti" target="_blank" class="link">/utenti</a></td><td>Utenti e permessi</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td><a href="http://localhost:3000/ai" target="_blank" class="link">/ai</a></td><td>AI Assistente (drawer)</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td><a href="http://localhost:3000/login" target="_blank" class="link">/login</a></td><td>Login + quick switch ruolo</td>
+              <td class="minus">—</td>
+              <td class="minus">—</td><td class="minus">—</td><td class="minus">—</td><td class="minus">—</td><td class="minus">—</td><td class="minus">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- COMANDI UTILI -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">💻</div>
+        <h2>Comandi utili</h2>
+        <span class="desc">Docker · psql · redis-cli</span>
+      </div>
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="card-title">🐳 Docker Compose</div>
+          <div class="code-block">docker compose up -d            # avvia
+docker compose down             # stop
+docker compose logs -f web      # log live
+docker compose ps               # status
+docker restart neogesys-web     # riavvia solo web</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🐘 PostgreSQL</div>
+          <div class="code-block">docker exec -it neogesys-postgres \
+  psql -U neogesys -d neogesys_sport
+
+# da host:
+psql postgresql://neogesys:neogesys_dev@localhost:5433/neogesys_sport</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔴 Redis</div>
+          <div class="code-block">docker exec -it neogesys-redis redis-cli
+> KEYS *
+> FLUSHDB</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🗄️ MinIO (mc)</div>
+          <div class="code-block">mc alias set local http://localhost:9000 \
+  minio_dev minio_dev_secret
+mc ls local/neogesys-docs</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BRAND SYSTEM -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap" style="background: rgba(237, 63, 158, 0.12); color: #ED3F9E;">⭐</div>
+        <h2>Brand system · NEOGESYS Universal Suite</h2>
+        <span class="desc">5 componenti React · 8 file SVG · palette cosmic</span>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card" style="background: #13102A; border-color: rgba(139, 63, 229, 0.35); box-shadow: 0 0 32px rgba(237, 63, 158, 0.12);">
+          <div style="color: #FFF6D9; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; margin-bottom: 0.75rem;">NeogesysLogoFull · login / splash</div>
+          <div style="display: flex; justify-content: center; align-items: center; padding: 1.25rem 0.5rem; color: #FFF6D9;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 48" style="height: 3rem; width: auto;" role="img" aria-label="NEOGESYS — Universal Suite"><title>NEOGESYS — Universal Suite</title><defs><radialGradient id="qc-bf" cx=".5" cy=".5" r=".5"><stop offset="0%" stop-color="#FFF6D9"/><stop offset="35%" stop-color="#FFF6D9" stop-opacity=".9"/><stop offset="100%" stop-color="#FFF6D9" stop-opacity="0"/></radialGradient><linearGradient id="qj-bf" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#FFF6D9" stop-opacity="0"/><stop offset="50%" stop-color="#FFF6D9" stop-opacity=".9"/><stop offset="100%" stop-color="#FFF6D9"/></linearGradient><linearGradient id="qd-bf" x1="0" y1=".5" x2="1" y2=".5"><stop offset="0%" stop-color="#8B3FE5"/><stop offset="50%" stop-color="#ED3F9E"/><stop offset="100%" stop-color="#8B3FE5"/></linearGradient></defs><g transform="translate(4 8)"><path d="M15.6 15 Q15.9 9 16 2 Q16.1 9 16.4 15 Z" fill="url(#qj-bf)"/><path d="M15.6 17 Q15.9 22 16 28 Q16.1 22 16.4 17 Z" fill="url(#qj-bf)" opacity=".9"/><ellipse cx="16" cy="16" rx="12" ry="3.4" transform="rotate(-22 16 16)" fill="none" stroke="url(#qd-bf)" stroke-width="1.1"/><ellipse cx="16" cy="16" rx="8.5" ry="2.3" transform="rotate(-22 16 16)" fill="none" stroke="#ED3F9E" stroke-width=".55" stroke-opacity=".6" stroke-dasharray=".7 1.1"/><circle cx="16" cy="16" r="3.6" fill="url(#qc-bf)"/><circle cx="16" cy="16" r="1.1" fill="#FFF6D9"/><circle cx="22.4" cy="19.4" r=".95" fill="#3BD0F2"/></g><g transform="translate(44 30)" fill="currentColor"><path d="M9.45 0L2.92 0L2.92-25.87L9.97-25.87L18.56-10.87L18.56-25.87L25.08-25.87L25.08 0L18.07 0L9.45-15.00L9.45 0Z"/><path d="M51.29 0L33.18 0L33.18-25.87L51.29-25.87L51.29-19.98L39.71-19.98L39.71-16.12L50.17-16.12L50.17-10.24L39.71-10.24L39.71-5.89L51.29-5.89L51.29 0Z"/><path d="M57.96-6.60L57.96-6.60L57.96-19.27Q57.96-25.87 64.56-25.87L64.56-25.87L72.96-25.87Q79.56-25.87 79.56-19.27L79.56-19.27L79.56-6.60Q79.56 0 72.96 0L72.96 0L64.56 0Q57.96 0 57.96-6.60ZM64.49-19.57L64.49-6.30Q64.49-5.89 64.90-5.89L64.90-5.89L72.62-5.89Q73.04-5.89 73.04-6.30L73.04-6.30L73.04-19.57Q73.04-19.98 72.62-19.98L72.62-19.98L64.90-19.98Q64.49-19.98 64.49-19.57L64.49-19.57Z"/><path d="M86.91-6.60L86.91-6.60L86.91-19.27Q86.91-25.87 93.51-25.87L93.51-25.87L104.08-25.87L107.01-23.62L107.01-19.98L93.85-19.98Q93.43-19.98 93.43-19.57L93.43-19.57L93.43-6.30Q93.43-5.89 93.85-5.89L93.85-5.89L101.23-5.89L101.23-10.24L97.00-10.24L97.00-16.12L107.76-16.12L107.76 0L93.51 0Q86.91 0 86.91-6.60Z"/><path d="M133.21 0L115.10 0L115.10-25.87L133.21-25.87L133.21-19.98L121.63-19.98L121.63-16.12L132.09-16.12L132.09-10.24L121.63-10.24L121.63-5.89L133.21-5.89L133.21 0Z"/><path d="M142.06 0L139.14-2.25L139.14-5.89L150.80-5.89Q151.21-5.89 151.21-6.30L151.21-6.30L151.21-8.85Q151.21-9.37 150.76-9.45L150.76-9.45L143.82-10.87Q139.14-11.77 139.14-17.13L139.14-17.13L139.14-19.27Q139.14-25.87 145.74-25.87L145.74-25.87L154.06-25.87L156.98-23.62L156.98-19.98L146.07-19.98Q145.66-19.98 145.66-19.57L145.66-19.57L145.66-17.17Q145.66-16.68 146.11-16.57L146.11-16.57L153.05-15.22Q157.73-14.25 157.73-8.92L157.73-8.92L157.73-6.60Q157.73 0 151.14 0L151.14 0L142.06 0Z"/><path d="M170.41-8.92L162.42-24.67L163.17-25.87L168.76-25.87L173.67-15.93L178.58-25.87L184.17-25.87L184.92-24.67L176.93-8.92L176.93 0L170.41 0L170.41-8.92Z"/><path d="M192.53 0L189.60-2.25L189.60-5.89L201.26-5.89Q201.68-5.89 201.68-6.30L201.68-6.30L201.68-8.85Q201.68-9.37 201.23-9.45L201.23-9.45L194.29-10.87Q189.60-11.77 189.60-17.13L189.60-17.13L189.60-19.27Q189.60-25.87 196.20-25.87L196.20-25.87L204.53-25.87L207.45-23.62L207.45-19.98L196.54-19.98Q196.13-19.98 196.13-19.57L196.13-19.57L196.13-17.17Q196.13-16.68 196.58-16.57L196.58-16.57L203.51-15.22Q208.20-14.25 208.20-8.92L208.20-8.92L208.20-6.60Q208.20 0 201.60 0L201.60 0L192.53 0Z"/></g><g transform="translate(44 46)" fill="currentColor" opacity=".55"><path d="M3.68 0L1.44-1.73L1.44-19.88L5.13-19.88L5.13-3.70Q5.13-3.39 5.44-3.39L5.44-3.39L12.42-3.39Q12.72-3.39 12.72-3.70L12.72-3.70L12.72-19.88L16.42-19.88L16.42-15.07Q16.42 0 11.35 0L11.35 0L3.68 0Z"/><path d="M37.76 0L22.78 0L22.78-19.88L37.76-19.88L37.76-16.30L26.48-16.30L26.48-11.70L36.35-11.70L36.35-8.12L26.48-8.12L26.48-3.58L37.76-3.58L37.76 0Z"/><path d="M57.60 0L55.36-1.73L55.36-15.07Q55.36-19.88 60.40-19.88L60.40-19.88L70.40-19.88L72.64-18.15L72.64-16.30L60.74-16.30Q59.05-16.30 59.05-15.07L59.05-15.07L59.05-4.82Q59.05-3.58 60.74-3.58L60.74-3.58L70.40-3.58L70.40-6.77Q70.40-7.01 70.15-7.01L70.15-7.01L62.40-7.01L62.40-10.59L74.08-10.59L74.08 0L57.60 0Z"/><path d="M92.61 0L87.09-6.46L86.30-6.46L82.17-6.46L82.17 0L78.47 0L78.47-19.88L91.13-19.88Q94.37-19.88 94.37-16.46L94.37-16.46L94.37-9.72Q94.37-6.77 91.61-6.54L91.61-6.54L96.91-0.38L96.30 0L92.61 0ZM82.17-10.04L89.68-10.04Q90.68-10.04 90.68-11.08L90.68-11.08L90.68-15.06Q90.68-16.30 89.37-16.30L89.37-16.30L82.17-16.30L82.17-10.04Z"/><path d="M102.07-6.85L102.07-6.85L102.07-14.82Q102.07-19.88 107.11-19.88L107.11-19.88L114.52-19.88Q119.56-19.88 119.56-14.82L119.56-14.82L119.56-6.85Q119.56 0 114.52 0L114.52 0L107.11 0Q102.07 0 102.07-6.85ZM105.75-14.55L105.75-4.82Q105.75-3.58 107.11-3.58L107.11-3.58L114.52-3.58Q115.88-3.58 115.88-4.82L115.88-4.82L115.88-14.55Q115.88-16.30 114.52-16.30L114.52-16.30L107.11-16.30Q105.75-16.30 105.75-14.55L105.75-14.55Z"/><path d="M132.34 0L123.99 0L123.99-3.58L127.35-3.58L127.35-16.30L123.99-16.30L123.99-19.88L134.57-19.88L134.57-16.30L131.04-16.30L131.04-3.58L134.57-3.58L134.57 0L132.34 0Z"/><path d="M142.39-1.23L140.15-2.95L140.15-5.56L150.60-5.56Q150.91-5.56 150.91-5.87L150.91-5.87L150.91-8.59Q150.91-9.56 149.44-9.83L149.44-9.83L143.34-10.86Q140.25-11.54 140.25-15.07L140.25-15.07L140.25-14.82Q140.25-19.88 145.31-19.88L145.31-19.88L153.42-19.88L155.65-18.15L155.65-16.30L145.65-16.30Q143.95-16.30 143.95-15.07L143.95-15.07L143.95-12.44Q143.95-11.77 145.44-11.47L145.44-11.47L151.53-10.28Q155.65-9.48 155.65-5.56L155.65-5.56L155.65 0L146.49 0L142.39-1.23Z"/></g></svg>
+          </div>
+          <div style="color: #FFF6D9; opacity: 0.65; font-family: ui-monospace, monospace; font-size: 0.6875rem; text-align: center; margin-top: 0.5rem;">viewBox 260×48 · tagline "Universal Suite" · currentColor</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🎨 Palette cosmic</div>
+          <div class="card-desc">Token brand hard-coded nei componenti React + SVG</div>
+          <table class="table">
+            <tbody>
+              <tr><td><div style="display:inline-block; width:1rem; height:1rem; border-radius:0.25rem; background:#FFF6D9; border:1px solid rgba(255,255,255,0.1); vertical-align:middle; margin-right:0.5rem;"></div>Starlight</td><td><code>#FFF6D9</code></td></tr>
+              <tr><td><div style="display:inline-block; width:1rem; height:1rem; border-radius:0.25rem; background:#8B3FE5; vertical-align:middle; margin-right:0.5rem;"></div>Pulsar Violet</td><td><code>#8B3FE5</code></td></tr>
+              <tr><td><div style="display:inline-block; width:1rem; height:1rem; border-radius:0.25rem; background:#ED3F9E; vertical-align:middle; margin-right:0.5rem;"></div>Pulsar Magenta</td><td><code>#ED3F9E</code></td></tr>
+              <tr><td><div style="display:inline-block; width:1rem; height:1rem; border-radius:0.25rem; background:#3BD0F2; vertical-align:middle; margin-right:0.5rem;"></div>Cosmic Cyan</td><td><code>#3BD0F2</code></td></tr>
+              <tr><td><div style="display:inline-block; width:1rem; height:1rem; border-radius:0.25rem; background:#13102A; vertical-align:middle; margin-right:0.5rem;"></div>Cosmic Night</td><td><code>#13102A</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="card-title">🧩 Componenti React · <code>components/brand/neogesys-mark.tsx</code></div>
+          <div class="card-desc">Replicato 1:1 in web + admin + portale-socio · suffissi defs univoci per evitare collisioni</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>ViewBox</th>
+                <th>Contenuto</th>
+                <th>Uso</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>&lt;NeogesysMark /&gt;</code></td>
+                <td><code>32×32</code></td>
+                <td>Quasar + quark cyan</td>
+                <td>Favicon, splash, social og, app icon</td>
+              </tr>
+              <tr>
+                <td><code>&lt;NeogesysMarkMinimal /&gt;</code></td>
+                <td><code>32×32</code></td>
+                <td>Quasar mono <code>currentColor</code></td>
+                <td>Quasar-btn sidebar, icon button</td>
+              </tr>
+              <tr>
+                <td><code>&lt;NeogesysLogoHorizontal /&gt;</code></td>
+                <td><code>260×40</code></td>
+                <td>Quasar + wordmark "NEOGESYS"</td>
+                <td>AppHeader web, admin-sidebar</td>
+              </tr>
+              <tr>
+                <td><code>&lt;NeogesysLogoFull /&gt;</code></td>
+                <td><code>260×48</code></td>
+                <td>Quasar + wordmark + tagline</td>
+                <td>Login (web + portale-socio), splash</td>
+              </tr>
+              <tr>
+                <td><code>&lt;NeogesysWordmark /&gt;</code></td>
+                <td><code>212×30</code></td>
+                <td>Solo "NEOGESYS"</td>
+                <td>Email header, footer riga</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.625rem;">
+            Props interface: <code>{ className?: string; size?: number | string; title?: string; ariaHidden?: boolean }</code>
+            · File SVG gemelli in <code>/public/brand/</code> (8 varianti incluse <code>-negative</code> per fondi scuri)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STACK TECH -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">🧱</div>
+        <h2>Stack tecnologico</h2>
+        <span class="desc">Monorepo pnpm · Turborepo · 14 workspace</span>
+      </div>
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="card-title">🎨 Frontend · Web App</div>
+          <div class="card-desc">apps/web · gestionale multi-ruolo</div>
+          <table class="table">
+            <tbody>
+              <tr><td>Framework</td><td><code>Next.js 15.1</code> (App Router · Turbopack)</td></tr>
+              <tr><td>React</td><td><code>19.0</code></td></tr>
+              <tr><td>Styling</td><td><code>Tailwind CSS 4.0</code> · CSS variables HSL</td></tr>
+              <tr><td>State</td><td><code>Zustand 5.0</code> + <code>persist</code> middleware</td></tr>
+              <tr><td>Data</td><td><code>TanStack Query 5</code> · <code>TanStack Table 8</code></td></tr>
+              <tr><td>API client</td><td><code>tRPC 11</code> (<code>@trpc/client</code> + react-query)</td></tr>
+              <tr><td>Forms</td><td><code>react-hook-form 7</code> + <code>zod 3</code></td></tr>
+              <tr><td>UI</td><td><code>lucide-react</code> · <code>framer-motion</code> · <code>cmdk</code> · <code>sonner</code> · <code>recharts</code></td></tr>
+              <tr><td>Theme</td><td><code>next-themes</code> (dark/light)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">⚡ Backend · API</div>
+          <div class="card-desc">apps/api · Fastify + tRPC</div>
+          <table class="table">
+            <tbody>
+              <tr><td>Runtime</td><td><code>Node.js 20+</code> (ESM · tsx watch)</td></tr>
+              <tr><td>Server</td><td><code>Fastify 5.2</code> + <code>@fastify/cors</code> + <code>@fastify/cookie</code></td></tr>
+              <tr><td>RPC</td><td><code>tRPC 11</code> server</td></tr>
+              <tr><td>ORM</td><td><code>Drizzle ORM 0.38</code> (migrations, type-safe SQL)</td></tr>
+              <tr><td>DB driver</td><td><code>postgres</code> (postgres.js)</td></tr>
+              <tr><td>Validation</td><td><code>zod 3</code></td></tr>
+              <tr><td>Logger</td><td><code>pino 9</code> + <code>pino-pretty</code></td></tr>
+              <tr><td>Env</td><td><code>dotenv 16</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🐘 Database · Storage · Cache</div>
+          <div class="card-desc">Infrastruttura dati · multi-tenant</div>
+          <table class="table">
+            <tbody>
+              <tr><td>RDBMS</td><td><code>PostgreSQL 16</code> (multi-tenant RLS)</td></tr>
+              <tr><td>Cache/Queue</td><td><code>Redis 7</code> · <code>BullMQ</code> jobs</td></tr>
+              <tr><td>Object Storage</td><td><code>MinIO</code> S3-compatible (bucket <code>neogesys-docs</code>)</td></tr>
+              <tr><td>Schema migrations</td><td><code>drizzle-kit</code></td></tr>
+              <tr><td>Auth</td><td><code>better-auth</code> (sessioni, 2FA, magic link)</td></tr>
+              <tr><td>Secrets</td><td><code>@neogesys/vault</code> (AES-256-GCM integrazioni)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🛠️ Dev Tooling · Infra</div>
+          <div class="card-desc">Monorepo e orchestrazione locale</div>
+          <table class="table">
+            <tbody>
+              <tr><td>Package manager</td><td><code>pnpm 9.15</code> (workspaces)</td></tr>
+              <tr><td>Build orchestrator</td><td><code>Turborepo 2.3</code> (cache remoto pronto)</td></tr>
+              <tr><td>Lang</td><td><code>TypeScript 5.7</code> strict</td></tr>
+              <tr><td>Lint/format</td><td><code>Biome 1.9</code> (sostituisce ESLint+Prettier)</td></tr>
+              <tr><td>Orchestrazione</td><td><code>Docker Compose</code> (7 servizi)</td></tr>
+              <tr><td>Reverse proxy demo</td><td><code>nginx</code> (serve demo statica :8080)</td></tr>
+              <tr><td>CI ready</td><td>Turbo remote cache · pnpm lockfile</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="card-title">📦 Workspace monorepo (<code>packages/*</code>)</div>
+          <div class="card-desc">9 pacchetti condivisi tra apps</div>
+          <div class="role-pages">
+            <code>@neogesys/ui</code>
+            <code>@neogesys/schemas</code>
+            <code>@neogesys/db</code>
+            <code>@neogesys/auth</code>
+            <code>@neogesys/ai</code>
+            <code>@neogesys/integrations</code>
+            <code>@neogesys/vault</code>
+            <code>@neogesys/jobs</code>
+            <code>@neogesys/tsconfig</code>
+          </div>
+          <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.625rem;">
+            <strong>Apps</strong>: <code>apps/web</code> (gestionale :3000) · <code>apps/admin</code> (platform :3001) · <code>apps/api</code> (Fastify :4000) · <code>apps/portale-socio</code> (:3002) · <code>apps/demo</code> (nginx :8080)
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PROMPT RIPRODUZIONE -->
+    <div class="section">
+      <div class="section-head">
+        <div class="icon-wrap">🤖</div>
+        <h2>Prompt di riproduzione</h2>
+        <span class="desc">Incolla in Claude / Cursor per ricreare il progetto da zero</span>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💬 Prompt completo (copia-incolla)</div>
+        <div class="card-desc">Ricostruisce l'intero gestionale NEOGESYS SPORT con ruoli, pagine, stack Docker e differenziazione super_admin/admin_tenant.</div>
+        <div class="code-block" style="white-space: pre-wrap; max-height: 640px; overflow-y: auto; font-size: 0.78125rem; line-height: 1.55;">Crea un gestionale multi-tenant SaaS "NEOGESYS SPORT" per società sportive ASD/SSD, parte della NEOGESYS Universal Suite, con le seguenti caratteristiche:
+
+═══════════════════════════════════════════════════
+VERSIONAMENTO (CalVer)
+═══════════════════════════════════════════════════
+- Versione attuale: v2026.4.1
+- Release datetime: 19 aprile 2026, 15:00 UTC
+- Canale: dev
+- File apps/web/src/lib/version.ts esporta APP_VERSION + RELEASE_DATETIME_UTC + helper
+  formatReleaseDateTime() ("19 aprile 2026, 15:00 UTC"). Footer login + sidebar mostrano:
+     v2026.4.1 · 19 aprile 2026, 15:00 UTC · DEV
+- Script node scripts/release.mjs bump + tag (patch/minor/major) aggiorna VERSION file
+  + package.json di tutte le apps simultaneamente. Commit automatico.
+
+═══════════════════════════════════════════════════
+ARCHITETTURA
+═══════════════════════════════════════════════════
+- Monorepo pnpm 9.15 + Turborepo 2.3
+- 5 apps: web (Next.js 15 Turbopack :3000), admin (Next.js :3001),
+  api (Fastify+tRPC :4000), portale-socio (Next.js :3002), demo (nginx :8080)
+- Packages: ui, schemas, db, auth, ai, integrations, vault, jobs, tsconfig
+- Docker Compose con 7 servizi core: web, admin, api, demo, postgres:16, redis:7, minio
+- TypeScript 5.7 strict · Biome 1.9 lint/format
+
+═══════════════════════════════════════════════════
+BRAND SYSTEM · Logo set ufficiale NEOGESYS
+═══════════════════════════════════════════════════
+Palette cosmic: Starlight #FFF6D9 · Pulsar Violet #8B3FE5 · Pulsar Magenta #ED3F9E ·
+Cosmic Cyan #3BD0F2 · Cosmic Night #13102A.
+
+8 file SVG in /public/brand/ (replicati su web + admin + portale-socio):
+  neogesys-mark.svg                       32×32 · quasar completa + quark cyan
+  neogesys-mark-minimal.svg               32×32 · quasar mono currentColor
+  neogesys-logo-horizontal.svg            260×40 · quasar + wordmark
+  neogesys-logo-horizontal-negative.svg   260×40 · per fondi scuri
+  neogesys-logo-vertical.svg              240×128 · splash/app icon
+  neogesys-logo-vertical-negative.svg     240×128 · per fondi scuri
+  neogesys-wordmark.svg                   212×30 · solo lettere NEOGESYS
+  neogesys-wordmark-negative.svg          212×30 · per fondi scuri
+
+5 componenti React in components/brand/neogesys-mark.tsx (1:1 con gli SVG):
+  &lt;NeogesysMark /&gt;             quasar completa, hard-coded brand colors (favicon/splash)
+  &lt;NeogesysMarkMinimal /&gt;      quasar mono currentColor (quasar-btn sidebar)
+  &lt;NeogesysLogoHorizontal /&gt;   quasar + "NEOGESYS" wordmark (AppHeader)
+  &lt;NeogesysLogoFull /&gt;         quasar + wordmark + tagline "Universal Suite" (login/splash)
+  &lt;NeogesysWordmark /&gt;         solo "NEOGESYS" (email header, footer riga)
+
+Convenzioni: tutti i componenti usano WORDMARK_PATHS + TAGLINE_PATHS condivisi.
+Helper QuasarInline({ idSuffix }) emette &lt;defs&gt; con gradient ID unici per evitare
+collisioni (web: -nm/-nmm/-nlh/-nlf · admin: append -adm · portale: come web).
+Props: { className?, size?: number | string, title?, ariaHidden? }.
+
+═══════════════════════════════════════════════════
+STACK FRONTEND (apps/web + admin + portale-socio)
+═══════════════════════════════════════════════════
+- Next.js 15.1 App Router con Turbopack
+- React 19.0 + Tailwind CSS 4 (CSS variables HSL: --primary, --success, --warning,
+  --destructive, --muted)
+- Route groups: (dashboard) con layout shell, (auth) per login
+- Stato: Zustand 5 con middleware persist (localStorage key "neogesys-current-user")
+- Data fetching: tRPC 11 + TanStack Query 5
+- Icone: lucide-react · Forms: react-hook-form + zod 3 · Chart: recharts · Toast: sonner
+
+═══════════════════════════════════════════════════
+STACK BACKEND (apps/api)
+═══════════════════════════════════════════════════
+- Fastify 5.2 + tRPC 11 server + Drizzle ORM 0.38 + postgres.js
+- better-auth per sessioni/2FA · pino 9 logger
+- Schema multi-tenant con RLS PostgreSQL
+- Procedure tRPC: publicProcedure, protectedProcedure, adminProcedure, superAdminProcedure
+
+═══════════════════════════════════════════════════
+GERARCHIA RUOLI (7 livelli)
+═══════════════════════════════════════════════════
+L0 super_admin    → Platform Admin (gestione piattaforma)
+L1 admin_tenant   → Proprietario società (accesso completo tenant)
+L2 coordinatore   → Gestione operativa soci/corsi/quote
+L3 operatore      → Segreteria / front office
+L3 tesoriere      → Solo contabilità e quote
+L4 istruttore     → Corsi assegnati + presenze
+L5 user           → Socio finale (vista personale)
+
+Implementa file lib/current-user.ts con:
+- type UserRole (union dei 7)
+- ROLES: Record&lt;UserRole, {label, badgeCls, hierarchyLevel, description}&gt;
+- USERS_BY_ROLE: utenti demo per ogni ruolo
+- PLATFORM_ONLY_PATHS: ["/tenants", "/billing", "/system", "/audit"]
+- ROLE_NAV_PERMISSIONS: matrice ruolo→paths consentite
+- useCurrentUser: Zustand store persistito con setRole()
+- canAccessRoute(role, path): super_admin bypassa, altri matchano prefix
+
+═══════════════════════════════════════════════════
+PIANI ABBONAMENTO (5 tier)
+═══════════════════════════════════════════════════
+Seed 5 piani in packages/db/seed/plans.ts:
+
+  trial        €0       · 50 soci    · 3 utenti    · 14 gg · prova gratuita
+  free         €0       · 20 soci    · 1 utente    · forever · ASD micro
+  base         €29/mese · 200 soci   · 5 utenti    · ASD standard
+  pro          €79/mese · 2000 soci  · 25 utenti   · SSD strutturate
+  enterprise   custom   · ∞ soci     · ∞ utenti    · federazioni/multi-sede
+
+super_admin CRUD piani via /billing (crea/modifica prezzi/limiti, attiva/disattiva).
+Tenant self-upgrade via /impostazioni/piano → procedura tRPC tenant.upgradePlan(planId)
+che valida limiti correnti + crea record billing.subscription_change.
+
+═══════════════════════════════════════════════════
+DIFFERENZIAZIONE SUPER_ADMIN vs ADMIN_TENANT (critico)
+═══════════════════════════════════════════════════
+1. SIDEBAR: due sezioni separate
+   - "Piattaforma" (rossa, con Shield icon) → visibile SOLO se role===super_admin
+     Contiene: /tenants (con badge "8"), /billing, /system, /audit
+   - "Gestione" (o "Gestione tenant (impersonation)" per super_admin)
+     Contiene le 12 route tenant
+
+2. DASHBOARD HOME (/) differenziata con if role===super_admin:
+   - SuperAdminDashboard: Tenant totali (8), MRR (€1.043), Soci cross-tenant (1.521),
+     Churn (2.1%), grafico MRR 6 mesi, platform alerts, lista tenant recenti
+   - TenantDashboard: Soci Attivi (247), Quote (€14.200), Certificati, Presenza Media,
+     grafico 6 mesi, AI alerts, prossimi eventi società
+
+3. HEADER AppHeader con &lt;NeogesysLogoHorizontal /&gt; in cosmic panel + sector pill "Sport"
+   + "{tenant} · {roleLabel}" dopo il nome utente, con role badge colorato
+
+═══════════════════════════════════════════════════
+PAGINE PLATFORM (solo super_admin)
+═══════════════════════════════════════════════════
+/tenants  → Lista 8 società con piano (trial/free/base/pro/enterprise), stato, soci,
+            MRR, admin. 4 stat card top. Filters piano+stato. Azione "impersonate".
+/billing  → 4 stat (MRR, ARR, paganti, churn). 5 piani CRUD (card editabile: nome,
+            prezzo, soci_max, utenti_max, features JSON, active). Fatture recenti (6).
+/system   → Banner "Tutti operativi". 4 metric (CPU 34%, RAM 2.8/8GB, Disk 18.4/100GB,
+            API 12.4 req/s). Tabella 7 servizi con status/uptime/latenza.
+/audit    → Banner GDPR. Filters (azione, tenant, tempo). 12 eventi cross-tenant con
+            timestamp, tenant, user, ruolo, azione, risorsa, IP, esito ok/ko.
+            Azioni: LOGIN, LOGIN_FAILED, CREATE, UPDATE, DELETE, EXPORT,
+            SUSPEND_TENANT, VIEW_BILLING, PAYMENT (badge colorati).
+
+═══════════════════════════════════════════════════
+PAGINE TENANT (12 route, filtrate per ruolo)
+═══════════════════════════════════════════════════
+/ (dashboard), /soci (anagrafica), /quote (iscrizioni), /calendario,
+/corsi, /eventi, /documenti (+certificati), /comunicazioni (email/SMS/WhatsApp),
+/contabilita (prima nota + fatture SDI), /integrazioni (vault credenziali),
+/impostazioni (tenant + /piano per self-upgrade), /utenti (permessi)
+
+═══════════════════════════════════════════════════
+LOGIN (cosmic brand treatment)
+═══════════════════════════════════════════════════
+/login (route group (auth)) mostra:
+- Cosmic panel centrale con &lt;NeogesysLogoFull size={220} /&gt;
+  background #13102A + box-shadow 0 0 0 1px rgba(139,63,229,.25), 0 0 32px rgba(237,63,158,.15)
+- Sector pill "Sport" sotto (gradient 135deg #8B3FE5 → #ED3F9E, Starlight text)
+- Form email + password con react-hook-form + zod
+- Quick role switcher (7 bottoni) per dev
+- URL ?role=&lt;nome&gt; con auto-login useEffect
+- Footer monospace: v{APP_VERSION} · {formatReleaseDateTime()} · DEV
+
+═══════════════════════════════════════════════════
+PORTALE SOCIO (apps/portale-socio :3002)
+═══════════════════════════════════════════════════
+App separata per i soci finali (vista esterna al gestionale operativo).
+- Stessa cosmic panel login ma sector pill "Portale Socio"
+- NeogesysLogoFull + form email/password + "Password dimenticata?" linkato a segreteria
+- Nessun quick role switcher (solo form login reale)
+- Token in localStorage key "portale-socio-token"
+
+═══════════════════════════════════════════════════
+DEMO HTML STATICA (apps/demo via nginx :8080)
+═══════════════════════════════════════════════════
+9 file role demo: super_admin, admin-tenant, coordinatore, segreteria, contabile,
+istruttore, user, atleta, genitore (.html + roles-index.html hub).
+
+Ogni demo ha header:
+  &lt;a class="logo logo-horizontal"&gt;
+    &lt;span class="logo-horizontal-wrap"&gt;[SVG NEOGESYS horizontal inline, 260×40]&lt;/span&gt;
+    &lt;span class="logo-sector"&gt;Sport&lt;/span&gt;
+  &lt;/a&gt;
+CSS: .logo-horizontal-wrap = cosmic panel (#13102A + glow magenta/viola)
+     .logo-sector = gradient pill 135deg viola→magenta
+
+Inoltre dev-index.html (questa pagina): riepilogo completo con role cards,
+servizi Docker, credenziali (MinIO minio_dev/minio_dev_secret, Postgres neogesys/
+neogesys_dev su :5433), tabella permessi con sezione "Piattaforma" rossa per
+super_admin, stack tech, build-badge v2026.4.1 + release datetime, e questo prompt.
+
+═══════════════════════════════════════════════════
+DOCKER COMPOSE (docker-compose.yml)
+═══════════════════════════════════════════════════
+- neogesys-web: apps/web su :3000
+- neogesys-admin: apps/admin su :3001
+- neogesys-api: apps/api su :4000
+- neogesys-demo: nginx serve /demo su :8080
+- neogesys-postgres: postgres:16 su :5433→5432, user=neogesys pwd=neogesys_dev db=neogesys_sport
+- neogesys-redis: redis:7 su :6379 (no auth dev)
+- neogesys-minio: minio su :9000 api, :9001 console, MINIO_ROOT_USER=minio_dev
+  MINIO_ROOT_PASSWORD=minio_dev_secret, bucket neogesys-docs auto-create
+
+═══════════════════════════════════════════════════
+OUTPUT ATTESO
+═══════════════════════════════════════════════════
+- docker compose up -d porta su TUTTI i 7 servizi healthy
+- http://localhost:3000/login?role=&lt;qualsiasi_ruolo&gt; funziona e cambia la vista
+- Login web mostra NeogesysLogoFull dentro cosmic panel + pill "Sport"
+- Login portale-socio (:3002) mostra stesso treatment + pill "Portale Socio"
+- super_admin vede sezione "Piattaforma" nella sidebar con 4 route esclusive
+- super_admin può CRUD i 5 piani abbonamento da /billing
+- tenant admin può self-upgrade piano da /impostazioni/piano
+- Dashboard home diversa per super_admin vs altri
+- AppHeader mostra NeogesysLogoHorizontal + pill "Sport"
+- Tutte le 17 route (/ + 12 tenant + 4 platform) restituiscono HTTP 200
+- http://localhost:8080/dev-index.html mostra riepilogo completo con matrice permessi,
+  build-badge v2026.4.1, release 19 aprile 2026 15:00 UTC, nuovo logo NEOGESYS
+
+Usa dati mock realistici (società italiane, nomi italiani, importi €, date 2026).
+Tutte le label UI in italiano. Valuta sempre componenti riusabili in @neogesys/ui.
+Mantieni allineato .neogesys-kit/00-master-prompt.md + 02-design-system.md come
+source of truth per future rigenerazioni del progetto.</div>
+      </div>
+
+      <div class="alert" style="margin-top: 1rem;">
+        <div class="alert-icon">💡</div>
+        <div>
+          <strong>Come usarlo:</strong> copia il prompt qui sopra e incollalo in Claude Code,
+          Cursor, Windsurf o qualsiasi agent in grado di creare file e gestire Docker.
+          L'agent dovrebbe generare ~30 file TypeScript/TSX + docker-compose.yml + 9 HTML demo.
+          Tempo stimato di generazione completa: 15-25 minuti con agent autonomo.
+        </div>
+      </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8125rem;">
+      <p>NEOGESYS SPORT · Dev Dashboard · Generato automaticamente</p>
+      <p style="margin-top: 0.5rem;">
+        <a href="roles-index.html" class="link">Demo HTML statiche</a> ·
+        <a href="http://localhost:3000/" class="link" target="_blank">Dev Next.js</a> ·
+        <a href="http://localhost:3001/" class="link" target="_blank">Admin Platform</a> ·
+        <a href="http://localhost:4000/health" class="link" target="_blank">API Health</a>
+      </p>
+      <p style="margin-top: 0.75rem; font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 0.6875rem;">
+        <span style="color: var(--primary); font-weight: 600;">v2026.4.1</span>
+        ·
+        Release <span style="color: var(--text);">19 aprile 2026, 15:00 UTC</span>
+        ·
+        <span style="color: var(--warning); text-transform: uppercase; letter-spacing: 0.08em;">dev</span>
+      </p>
+    </footer>
+
+  </div>
+</body>
+</html>

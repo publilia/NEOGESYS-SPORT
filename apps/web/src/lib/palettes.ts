@@ -27,6 +27,8 @@ export interface Palette {
 	id: string;
 	name: string;
 	icon: string;
+	special?: boolean; // marks themes with extra animations (e.g. pulsar)
+	description?: string;
 	colors: {
 		light: PaletteColors;
 		dark: PaletteColors;
@@ -416,6 +418,71 @@ export const PALETTES: Palette[] = [
 				"sidebar-background": "215 28% 7%",
 				"sidebar-foreground": "210 18% 95%",
 				"sidebar-border": "215 25% 18%",
+			},
+		},
+	},
+	{
+		id: "pulsar",
+		name: "Pulsar Star",
+		icon: "✨",
+		special: true,
+		description:
+			"Cosmic · quasar viola-magenta, stelle pulsanti, nebulosa cyan. Liquid Glass su fondo notte profonda.",
+		colors: {
+			light: {
+				// Light mode = "alba cosmica": bianco con hint lilla + cyan agli
+				// elementi. I token primary/accent restano vivi ma si appoggiano
+				// a backgrounds lattiginosi semi-trasparenti (Liquid Glass).
+				primary: "272 85% 55%", // pulsar violet saturato
+				"primary-foreground": "48 89% 93%", // starlight
+				secondary: "258 55% 94%",
+				"secondary-foreground": "260 60% 8%",
+				accent: "328 90% 58%", // pulsar magenta acceso
+				"accent-foreground": "48 89% 93%",
+				background: "250 40% 99%", // quasi bianco, hint blu-viola
+				foreground: "260 60% 8%",
+				card: "250 40% 100%",
+				"card-foreground": "260 60% 8%",
+				popover: "250 40% 100%",
+				"popover-foreground": "260 60% 8%",
+				muted: "258 35% 95%",
+				"muted-foreground": "260 15% 42%",
+				destructive: "0 84% 60%",
+				"destructive-foreground": "48 89% 93%",
+				border: "258 32% 88%",
+				input: "258 32% 88%",
+				ring: "328 90% 58%", // magenta per focus ring (distintivo pulsar)
+				"sidebar-background": "258 40% 96%",
+				"sidebar-foreground": "260 60% 8%",
+				"sidebar-border": "258 32% 88%",
+			},
+			dark: {
+				// Dark mode = "spazio profondo": background quasi nero con
+				// dominante blu-viola (non neutro). Primary violet luminoso,
+				// accent magenta neon. Più cyan rispetto a prima per evocare
+				// nebulose + pulsar beam.
+				primary: "272 95% 72%", // violetto glowing stellare
+				"primary-foreground": "260 65% 4%",
+				secondary: "260 45% 13%",
+				"secondary-foreground": "48 89% 93%",
+				accent: "328 100% 68%", // magenta neon pulsar
+				"accent-foreground": "260 65% 4%",
+				background: "260 70% 3%", // deep space, quasi nero con blu
+				foreground: "48 89% 94%", // starlight
+				card: "258 60% 7%",
+				"card-foreground": "48 89% 94%",
+				popover: "258 60% 7%",
+				"popover-foreground": "48 89% 94%",
+				muted: "260 50% 12%",
+				"muted-foreground": "258 30% 72%",
+				destructive: "0 75% 55%",
+				"destructive-foreground": "48 89% 93%",
+				border: "260 50% 15%",
+				input: "260 50% 15%",
+				ring: "192 90% 60%", // cosmic cyan per focus ring in dark
+				"sidebar-background": "262 75% 2%", // ancora più profondo
+				"sidebar-foreground": "48 89% 94%",
+				"sidebar-border": "260 50% 13%",
 			},
 		},
 	},

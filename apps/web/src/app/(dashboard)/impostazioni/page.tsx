@@ -1,293 +1,565 @@
 "use client";
 
 import { usePaletteContext } from "@/components/palette-provider";
-import { Building, Globe, Moon, Palette, Plug, Settings, Sun, Users } from "lucide-react";
+import { Field, FormGrid, Input, Select } from "@/components/ui/form";
+import { useLayout } from "@/hooks/use-layout";
+import { trpc } from "@/lib/trpc";
+import {
+	ArrowUpRight,
+	Check,
+	CheckCircle,
+	Monitor,
+	Moon,
+	type LucideIcon,
+	PanelLeft,
+	PanelTop,
+	Save,
+	Sparkles,
+	Sun,
+	Zap,
+} from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-const TABS = [
-	{ id: "generale", label: "Generale", icon: Settings },
-	{ id: "aspetto", label: "Aspetto", icon: Palette },
-	{ id: "integrazioni", label: "Integrazioni", icon: Plug },
-	{ id: "utenti", label: "Utenti", icon: Users },
-] as const;
+const LAYOUTS: { id: "sidebar" | "topbar"; name: string; Icon: LucideIcon; desc: string }[] = [
+	{ id: "sidebar", name: "Sidebar", Icon: PanelLeft, desc: "Menu laterale verticale" },
+	{ id: "topbar", name: "Topbar", Icon: PanelTop, desc: "Menu in alto orizzontale" },
+];
 
-type TabId = (typeof TABS)[number]["id"];
+const THEMES: { id: "light" | "dark" | "system"; name: string; Icon: LucideIcon }[] = [
+	{ id: "light", name: "Chiaro", Icon: Sun },
+	{ id: "dark", name: "Scuro", Icon: Moon },
+	{ id: "system", name: "Sistema", Icon: Monitor },
+];
 
 export default function ImpostazioniPage() {
-	const [activeTab, setActiveTab] = useState<TabId>("generale");
-	const { currentPaletteId, setPalette, palettes } = usePaletteContext();
+	const utils = trpc.useUtils();
+	const { layoutMode, setLayoutMode } = useLayout();
 	const { theme, setTheme } = useTheme();
+	const { currentPaletteId, setPalette, palettes } = usePaletteContext();
+
+	const impostazioniQuery = trpc.impostazioni.get.useQuery();
+	const tenantQuery = trpc.tenant.getCurrent.useQuery();
+
+	const updateLayoutMut = trpc.impostazioni.updateLayout.useMutation({
+		onSuccess: () => {
+			toast.success("Layout salvato");
+			utils.impostazioni.get.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const updatePaletteMut = trpc.impostazioni.updatePalette.useMutation({
+		onSuccess: () => {
+			toast.success("Palette salvata");
+			utils.impostazioni.get.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const updateGeneralMut = trpc.impostazioni.updateGeneral.useMutation({
+		onSuccess: () => {
+			toast.success("Impostazioni salvate");
+			utils.impostazioni.get.invalidate();
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const [certDays, setCertDays] = useState(30);
+	const [aiEnabled, setAiEnabled] = useState(false);
+	const [lingua, setLingua] = useState("it");
+
+	useEffect(() => {
+		if (impostazioniQuery.data) {
+			setCertDays(impostazioniQuery.data.cert_alert_days ?? 30);
+			setAiEnabled(Boolean(impostazioniQuery.data.ai_enabled));
+			setLingua(impostazioniQuery.data.lingua ?? "it");
+		}
+	}, [impostazioniQuery.data]);
+
+	const tenant = tenantQuery.data;
+
+	const pickerCardStyle = (active: boolean): React.CSSProperties => ({
+		padding: "1rem",
+		background: active ? "hsl(var(--primary) / 0.08)" : "transparent",
+		borderColor: active ? "hsl(var(--primary))" : "hsl(var(--border))",
+		borderWidth: "2px",
+		cursor: "pointer",
+		textAlign: "left",
+		display: "flex",
+		flexDirection: "column",
+		gap: "0.5rem",
+		transition: "all 0.15s",
+	});
 
 	return (
-		<div className="space-y-6 p-6">
-			{/* Header */}
-			<div>
-				<h1 className="text-3xl font-bold tracking-tight text-foreground">Impostazioni</h1>
-				<p className="text-muted-foreground">Configura la tua associazione e le preferenze</p>
+		<div className="p-6">
+			<div className="page-header">
+				<div>
+					<h1 className="page-title">Impostazioni</h1>
+					<p className="page-subtitle">Preferenze piattaforma, layout, tema e palette</p>
+				</div>
 			</div>
 
-			{/* Tabs */}
-			<div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/50 p-1">
-				{TABS.map((tab) => {
-					const Icon = tab.icon;
-					return (
-						<button
-							key={tab.id}
-							type="button"
-							onClick={() => setActiveTab(tab.id)}
-							className={`inline-flex items-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ${
-								activeTab === tab.id
-									? "bg-background text-foreground shadow-sm"
-									: "text-muted-foreground hover:text-foreground"
-							}`}
-						>
-							<Icon className="h-4 w-4" />
-							{tab.label}
-						</button>
-					);
-				})}
-			</div>
-
-			{/* Tab content */}
-			<div className="rounded-xl border border-border bg-card p-6">
-				{/* Generale */}
-				{activeTab === "generale" && (
-					<div className="space-y-6">
-						<h2 className="text-lg font-semibold text-foreground">Informazioni Generali</h2>
-						<div className="grid gap-4 sm:grid-cols-2">
-							<div className="space-y-2">
-								<label className="text-sm font-medium text-foreground">Nome Associazione</label>
-								<div className="flex items-center gap-2">
-									<Building className="h-4 w-4 text-muted-foreground" />
-									<input
-										type="text"
-										defaultValue="ASD Napoli Sport"
-										className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<label className="text-sm font-medium text-foreground">Codice Fiscale</label>
-								<input
-									type="text"
-									defaultValue="80012345678"
-									className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-								/>
-							</div>
-							<div className="space-y-2">
-								<label className="text-sm font-medium text-foreground">Sottodominio</label>
-								<div className="flex items-center gap-2">
-									<Globe className="h-4 w-4 text-muted-foreground" />
-									<input
-										type="text"
-										defaultValue="asdnapoli"
-										className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-										disabled
-									/>
-									<span className="text-sm text-muted-foreground">.gestionale.sport</span>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<label className="text-sm font-medium text-foreground">Email di contatto</label>
-								<input
-									type="email"
-									defaultValue="info@asdnapoli.it"
-									className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-								/>
-							</div>
-						</div>
-						<button
-							type="button"
-							className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-						>
-							Salva Modifiche
-						</button>
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: "1fr",
+					gap: "1.5rem",
+					maxWidth: "48rem",
+				}}
+			>
+				{/* Layout */}
+				<div className="card">
+					<div className="card-header">
+						<div className="card-title">Layout navigazione</div>
+						<div className="card-desc">Modalità di visualizzazione del menu principale</div>
 					</div>
-				)}
+					<div
+						className="card-body"
+						style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}
+					>
+						{LAYOUTS.map((l) => {
+							const active = layoutMode === l.id;
+							const Icon = l.Icon;
+							return (
+								<button
+									key={l.id}
+									type="button"
+									onClick={() => {
+										setLayoutMode(l.id);
+										updateLayoutMut.mutate({ layout_menu: l.id });
+									}}
+									className="card"
+									style={pickerCardStyle(active)}
+								>
+									<div
+										style={{
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "space-between",
+										}}
+									>
+										<Icon
+											className="icon-lg"
+											style={{
+												color: active ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+											}}
+										/>
+										{active && (
+											<CheckCircle
+												className="icon"
+												style={{ color: "hsl(var(--primary))" }}
+											/>
+										)}
+									</div>
+									<div>
+										<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>{l.name}</div>
+										<div
+											style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))" }}
+										>
+											{l.desc}
+										</div>
+									</div>
+								</button>
+							);
+						})}
+					</div>
+				</div>
 
-				{/* Aspetto */}
-				{activeTab === "aspetto" && (
-					<div className="space-y-6">
-						<h2 className="text-lg font-semibold text-foreground">Personalizzazione Aspetto</h2>
+				{/* Theme */}
+				<div className="card">
+					<div className="card-header">
+						<div className="card-title">Tema</div>
+						<div className="card-desc">Aspetto chiaro, scuro o automatico (solo locale)</div>
+					</div>
+					<div
+						className="card-body"
+						style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}
+					>
+						{THEMES.map((t) => {
+							const active = theme === t.id;
+							const Icon = t.Icon;
+							return (
+								<button
+									key={t.id}
+									type="button"
+									onClick={() => setTheme(t.id)}
+									className="card"
+									style={{
+										...pickerCardStyle(active),
+										textAlign: "center",
+										alignItems: "center",
+									}}
+								>
+									<Icon
+										className="icon-lg"
+										style={{
+											color: active ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+										}}
+									/>
+									<div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t.name}</div>
+								</button>
+							);
+						})}
+					</div>
+				</div>
 
-						{/* Theme */}
-						<div className="space-y-3">
-							<h3 className="text-sm font-medium text-foreground">Tema</h3>
-							<div className="flex gap-2">
-								{[
-									{ id: "light", label: "Chiaro", icon: Sun },
-									{ id: "dark", label: "Scuro", icon: Moon },
-									{ id: "system", label: "Sistema", icon: Settings },
-								].map((t) => {
-									const Icon = t.icon;
+				{/* Palette */}
+				<div className="card" id="branding">
+					<div className="card-header">
+						<div className="card-title">Palette colori</div>
+						<div className="card-desc">
+							{palettes.length} palette predefinite · salvate lato tenant
+						</div>
+					</div>
+					<div
+						className="card-body"
+						style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+					>
+						{/* Grid 2+ colonne per le palette standard. */}
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+								gap: "0.625rem",
+							}}
+						>
+							{palettes
+								.filter((p) => !p.special)
+								.map((p) => {
+									const active = currentPaletteId === p.id;
 									return (
 										<button
-											key={t.id}
+											key={p.id}
 											type="button"
-											onClick={() => setTheme(t.id)}
-											className={`inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium ${
-												theme === t.id
-													? "border-primary bg-primary/10 text-primary"
-													: "border-border text-foreground hover:bg-muted"
-											}`}
+											onClick={() => {
+												setPalette(p.id);
+												updatePaletteMut.mutate({ palette_default: p.id });
+											}}
+											className="card"
+											style={{
+												padding: "0.75rem",
+												background: active ? "hsl(var(--primary) / 0.08)" : "transparent",
+												borderColor: active ? "hsl(var(--primary))" : "hsl(var(--border))",
+												borderWidth: "2px",
+												cursor: "pointer",
+												textAlign: "left",
+												display: "flex",
+												alignItems: "center",
+												gap: "0.5rem",
+												transition: "all 0.15s",
+											}}
 										>
-											<Icon className="h-4 w-4" />
-											{t.label}
+											<span
+												style={{
+													width: "1.5rem",
+													height: "1.5rem",
+													borderRadius: "9999px",
+													background: `hsl(${p.colors.light.primary})`,
+													flexShrink: 0,
+												}}
+											/>
+											<span style={{ fontWeight: 500, fontSize: "0.8125rem" }}>{p.name}</span>
+											{active && (
+												<Check
+													className="icon-sm"
+													style={{ color: "hsl(var(--primary))", marginLeft: "auto" }}
+												/>
+											)}
 										</button>
 									);
 								})}
-							</div>
 						</div>
 
-						{/* Palette */}
-						<div className="space-y-3">
-							<h3 className="text-sm font-medium text-foreground">Palette Colori</h3>
-							<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-								{palettes.map((palette) => (
+						{/* ═════════════ Palette SPECIAL (full-width) ═════════════
+						    Renderizzata dopo le standard e a larghezza piena. La
+						    quasar NEOGESYS è "il" tema — non è un'opzione come le
+						    altre, è l'identità. Preview Liquid Glass con stelle
+						    animate: stesso trattamento del dropdown header. */}
+						{palettes
+							.filter((p) => p.special)
+							.map((p) => {
+								const active = currentPaletteId === p.id;
+								return (
 									<button
-										key={palette.id}
+										key={p.id}
 										type="button"
-										onClick={() => setPalette(palette.id)}
-										className={`flex items-center gap-3 rounded-lg border p-3 text-left ${
-											currentPaletteId === palette.id
-												? "border-primary ring-2 ring-primary/20"
-												: "border-border hover:bg-muted"
+										onClick={() => {
+											setPalette(p.id);
+											updatePaletteMut.mutate({ palette_default: p.id });
+										}}
+										className={`pulsar-card-preview pulsar-card-preview-lg ${
+											active ? "pulsar-card-selected" : ""
 										}`}
+										style={{ width: "100%" }}
+										aria-label={`Palette ${p.name}`}
 									>
-										<span className="text-lg">{palette.icon}</span>
-										<span className="text-sm font-medium text-foreground">{palette.name}</span>
+										<div aria-hidden="true" className="pulsar-card-bg" />
+										<div aria-hidden="true" className="pulsar-card-stars" />
+										<div aria-hidden="true" className="pulsar-card-nebula" />
+
+										<div className="pulsar-card-glass">
+											<div
+												style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "0.875rem",
+												}}
+											>
+												<div className="pulsar-card-core pulsar-card-core-lg">
+													<Sparkles style={{ width: "1.125rem", height: "1.125rem", color: "white" }} />
+												</div>
+												<div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+													<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+														<span
+															style={{
+																fontSize: "0.9375rem",
+																fontWeight: 700,
+																color: "white",
+																textShadow: "0 1px 2px rgba(0,0,0,0.4)",
+															}}
+														>
+															{p.name}
+														</span>
+														<span className="pulsar-card-badge">Special</span>
+													</div>
+													{p.description ? (
+														<p
+															style={{
+																marginTop: "0.125rem",
+																fontSize: "0.75rem",
+																lineHeight: 1.35,
+																color: "rgba(255,255,255,0.88)",
+																textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+															}}
+														>
+															{p.description}
+														</p>
+													) : null}
+												</div>
+												{active && (
+													<Check
+														style={{
+															width: "1.25rem",
+															height: "1.25rem",
+															color: "white",
+															flexShrink: 0,
+															filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+														}}
+													/>
+												)}
+											</div>
+										</div>
 									</button>
-								))}
-							</div>
-						</div>
-
-						{/* Layout */}
-						<div className="space-y-3">
-							<h3 className="text-sm font-medium text-foreground">Layout Menu</h3>
-							<div className="flex gap-2">
-								<button
-									type="button"
-									className="rounded-md border border-primary bg-primary/10 px-4 py-2 text-sm font-medium text-primary"
-								>
-									Sidebar Laterale
-								</button>
-								<button
-									type="button"
-									className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-								>
-									Barra Superiore
-								</button>
-							</div>
-						</div>
+								);
+							})}
 					</div>
-				)}
+				</div>
 
-				{/* Integrazioni */}
-				{activeTab === "integrazioni" && (
-					<div className="space-y-6">
-						<h2 className="text-lg font-semibold text-foreground">Integrazioni</h2>
-						<div className="space-y-4">
-							{[
-								{
-									nome: "Stripe",
-									desc: "Pagamenti online con carta di credito",
-									stato: true,
-								},
-								{
-									nome: "CONI / Sport e Salute",
-									desc: "Registro nazionale affiliazioni",
-									stato: false,
-								},
-								{
-									nome: "PEC / Fatturazione",
-									desc: "Invio automatico ricevute e fatture",
-									stato: false,
-								},
-								{
-									nome: "WhatsApp Business",
-									desc: "Notifiche e promemoria via WhatsApp",
-									stato: false,
-								},
-							].map((integration) => (
-								<div
-									key={integration.nome}
-									className="flex items-center justify-between rounded-lg border border-border p-4"
-								>
-									<div>
-										<p className="font-medium text-foreground">{integration.nome}</p>
-										<p className="text-sm text-muted-foreground">{integration.desc}</p>
-									</div>
-									<button
-										type="button"
-										className={`rounded-md px-4 py-1.5 text-sm font-medium ${
-											integration.stato
-												? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-												: "bg-muted text-muted-foreground hover:text-foreground"
-										}`}
-									>
-										{integration.stato ? "Connesso" : "Configura"}
-									</button>
-								</div>
-							))}
-						</div>
+				{/* Generali */}
+				<div className="card">
+					<div className="card-header">
+						<div className="card-title">Preferenze generali</div>
+						<div className="card-desc">Allerta certificati, AI e lingua piattaforma</div>
 					</div>
-				)}
-
-				{/* Utenti */}
-				{activeTab === "utenti" && (
-					<div className="space-y-6">
-						<div className="flex items-center justify-between">
-							<h2 className="text-lg font-semibold text-foreground">Utenti</h2>
+					<div
+						className="card-body"
+						style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+					>
+						<FormGrid>
+							<Field
+								label="Giorni preavviso scadenza certificato"
+								hint="Numero di giorni prima della scadenza per mostrare avvisi"
+								span={1}
+							>
+								<Input
+									type="number"
+									min="1"
+									max="180"
+									value={certDays}
+									onChange={(e) => setCertDays(Number(e.target.value))}
+								/>
+							</Field>
+							<Field label="Lingua predefinita" span={1}>
+								<Select value={lingua} onChange={(e) => setLingua(e.target.value)}>
+									<option value="it">Italiano</option>
+									<option value="en">English</option>
+									<option value="es">Español</option>
+								</Select>
+							</Field>
+							<Field
+								label="Assistente AI"
+								hint="Attiva le funzioni di intelligenza artificiale (solo piano Pro/Enterprise)"
+								span={2}
+							>
+								<label
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										gap: "0.5rem",
+										cursor: "pointer",
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={aiEnabled}
+										onChange={(e) => setAiEnabled(e.target.checked)}
+									/>
+									<span>AI abilitata</span>
+								</label>
+							</Field>
+						</FormGrid>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "flex-end",
+								gap: "0.5rem",
+							}}
+						>
 							<button
 								type="button"
-								className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+								className="btn btn-primary btn-sm"
+								onClick={() =>
+									updateGeneralMut.mutate({
+										cert_alert_days: certDays,
+										ai_enabled: aiEnabled,
+										lingua,
+									})
+								}
+								disabled={updateGeneralMut.isPending}
 							>
-								Invita Utente
+								<Save className="icon-sm" /> Salva impostazioni
 							</button>
 						</div>
-						<div className="space-y-3">
-							{[
-								{
-									nome: "Mario Rossi",
-									email: "mario@asdnapoli.it",
-									ruolo: "Amministratore",
-								},
-								{
-									nome: "Laura Verdi",
-									email: "laura@asdnapoli.it",
-									ruolo: "Segreteria",
-								},
-								{
-									nome: "Marco Bianchi",
-									email: "marco@asdnapoli.it",
-									ruolo: "Istruttore",
-								},
-							].map((user) => (
-								<div
-									key={user.email}
-									className="flex items-center justify-between rounded-lg border border-border p-4"
-								>
-									<div className="flex items-center gap-3">
-										<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-											{user.nome
-												.split(" ")
-												.map((n) => n[0])
-												.join("")}
-										</div>
-										<div>
-											<p className="font-medium text-foreground">{user.nome}</p>
-											<p className="text-sm text-muted-foreground">{user.email}</p>
-										</div>
-									</div>
-									<span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-										{user.ruolo}
-									</span>
-								</div>
-							))}
+					</div>
+				</div>
+
+				{/* Società — include anche il piano attivo, da qui l'ancora #piano
+				    linkata dal TenantMenu ("Gestisci piano → vai al dettaglio").
+				    L'upgrade self-service ha la sua pagina dedicata a /impostazioni/piano. */}
+				<div className="card" id="piano">
+					<div className="card-header">
+						<div className="card-title">Società</div>
+						<div className="card-desc">
+							Dati anagrafici tenant (modificabili solo dal super admin)
 						</div>
 					</div>
-				)}
+					<div
+						className="card-body"
+						style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+					>
+						{tenantQuery.isLoading ? (
+							<div>Caricamento…</div>
+						) : tenant ? (
+							<FormGrid>
+								<Field label="Nome società" span={2}>
+									<Input
+										value={tenant.ragioneSociale ?? ""}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+								<Field label="Nome visualizzato" span={2}>
+									<Input
+										value={tenant.nomeVisualizzato ?? ""}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+								<Field label="Slug" span={1}>
+									<Input
+										value={tenant.slug ?? ""}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+								<Field label="Piano" span={1}>
+									<Input
+										value={tenant.piano ?? ""}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+								<Field label="Stato" span={1}>
+									<Input
+										value={tenant.stato ?? ""}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+								<Field label="Custom domain" span={1}>
+									<Input
+										value={tenant.customDomain ?? "—"}
+										readOnly
+										style={{ background: "hsl(var(--muted) / 0.3)" }}
+									/>
+								</Field>
+							</FormGrid>
+						) : (
+							<div>Dati tenant non disponibili.</div>
+						)}
+
+						{/* ═══════════ Upgrade CTA ══════════════════════════════════
+						    Link verso /impostazioni/piano dove il tenant admin vede
+						    tutti i piani e può fare upgrade/downgrade in autonomia. */}
+						<div
+							style={{
+								marginTop: "0.75rem",
+								padding: "1rem",
+								borderRadius: "0.625rem",
+								background:
+									"linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08))",
+								border: "1px solid hsl(var(--primary) / 0.25)",
+								display: "flex",
+								alignItems: "center",
+								gap: "0.875rem",
+								flexWrap: "wrap",
+							}}
+						>
+							<div
+								style={{
+									width: "2.5rem",
+									height: "2.5rem",
+									borderRadius: "0.5rem",
+									background: "hsl(var(--primary))",
+									color: "hsl(var(--primary-foreground))",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+								}}
+							>
+								<Zap className="icon" />
+							</div>
+							<div style={{ flex: 1, minWidth: "200px" }}>
+								<div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
+									Vuoi cambiare piano?
+								</div>
+								<div
+									style={{
+										fontSize: "0.8125rem",
+										color: "hsl(var(--muted-foreground))",
+										marginTop: "0.125rem",
+									}}
+								>
+									Confronta i piani disponibili e fai l&apos;upgrade in autonomia — nessuna
+									telefonata al supporto.
+								</div>
+							</div>
+							<Link
+								href="/impostazioni/piano"
+								className="btn btn-primary btn-sm"
+								style={{ flexShrink: 0 }}
+							>
+								<Sparkles className="icon-sm" /> Vedi piani
+								<ArrowUpRight className="icon-sm" />
+							</Link>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

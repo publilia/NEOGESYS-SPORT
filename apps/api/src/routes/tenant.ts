@@ -470,6 +470,8 @@ export const tenantRouter = router({
 				piano: tenants.piano,
 				stato: tenants.stato,
 				trialEnd: tenants.trialEnd,
+				maxSoci: tenants.maxSoci,
+				maxUtenti: tenants.maxUtenti,
 				impostazioni: tenants.impostazioni,
 			})
 			.from(tenants)
@@ -482,4 +484,78 @@ export const tenantRouter = router({
 
 		return tenant;
 	}),
+
+	/**
+	 * Self-service plan change (tenant admin, super_admin).
+	 * ──────────────────────────────────────────────────────
+	 * Lets a tenant admin request an upgrade/downgrade for their own
+	 * tenant. The limits (maxSoci, maxUtenti) are copied from the
+	 * target plan so the tenant doesn't need to set them manually.
+	 *
+	 * ⚠️ MVP: applies the change immediately. Once Stripe is wired in,
+	 * this should instead create a checkout session and only finalize
+	 * the switch once payment is confirmed.
+	 */
+	requestPlanChange: adminProcedure
+		.input(z.object({ piano: z.enum(["trial", "free", "base", "pro", "enterprise"]) }))
+		.mutation(async ({ ctx, input }) => {
+			if (!ctx.tenant) {
+				throw new TRPCError({ code: "BAD_REQUEST", message: "Nessun tenant nel contesto." });
+			}
+
+			const [before] = await ctx.db
+				.select()
+				.from(tenants)
+				.where(eq(tenants.id, ctx.tenant.id))
+				.limit(1);
+			if (!before) throw new TRPCError({ code: "NOT_FOUND", message: "Tenant non trovato." });
+
+			if (before.piano === input.piano) {
+				// No-op: user asked for the same plan they already have.
+				return { tenant: before, changed: false as const };
+			}
+
+			// Default quotas per tier (used when the target plan doesn't exist
+			// yet in piani_abbonamento — keeps the UX resilient during seeding).
+			const defaultLimits: Record<string, { maxSoci: string; maxUtenti: string }> = {
+				trial: { maxSoci: "50", maxUtenti: "3" },
+				free: { maxSoci: "20", maxUtenti: "1" },
+				base: { maxSoci: "200", maxUtenti: "5" },
+				pro: { maxSoci: "2000", maxUtenti: "25" },
+				enterprise: { maxSoci: "999999", maxUtenti: "999999" },
+			};
+			const limits = defaultLimits[input.piano] ?? {
+				maxSoci: before.maxSoci,
+				maxUtenti: before.maxUtenti,
+			};
+
+			const [after] = await ctx.db
+				.update(tenants)
+				.set({
+					piano: input.piano,
+					maxSoci: limits.maxSoci,
+					maxUtenti: limits.maxUtenti,
+					// When moving OUT of trial, activate the tenant.
+					stato: before.stato === "trial" && input.piano !== "trial" ? "attivo" : before.stato,
+					updatedAt: new Date(),
+				})
+				.where(eq(tenants.id, ctx.tenant.id))
+				.returning();
+
+			// Audit trail — reuse superAdminAuditLog, flagged as tenant-initiated.
+			await ctx.db.insert(superAdminAuditLog).values({
+				superAdminId: ctx.user.id,
+				superAdminEmail: ctx.user.email,
+				azione: "tenant.self_plan_change",
+				target: "tenant",
+				targetId: ctx.tenant.id,
+				dettagli: {
+					from: before.piano,
+					to: input.piano,
+					initiatedBy: "tenant_admin",
+				},
+			});
+
+			return { tenant: after, changed: true as const };
+		}),
 });

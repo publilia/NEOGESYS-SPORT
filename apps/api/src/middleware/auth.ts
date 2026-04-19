@@ -32,6 +32,15 @@ export async function resolveUser(req: FastifyRequest): Promise<UserContext | nu
 		(req.cookies as Record<string, string>)?.[SESSION_COOKIE_NAME] ??
 		extractBearerToken(req.headers.authorization);
 
+	// Dev-mode fallback: allow x-dev-role header to impersonate a role
+	// without requiring a real session. Used by the web app's role switcher.
+	if (!sessionToken && process.env.NODE_ENV !== "production") {
+		const devRole = req.headers["x-dev-role"];
+		if (devRole && typeof devRole === "string") {
+			return await resolveDevUser(devRole, req);
+		}
+	}
+
 	if (!sessionToken) {
 		return null;
 	}
@@ -108,6 +117,92 @@ function extractBearerToken(header: string | undefined): string | null {
 		return null;
 	}
 	return header.slice(7);
+}
+
+/**
+ * Dev-only user resolver. Creates a UserContext from the `x-dev-role` header.
+ * Looks up an existing utente matching the role's demo email, falls back to
+ * returning a synthetic context when the user doesn't exist.
+ */
+async function resolveDevUser(role: string, req: FastifyRequest): Promise<UserContext | null> {
+	const tenantReq = req as FastifyRequest & { tenant?: TenantInfo };
+	const tenantId = tenantReq.tenant?.id;
+
+	// Map of role → demo email (matches seed data)
+	const demoEmails: Record<string, string> = {
+		super_admin: "admin@neogesys.sport",
+		admin_tenant: "admin@demo-asd.gestionale.sport",
+		coordinatore: "coord@demo-asd.gestionale.sport",
+		operatore: "segreteria@demo-asd.gestionale.sport",
+		tesoriere: "tesoreria@demo-asd.gestionale.sport",
+		istruttore: "atletica@demo-asd.gestionale.sport",
+		user: "anna.bianchi@demo-asd.gestionale.sport",
+	};
+
+	const email = demoEmails[role];
+	if (!email) {
+		return null;
+	}
+
+	// Try to find existing user
+	const [user] = await db
+		.select({
+			id: utenti.id,
+			email: utenti.email,
+			nome: utenti.nome,
+			cognome: utenti.cognome,
+		})
+		.from(utenti)
+		.where(eq(utenti.email, email))
+		.limit(1);
+
+	if (user) {
+		// Load tenant-specific role if we have tenant context
+		let actualRole = role;
+		let permessi: Record<string, boolean> | null = null;
+		let socioId: string | null = null;
+
+		if (tenantId && role !== "super_admin") {
+			const [membership] = await db
+				.select({
+					ruolo: utenteTenant.ruolo,
+					permessi: utenteTenant.permessi,
+					socioId: utenteTenant.socioId,
+					attivo: utenteTenant.attivo,
+				})
+				.from(utenteTenant)
+				.where(and(eq(utenteTenant.utenteId, user.id), eq(utenteTenant.tenantId, tenantId)))
+				.limit(1);
+
+			if (membership?.attivo) {
+				actualRole = membership.ruolo;
+				permessi = membership.permessi as Record<string, boolean> | null;
+				socioId = membership.socioId;
+			}
+		}
+
+		return {
+			id: user.id,
+			email: user.email,
+			nome: user.nome,
+			cognome: user.cognome,
+			ruolo: actualRole,
+			permessi,
+			socioId,
+		};
+	}
+
+	// Synthetic fallback: user doesn't exist in DB but we allow the call
+	// to proceed with a fake identity. Useful for initial development.
+	return {
+		id: "00000000-0000-0000-0000-000000000000",
+		email,
+		nome: "Dev",
+		cognome: role,
+		ruolo: role,
+		permessi: null,
+		socioId: null,
+	};
 }
 
 /**

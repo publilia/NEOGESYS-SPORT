@@ -1,38 +1,55 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
 import {
 	Calendar,
-	ChevronDown,
-	ChevronUp,
-	Flag,
+	Check,
 	MapPin,
+	Pencil,
 	Plus,
-	Search,
-	Star,
-	Target,
-	Tent,
-	Trophy,
+	Trash2,
+	UserPlus,
 	Users,
+	X,
 } from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type TipoEvento = "gara" | "torneo" | "stage" | "saggio" | "raduno";
-type StatoEvento = "aperto" | "chiuso" | "in_corso";
 
-interface Evento {
-	id: string;
+interface EventoFormState {
 	nome: string;
 	tipo: TipoEvento;
-	data: string;
+	descrizione: string;
+	dataInizio: string;
 	dataFine: string;
 	luogo: string;
 	disciplina: string;
-	iscrizioniCount: number;
-	maxPartecipanti: number;
-	stato: StatoEvento;
-	partecipanti: { nome: string; cognome: string; tessera: string }[];
+	categoria: string;
+	iscrizioniAperte: boolean;
+	deadlineIscrizione: string;
+	quotaIscrizione: string;
+	maxPartecipanti: string;
 }
+
+const EMPTY_FORM: EventoFormState = {
+	nome: "",
+	tipo: "gara",
+	descrizione: "",
+	dataInizio: "",
+	dataFine: "",
+	luogo: "",
+	disciplina: "",
+	categoria: "",
+	iscrizioniAperte: true,
+	deadlineIscrizione: "",
+	quotaIscrizione: "",
+	maxPartecipanti: "",
+};
 
 const TIPO_LABELS: Record<TipoEvento, string> = {
 	gara: "Gara",
@@ -42,316 +59,649 @@ const TIPO_LABELS: Record<TipoEvento, string> = {
 	raduno: "Raduno",
 };
 
-const TIPO_ICONS: Record<TipoEvento, typeof Trophy> = {
-	gara: Trophy,
-	torneo: Flag,
-	stage: Star,
-	saggio: Target,
-	raduno: Tent,
-};
-
-const STATO_LABELS: Record<StatoEvento, string> = {
-	aperto: "Aperto",
-	chiuso: "Chiuso",
-	in_corso: "In corso",
-};
-
-const STATO_COLORS: Record<StatoEvento, string> = {
-	aperto: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	chiuso: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-	in_corso: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-};
-
-const SAMPLE_EVENTI: Evento[] = [
-	{
-		id: "1",
-		nome: "Torneo Primavera Under 14",
-		tipo: "torneo",
-		data: "2026-05-10",
-		dataFine: "2026-05-11",
-		luogo: "Campo Sportivo Centrale",
-		disciplina: "Calcio",
-		iscrizioniCount: 32,
-		maxPartecipanti: 48,
-		stato: "aperto",
-		partecipanti: [
-			{ nome: "Mario", cognome: "Rossi", tessera: "SOC-001" },
-			{ nome: "Luca", cognome: "Bianchi", tessera: "SOC-002" },
-		],
-	},
-	{
-		id: "2",
-		nome: "Gara Regionale Nuoto",
-		tipo: "gara",
-		data: "2026-04-20",
-		dataFine: "2026-04-20",
-		luogo: "Piscina Olimpica",
-		disciplina: "Nuoto",
-		iscrizioniCount: 15,
-		maxPartecipanti: 30,
-		stato: "aperto",
-		partecipanti: [{ nome: "Anna", cognome: "Verdi", tessera: "SOC-003" }],
-	},
-	{
-		id: "3",
-		nome: "Stage Tecnico Tennis",
-		tipo: "stage",
-		data: "2026-04-15",
-		dataFine: "2026-04-17",
-		luogo: "Centro Tennis",
-		disciplina: "Tennis",
-		iscrizioniCount: 20,
-		maxPartecipanti: 20,
-		stato: "chiuso",
-		partecipanti: [
-			{ nome: "Giulia", cognome: "Neri", tessera: "SOC-004" },
-			{ nome: "Paolo", cognome: "Gialli", tessera: "SOC-005" },
-		],
-	},
-	{
-		id: "4",
-		nome: "Saggio di Ginnastica Artistica",
-		tipo: "saggio",
-		data: "2026-06-15",
-		dataFine: "2026-06-15",
-		luogo: "Palestra Principale",
-		disciplina: "Ginnastica",
-		iscrizioniCount: 25,
-		maxPartecipanti: 40,
-		stato: "aperto",
-		partecipanti: [],
-	},
-	{
-		id: "5",
-		nome: "Raduno Estivo Pallavolo",
-		tipo: "raduno",
-		data: "2026-04-16",
-		dataFine: "2026-04-18",
-		luogo: "Palazzetto dello Sport",
-		disciplina: "Pallavolo",
-		iscrizioniCount: 12,
-		maxPartecipanti: 14,
-		stato: "in_corso",
-		partecipanti: [{ nome: "Sara", cognome: "Blu", tessera: "SOC-006" }],
-	},
-];
+function dateOnly(value: string | Date | null | undefined): string {
+	if (!value) return "";
+	const d = new Date(value as string);
+	return d.toISOString().slice(0, 10);
+}
 
 export default function EventiPage() {
-	const [search, setSearch] = useState("");
-	const [tipoFilter, setTipoFilter] = useState<string>("tutti");
-	const [disciplinaFilter, setDisciplinaFilter] = useState<string>("tutti");
-	const [dataInizio, setDataInizio] = useState("");
-	const [dataFine, setDataFine] = useState("");
-	const [expandedId, setExpandedId] = useState<string | null>(null);
+	const [tipo, setTipo] = useState<TipoEvento | "">("");
+	const [modalOpen, setModalOpen] = useState(false);
+	const [editId, setEditId] = useState<string | null>(null);
+	const [form, setForm] = useState<EventoFormState>(EMPTY_FORM);
+	const [formError, setFormError] = useState<string | null>(null);
 
-	const discipline = useMemo(() => [...new Set(SAMPLE_EVENTI.map((e) => e.disciplina))], []);
+	const [iscriviTarget, setIscriviTarget] = useState<{ id: string; nome: string } | null>(null);
+	const [iscrittiFor, setIscrittiFor] = useState<{ id: string; nome: string } | null>(null);
+	const [selectedSocioId, setSelectedSocioId] = useState("");
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; nome: string } | null>(null);
 
-	const filtered = useMemo(() => {
-		let data = SAMPLE_EVENTI;
-		if (tipoFilter !== "tutti") {
-			data = data.filter((e) => e.tipo === tipoFilter);
+	const utils = trpc.useUtils();
+
+	const query = trpc.eventi.list.useQuery({
+		page: 1,
+		perPage: 100,
+		tipo: tipo || undefined,
+	});
+
+	const sociQuery = trpc.soci.list.useQuery({ page: 1, perPage: 200, stato: "attivo" });
+
+	const iscrittiQuery = trpc.eventi.listIscritti.useQuery(
+		{ eventoId: iscrittiFor?.id ?? "" },
+		{ enabled: !!iscrittiFor },
+	);
+
+	const createMutation = trpc.eventi.create.useMutation({
+		onSuccess: () => {
+			utils.eventi.list.invalidate();
+			toast.success("Evento creato");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
+		},
+	});
+
+	const updateMutation = trpc.eventi.update.useMutation({
+		onSuccess: () => {
+			utils.eventi.list.invalidate();
+			toast.success("Evento aggiornato");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
+		},
+	});
+
+	const deleteMutation = trpc.eventi.delete.useMutation({
+		onSuccess: () => {
+			utils.eventi.list.invalidate();
+			toast.success("Evento eliminato");
+			setDeleteTarget(null);
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const iscriviMutation = trpc.eventi.iscrivi.useMutation({
+		onSuccess: () => {
+			utils.eventi.listIscritti.invalidate();
+			toast.success("Socio iscritto");
+			setIscriviTarget(null);
+			setSelectedSocioId("");
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const disiscriviMutation = trpc.eventi.disiscrivi.useMutation({
+		onSuccess: () => {
+			utils.eventi.listIscritti.invalidate();
+			toast.success("Iscrizione rimossa");
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const items = query.data?.items ?? [];
+
+	function openCreate() {
+		setEditId(null);
+		setForm(EMPTY_FORM);
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function openEdit(row: (typeof items)[number]) {
+		setEditId(row.id);
+		setForm({
+			nome: row.nome,
+			tipo: row.tipo as TipoEvento,
+			descrizione: row.descrizione ?? "",
+			dataInizio: dateOnly(row.dataInizio as string),
+			dataFine: dateOnly(row.dataFine as string | null),
+			luogo: row.luogo ?? "",
+			disciplina: row.disciplina ?? "",
+			categoria: row.categoria ?? "",
+			iscrizioniAperte: !!row.iscrizioniAperte,
+			deadlineIscrizione: dateOnly(row.deadlineIscrizione as string | null),
+			quotaIscrizione: row.quotaIscrizione?.toString() ?? "",
+			maxPartecipanti: row.maxPartecipanti?.toString() ?? "",
+		});
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function closeModal() {
+		setModalOpen(false);
+		setEditId(null);
+		setFormError(null);
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		setFormError(null);
+		if (!form.nome.trim() || !form.dataInizio) {
+			setFormError("Nome e data inizio sono obbligatori.");
+			return;
 		}
-		if (disciplinaFilter !== "tutti") {
-			data = data.filter((e) => e.disciplina === disciplinaFilter);
+		const payload = {
+			nome: form.nome.trim(),
+			tipo: form.tipo,
+			descrizione: form.descrizione.trim() || undefined,
+			dataInizio: new Date(form.dataInizio).toISOString(),
+			dataFine: form.dataFine ? new Date(form.dataFine).toISOString() : undefined,
+			luogo: form.luogo.trim() || undefined,
+			disciplina: form.disciplina.trim() || undefined,
+			categoria: form.categoria.trim() || undefined,
+			iscrizioniAperte: form.iscrizioniAperte,
+			deadlineIscrizione: form.deadlineIscrizione
+				? new Date(form.deadlineIscrizione).toISOString()
+				: undefined,
+			quotaIscrizione: form.quotaIscrizione ? Number(form.quotaIscrizione) : undefined,
+			maxPartecipanti: form.maxPartecipanti ? Number(form.maxPartecipanti) : undefined,
+		};
+		if (editId) {
+			updateMutation.mutate({ id: editId, ...payload });
+		} else {
+			createMutation.mutate(payload);
 		}
-		if (dataInizio) {
-			data = data.filter((e) => e.data >= dataInizio);
-		}
-		if (dataFine) {
-			data = data.filter((e) => e.data <= dataFine);
-		}
-		if (search) {
-			const s = search.toLowerCase();
-			data = data.filter(
-				(e) => e.nome.toLowerCase().includes(s) || e.luogo.toLowerCase().includes(s),
-			);
-		}
-		return data;
-	}, [search, tipoFilter, disciplinaFilter, dataInizio, dataFine]);
+	}
 
 	return (
-		<div className="space-y-6 p-6">
-			{/* Page header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">Eventi</h1>
-					<p className="text-muted-foreground">Gestisci gare, tornei, stage, saggi e raduni</p>
+					<h1 className="page-title">Eventi</h1>
+					<p className="page-subtitle">
+						{items.length} eventi · gare, tornei, stage e saggi
+					</p>
 				</div>
-				<Link
-					href="/eventi/nuovo"
-					className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-				>
-					<Plus className="h-4 w-4" />
-					Nuovo Evento
-				</Link>
+				<div className="page-actions">
+					<a href="/calendario" className="btn btn-outline btn-sm">
+						<Calendar className="icon" /> Calendario
+					</a>
+					<button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+						<Plus className="icon" /> Nuovo Evento
+					</button>
+				</div>
 			</div>
 
-			{/* Filters bar */}
-			<div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:flex-wrap">
-				<div className="relative flex-1 min-w-[200px]">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<input
-						type="text"
-						placeholder="Cerca per nome, luogo..."
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</div>
+			<div className="filters-bar">
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={tipoFilter}
-					onChange={(e) => setTipoFilter(e.target.value)}
+					className="select"
+					value={tipo}
+					onChange={(e) => setTipo(e.target.value as TipoEvento | "")}
 				>
-					<option value="tutti">Tutti i tipi</option>
-					{(Object.keys(TIPO_LABELS) as TipoEvento[]).map((t) => (
-						<option key={t} value={t}>
-							{TIPO_LABELS[t]}
-						</option>
-					))}
+					<option value="">Tutti i tipi</option>
+					<option value="gara">Gara</option>
+					<option value="torneo">Torneo</option>
+					<option value="stage">Stage</option>
+					<option value="saggio">Saggio</option>
+					<option value="raduno">Raduno</option>
 				</select>
-				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={disciplinaFilter}
-					onChange={(e) => setDisciplinaFilter(e.target.value)}
-				>
-					<option value="tutti">Tutte le discipline</option>
-					{discipline.map((d) => (
-						<option key={d} value={d}>
-							{d}
-						</option>
-					))}
-				</select>
-				<input
-					type="date"
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={dataInizio}
-					onChange={(e) => setDataInizio(e.target.value)}
-					placeholder="Da"
-				/>
-				<input
-					type="date"
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={dataFine}
-					onChange={(e) => setDataFine(e.target.value)}
-					placeholder="A"
-				/>
 			</div>
 
-			{/* Events list */}
-			<div className="space-y-3">
-				{filtered.length === 0 ? (
-					<div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-						Nessun evento trovato
-					</div>
-				) : (
-					filtered.map((evento) => {
-						const TipoIcon = TIPO_ICONS[evento.tipo];
-						const isExpanded = expandedId === evento.id;
+			{query.isLoading ? (
+				<div
+					style={{
+						padding: "3rem",
+						textAlign: "center",
+						color: "hsl(var(--muted-foreground))",
+					}}
+				>
+					Caricamento...
+				</div>
+			) : items.length === 0 ? (
+				<EmptyState
+					icon={Calendar}
+					title="Nessun evento"
+					description="Crea il primo evento per aprire le iscrizioni."
+					action={
+						<button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+							<Plus className="icon" /> Nuovo Evento
+						</button>
+					}
+				/>
+			) : (
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
+						gap: "1rem",
+					}}
+				>
+					{items.map((e) => {
+						const dt = new Date(e.dataInizio as unknown as string);
+						const giorno = dt.getDate();
+						const mese = dt
+							.toLocaleString("it-IT", { month: "short" })
+							.toUpperCase()
+							.slice(0, 3);
 						return (
-							<div
-								key={evento.id}
-								className="rounded-xl border border-border bg-card overflow-hidden"
-							>
-								<div
-									className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between cursor-pointer hover:bg-muted/30"
-									onClick={() => setExpandedId(isExpanded ? null : evento.id)}
-									onKeyDown={(e) => {
-										if (e.key === "Enter" || e.key === " ") {
-											setExpandedId(isExpanded ? null : evento.id);
-										}
-									}}
-									role="button"
-									tabIndex={0}
-								>
-									<div className="flex items-start gap-4">
-										<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-											<TipoIcon className="h-5 w-5" />
-										</div>
-										<div>
-											<h3 className="font-semibold text-foreground">{evento.nome}</h3>
-											<div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
-												<span className="inline-flex items-center gap-1">
-													<Calendar className="h-3.5 w-3.5" />
-													{new Date(evento.data).toLocaleDateString("it-IT")}
-													{evento.data !== evento.dataFine &&
-														` - ${new Date(evento.dataFine).toLocaleDateString("it-IT")}`}
-												</span>
-												<span className="inline-flex items-center gap-1">
-													<MapPin className="h-3.5 w-3.5" />
-													{evento.luogo}
-												</span>
-												<span className="inline-flex items-center gap-1">
-													<Users className="h-3.5 w-3.5" />
-													{evento.iscrizioniCount}/{evento.maxPartecipanti} iscritti
-												</span>
+							<div key={e.id} className="card">
+								<div className="card-body">
+									<div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+										<div
+											style={{
+												flexShrink: 0,
+												width: "4rem",
+												height: "4rem",
+												borderRadius: "0.5rem",
+												background: "hsl(var(--primary) / 0.1)",
+												display: "flex",
+												flexDirection: "column",
+												alignItems: "center",
+												justifyContent: "center",
+												border: "2px solid hsl(var(--primary) / 0.2)",
+											}}
+										>
+											<div
+												style={{
+													fontSize: "1.5rem",
+													fontWeight: 700,
+													color: "hsl(var(--primary))",
+													lineHeight: 1,
+												}}
+											>
+												{giorno}
+											</div>
+											<div
+												style={{
+													fontSize: "0.6875rem",
+													fontWeight: 600,
+													color: "hsl(var(--primary))",
+													textTransform: "uppercase",
+													letterSpacing: "0.05em",
+												}}
+											>
+												{mese}
 											</div>
 										</div>
-									</div>
-
-									<div className="flex items-center gap-3">
-										<span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-											{TIPO_LABELS[evento.tipo]}
-										</span>
-										<span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-											{evento.disciplina}
-										</span>
-										<span
-											className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATO_COLORS[evento.stato]}`}
-										>
-											{STATO_LABELS[evento.stato]}
-										</span>
-										{isExpanded ? (
-											<ChevronUp className="h-4 w-4 text-muted-foreground" />
-										) : (
-											<ChevronDown className="h-4 w-4 text-muted-foreground" />
-										)}
+										<div style={{ flex: 1, minWidth: 0 }}>
+											<h3
+												style={{
+													fontWeight: 600,
+													marginBottom: "0.25rem",
+													fontSize: "1rem",
+												}}
+											>
+												{e.nome}
+											</h3>
+											<div
+												style={{
+													fontSize: "0.8125rem",
+													color: "hsl(var(--muted-foreground))",
+													marginBottom: "0.5rem",
+												}}
+											>
+												<span className="badge badge-outline">{TIPO_LABELS[e.tipo as TipoEvento]}</span>
+												{e.disciplina && (
+													<span style={{ marginLeft: 8 }}>{e.disciplina}</span>
+												)}
+											</div>
+											{e.luogo && (
+												<div
+													style={{
+														fontSize: "0.8125rem",
+														color: "hsl(var(--muted-foreground))",
+														display: "flex",
+														alignItems: "center",
+														gap: "0.25rem",
+														marginBottom: "0.5rem",
+													}}
+												>
+													<MapPin className="icon-sm" /> {e.luogo}
+												</div>
+											)}
+											<div
+												style={{
+													display: "flex",
+													gap: "0.5rem",
+													alignItems: "center",
+													marginBottom: "0.75rem",
+												}}
+											>
+												{e.iscrizioniAperte ? (
+													<span className="badge badge-success">Iscrizioni aperte</span>
+												) : (
+													<span className="badge">Chiuse</span>
+												)}
+												{e.maxPartecipanti && (
+													<span
+														style={{
+															fontSize: "0.8125rem",
+															color: "hsl(var(--muted-foreground))",
+														}}
+													>
+														max {e.maxPartecipanti}
+													</span>
+												)}
+												{e.quotaIscrizione && (
+													<span
+														style={{
+															fontSize: "0.8125rem",
+															fontWeight: 600,
+														}}
+													>
+														€ {e.quotaIscrizione}
+													</span>
+												)}
+											</div>
+											<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+												<button
+													type="button"
+													className="btn btn-outline btn-sm"
+													onClick={() => setIscrittiFor({ id: e.id, nome: e.nome })}
+												>
+													<Users className="icon-sm" /> Iscritti
+												</button>
+												<button
+													type="button"
+													className="btn btn-primary btn-sm"
+													onClick={() => setIscriviTarget({ id: e.id, nome: e.nome })}
+												>
+													<UserPlus className="icon-sm" /> Iscrivi
+												</button>
+												<button
+													type="button"
+													className="btn btn-ghost btn-icon"
+													onClick={() => openEdit(e)}
+													title="Modifica"
+												>
+													<Pencil className="icon-sm" />
+												</button>
+												<button
+													type="button"
+													className="btn btn-ghost btn-icon"
+													onClick={() => setDeleteTarget({ id: e.id, nome: e.nome })}
+													title="Elimina"
+												>
+													<Trash2 className="icon-sm" style={{ color: "#dc2626" }} />
+												</button>
+											</div>
+										</div>
 									</div>
 								</div>
-
-								{/* Expanded details */}
-								{isExpanded && (
-									<div className="border-t border-border bg-muted/20 p-5">
-										<h4 className="mb-3 text-sm font-semibold text-foreground">
-											Partecipanti ({evento.partecipanti.length})
-										</h4>
-										{evento.partecipanti.length === 0 ? (
-											<p className="text-sm text-muted-foreground">Nessun partecipante iscritto</p>
-										) : (
-											<div className="overflow-x-auto">
-												<table className="w-full">
-													<thead>
-														<tr className="border-b border-border">
-															<th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-																Tessera
-															</th>
-															<th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-																Cognome
-															</th>
-															<th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-																Nome
-															</th>
-														</tr>
-													</thead>
-													<tbody>
-														{evento.partecipanti.map((p) => (
-															<tr key={p.tessera} className="border-b border-border last:border-0">
-																<td className="px-3 py-2 text-sm font-mono">{p.tessera}</td>
-																<td className="px-3 py-2 text-sm font-medium">{p.cognome}</td>
-																<td className="px-3 py-2 text-sm">{p.nome}</td>
-															</tr>
-														))}
-													</tbody>
-												</table>
-											</div>
-										)}
-									</div>
-								)}
 							</div>
 						);
-					})
+					})}
+				</div>
+			)}
+
+			{/* Create/Edit Modal */}
+			<Modal
+				open={modalOpen}
+				onClose={closeModal}
+				title={editId ? "Modifica evento" : "Nuovo evento"}
+				size="lg"
+				footer={
+					<>
+						<button
+							type="button"
+							className="btn btn-outline btn-sm"
+							onClick={closeModal}
+							disabled={createMutation.isPending || updateMutation.isPending}
+						>
+							Annulla
+						</button>
+						<button
+							type="submit"
+							form="evento-form"
+							className="btn btn-primary btn-sm"
+							disabled={createMutation.isPending || updateMutation.isPending}
+						>
+							<Check className="icon" />{" "}
+							{createMutation.isPending || updateMutation.isPending ? "Salvataggio..." : "Salva"}
+						</button>
+					</>
+				}
+			>
+				<form id="evento-form" onSubmit={handleSubmit}>
+					{formError && (
+						<div
+							style={{
+								padding: "0.75rem 1rem",
+								background: "rgba(220,38,38,0.1)",
+								color: "#dc2626",
+								borderRadius: 6,
+								fontSize: "0.875rem",
+								marginBottom: "1rem",
+							}}
+						>
+							{formError}
+						</div>
+					)}
+					<FormGrid>
+						<Field label="Nome" required span={2}>
+							<Input
+								value={form.nome}
+								onChange={(e) => setForm({ ...form, nome: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Tipo" required>
+							<Select
+								value={form.tipo}
+								onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoEvento })}
+							>
+								<option value="gara">Gara</option>
+								<option value="torneo">Torneo</option>
+								<option value="stage">Stage</option>
+								<option value="saggio">Saggio</option>
+								<option value="raduno">Raduno</option>
+							</Select>
+						</Field>
+						<Field label="Disciplina">
+							<Input
+								value={form.disciplina}
+								onChange={(e) => setForm({ ...form, disciplina: e.target.value })}
+							/>
+						</Field>
+						<Field label="Data Inizio" required>
+							<Input
+								type="date"
+								value={form.dataInizio}
+								onChange={(e) => setForm({ ...form, dataInizio: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Data Fine">
+							<Input
+								type="date"
+								value={form.dataFine}
+								onChange={(e) => setForm({ ...form, dataFine: e.target.value })}
+							/>
+						</Field>
+						<Field label="Luogo" span={2}>
+							<Input
+								value={form.luogo}
+								onChange={(e) => setForm({ ...form, luogo: e.target.value })}
+							/>
+						</Field>
+						<Field label="Categoria">
+							<Input
+								value={form.categoria}
+								onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+							/>
+						</Field>
+						<Field label="Quota iscrizione (EUR)">
+							<Input
+								type="number"
+								step="0.01"
+								min="0"
+								value={form.quotaIscrizione}
+								onChange={(e) => setForm({ ...form, quotaIscrizione: e.target.value })}
+							/>
+						</Field>
+						<Field label="Max partecipanti">
+							<Input
+								type="number"
+								min="1"
+								value={form.maxPartecipanti}
+								onChange={(e) => setForm({ ...form, maxPartecipanti: e.target.value })}
+							/>
+						</Field>
+						<Field label="Deadline iscrizioni">
+							<Input
+								type="date"
+								value={form.deadlineIscrizione}
+								onChange={(e) => setForm({ ...form, deadlineIscrizione: e.target.value })}
+							/>
+						</Field>
+						<Field label="Iscrizioni aperte" span={2}>
+							<label
+								style={{
+									display: "inline-flex",
+									alignItems: "center",
+									gap: 8,
+									fontSize: "0.875rem",
+								}}
+							>
+								<input
+									type="checkbox"
+									checked={form.iscrizioniAperte}
+									onChange={(e) => setForm({ ...form, iscrizioniAperte: e.target.checked })}
+								/>
+								Permetti nuove iscrizioni
+							</label>
+						</Field>
+						<Field label="Descrizione" span={2}>
+							<Textarea
+								value={form.descrizione}
+								onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
+							/>
+						</Field>
+					</FormGrid>
+				</form>
+			</Modal>
+
+			<Modal
+				open={!!iscriviTarget}
+				onClose={() => {
+					setIscriviTarget(null);
+					setSelectedSocioId("");
+				}}
+				title="Iscrivi socio all'evento"
+				subtitle={iscriviTarget?.nome}
+				size="sm"
+				footer={
+					<>
+						<button
+							type="button"
+							className="btn btn-outline btn-sm"
+							onClick={() => setIscriviTarget(null)}
+						>
+							Annulla
+						</button>
+						<button
+							type="button"
+							className="btn btn-primary btn-sm"
+							disabled={!selectedSocioId || iscriviMutation.isPending}
+							onClick={() => {
+								if (iscriviTarget && selectedSocioId) {
+									iscriviMutation.mutate({
+										eventoId: iscriviTarget.id,
+										socioId: selectedSocioId,
+									});
+								}
+							}}
+						>
+							<UserPlus className="icon" /> Iscrivi
+						</button>
+					</>
+				}
+			>
+				<Field label="Seleziona socio" required>
+					<Select
+						value={selectedSocioId}
+						onChange={(e) => setSelectedSocioId(e.target.value)}
+					>
+						<option value="">—</option>
+						{sociQuery.data?.items.map((s) => (
+							<option key={s.id} value={s.id}>
+								{s.cognome} {s.nome}
+							</option>
+						))}
+					</Select>
+				</Field>
+			</Modal>
+
+			<Modal
+				open={!!iscrittiFor}
+				onClose={() => setIscrittiFor(null)}
+				title="Iscritti all'evento"
+				subtitle={iscrittiFor?.nome}
+				size="md"
+			>
+				{iscrittiQuery.isLoading ? (
+					<p>Caricamento...</p>
+				) : !iscrittiQuery.data || iscrittiQuery.data.length === 0 ? (
+					<EmptyState
+						icon={Users}
+						title="Nessun iscritto"
+						description="Nessun socio si e' ancora iscritto a questo evento."
+					/>
+				) : (
+					<table className="table">
+						<thead>
+							<tr>
+								<th>Cognome</th>
+								<th>Nome</th>
+								<th>Tessera</th>
+								<th>Stato</th>
+								<th />
+							</tr>
+						</thead>
+						<tbody>
+							{iscrittiQuery.data.map((i) => (
+								<tr key={i.id}>
+									<td style={{ fontWeight: 500 }}>{i.cognome}</td>
+									<td>{i.nome}</td>
+									<td
+										style={{
+											fontFamily: "monospace",
+											fontSize: "0.8125rem",
+											color: "hsl(var(--muted-foreground))",
+										}}
+									>
+										{i.codiceTessera ?? "—"}
+									</td>
+									<td>{i.stato}</td>
+									<td style={{ textAlign: "right" }}>
+										<button
+											type="button"
+											className="table-action"
+											onClick={() => {
+												if (iscrittiFor) {
+													disiscriviMutation.mutate({
+														eventoId: iscrittiFor.id,
+														socioId: i.socioId,
+													});
+												}
+											}}
+										>
+											<X className="icon" />
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
 				)}
-			</div>
+			</Modal>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				onConfirm={() => {
+					if (deleteTarget) deleteMutation.mutate({ id: deleteTarget.id });
+				}}
+				title="Eliminare evento?"
+				message={`L'evento "${deleteTarget?.nome ?? ""}" e le relative iscrizioni saranno rimossi.`}
+				confirmLabel="Elimina"
+				loading={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

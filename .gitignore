@@ -63,3 +63,6 @@ minio-data/
 *.pem
 *.key
 .env.docker
+
+# Claude Code
+.claude/

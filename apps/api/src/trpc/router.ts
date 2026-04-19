@@ -5,6 +5,7 @@ import { contabilitaRouter } from "../routes/contabilita";
 import { corsiRouter } from "../routes/corsi";
 import { dashboardRouter } from "../routes/dashboard";
 import { documentiRouter } from "../routes/documenti";
+import { ecosystemRouter } from "../routes/ecosystem";
 import { eventiRouter } from "../routes/eventi";
 import { googleCalendarRouter } from "../routes/google-calendar";
 import { impostazioniRouter } from "../routes/impostazioni";
@@ -16,6 +17,7 @@ import { quoteRouter } from "../routes/quote";
 import { sociRouter } from "../routes/soci";
 import { tenantRouter } from "../routes/tenant";
 import { utentiRouter } from "../routes/utenti";
+import { verificaRouter } from "../routes/verifica";
 import { router } from "./index";
 
 /**
@@ -44,6 +46,16 @@ export const appRouter = router({
 	googleCalendar: googleCalendarRouter,
 	microsoftOneDrive: microsoftOneDriveRouter,
 	microsoftCalendar: microsoftCalendarRouter,
+
+	// ── Ecosistema NEOGESYS (cross-gestionale) ──────────────────
+	// Contratto d'interoperabilità fra tutti i gestionali della suite
+	// (Sport, CRM, Proloco, Farmacie, Estetica, HR). Permette a gestionali
+	// futuri di registrarsi, fare discovery delle app installate per un
+	// tenant e orchestrare l'hand-off SSO. Dettagli in routes/ecosystem.ts.
+	ecosystem: ecosystemRouter,
+
+	// ── Public (nessuna autenticazione) ──────────────────────────
+	verifica: verificaRouter,
 
 	// ── Platform-level (solo super_admin) ────────────────────────
 	piattaforma: router({

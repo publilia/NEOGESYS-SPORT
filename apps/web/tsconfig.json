@@ -3,7 +3,9 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"]
+			"@/*": ["src/*"],
+			"@neogesys/api": ["../api/src/index.ts"],
+			"@neogesys/api/*": ["../api/src/*"]
 		},
 		"strict": true,
 		"esModuleInterop": true,

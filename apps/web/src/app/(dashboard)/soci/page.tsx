@@ -1,392 +1,757 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
+import { Modal } from "@/components/ui/modal";
+import { trpc } from "@/lib/trpc";
 import {
-	type ColumnDef,
-	type SortingState,
-	flexRender,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
-import {
+	Check,
 	ChevronLeft,
 	ChevronRight,
+	Circle,
 	Download,
-	Edit,
-	Eye,
-	MoreHorizontal,
+	Pause,
+	Pencil,
 	Plus,
 	Search,
 	Trash2,
+	TrendingDown,
+	Users,
+	X,
 } from "lucide-react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
-interface Socio {
-	id: string;
-	tessera: string;
+type StatoSocio = "attivo" | "sospeso" | "dimesso" | "scaduto";
+type TipologiaSocio = "socio" | "atleta" | "istruttore" | "dirigente" | "volontario";
+
+interface SocioFormState {
 	nome: string;
 	cognome: string;
+	codiceFiscale: string;
+	codiceTessera: string;
+	email: string;
+	telefono: string;
+	tipologia: TipologiaSocio;
 	disciplina: string;
-	stato: "attivo" | "scaduto" | "sospeso" | "in_attesa";
-	certificato: "valido" | "scaduto" | "mancante";
+	sesso: "" | "M" | "F";
+	dataNascita: string;
+	luogoNascita: string;
+	note: string;
+	consensoGdpr: boolean;
+	consensoFoto: boolean;
+	consensoMarketing: boolean;
 }
 
-const STATI_LABELS: Record<string, string> = {
-	attivo: "Attivo",
-	scaduto: "Scaduto",
-	sospeso: "Sospeso",
-	in_attesa: "In attesa",
+const EMPTY_FORM: SocioFormState = {
+	nome: "",
+	cognome: "",
+	codiceFiscale: "",
+	codiceTessera: "",
+	email: "",
+	telefono: "",
+	tipologia: "socio",
+	disciplina: "",
+	sesso: "",
+	dataNascita: "",
+	luogoNascita: "",
+	note: "",
+	consensoGdpr: true,
+	consensoFoto: false,
+	consensoMarketing: false,
 };
 
-const STATI_COLORS: Record<string, string> = {
-	attivo: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	scaduto: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-	sospeso: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-	in_attesa: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-};
+function StatoBadge({ stato }: { stato: StatoSocio }) {
+	if (stato === "attivo")
+		return (
+			<span className="badge badge-success">
+				<Circle className="icon-sm" /> Attivo
+			</span>
+		);
+	if (stato === "sospeso")
+		return (
+			<span className="badge badge-destructive">
+				<Pause className="icon-sm" /> Sospeso
+			</span>
+		);
+	if (stato === "scaduto")
+		return (
+			<span className="badge badge-warning">
+				<X className="icon-sm" /> Scaduto
+			</span>
+		);
+	return (
+		<span className="badge" style={{ background: "hsl(var(--muted))" }}>
+			<TrendingDown className="icon-sm" /> Dimesso
+		</span>
+	);
+}
 
-const CERT_COLORS: Record<string, string> = {
-	valido: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-	scaduto: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-	mancante: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-};
+function TipologiaBadge({ tipo }: { tipo: TipologiaSocio }) {
+	const map: Record<TipologiaSocio, { bg: string; label: string }> = {
+		atleta: { bg: "rgba(59,130,246,0.15)", label: "Atleta" },
+		istruttore: { bg: "rgba(168,85,247,0.15)", label: "Istruttore" },
+		dirigente: { bg: "rgba(245,158,11,0.15)", label: "Dirigente" },
+		volontario: { bg: "rgba(16,185,129,0.15)", label: "Volontario" },
+		socio: { bg: "rgba(100,116,139,0.15)", label: "Socio" },
+	};
+	const cfg = map[tipo];
+	return (
+		<span
+			style={{
+				padding: "2px 8px",
+				borderRadius: 999,
+				fontSize: "0.75rem",
+				fontWeight: 500,
+				background: cfg.bg,
+			}}
+		>
+			{cfg.label}
+		</span>
+	);
+}
 
-// Sample data - replace with tRPC query
-const SAMPLE_SOCI: Socio[] = [
-	{
-		id: "1",
-		tessera: "SOC-001",
-		nome: "Mario",
-		cognome: "Rossi",
-		disciplina: "Calcio",
-		stato: "attivo",
-		certificato: "valido",
-	},
-	{
-		id: "2",
-		tessera: "SOC-002",
-		nome: "Luca",
-		cognome: "Bianchi",
-		disciplina: "Nuoto",
-		stato: "attivo",
-		certificato: "scaduto",
-	},
-	{
-		id: "3",
-		tessera: "SOC-003",
-		nome: "Anna",
-		cognome: "Verdi",
-		disciplina: "Tennis",
-		stato: "scaduto",
-		certificato: "mancante",
-	},
-	{
-		id: "4",
-		tessera: "SOC-004",
-		nome: "Giulia",
-		cognome: "Neri",
-		disciplina: "Pallavolo",
-		stato: "attivo",
-		certificato: "valido",
-	},
-	{
-		id: "5",
-		tessera: "SOC-005",
-		nome: "Paolo",
-		cognome: "Gialli",
-		disciplina: "Basket",
-		stato: "sospeso",
-		certificato: "valido",
-	},
-	{
-		id: "6",
-		tessera: "SOC-006",
-		nome: "Sara",
-		cognome: "Blu",
-		disciplina: "Calcio",
-		stato: "in_attesa",
-		certificato: "mancante",
-	},
-];
+function formValuesToInput(form: SocioFormState) {
+	const payload: Record<string, unknown> = {
+		nome: form.nome.trim(),
+		cognome: form.cognome.trim(),
+		tipologia: form.tipologia,
+		consensoGdpr: form.consensoGdpr,
+		consensoFoto: form.consensoFoto,
+		consensoMarketing: form.consensoMarketing,
+	};
+	if (form.codiceFiscale.trim()) payload.codiceFiscale = form.codiceFiscale.trim().toUpperCase();
+	if (form.codiceTessera.trim()) payload.codiceTessera = form.codiceTessera.trim();
+	if (form.email.trim()) payload.email = form.email.trim();
+	if (form.telefono.trim()) payload.telefono = form.telefono.trim();
+	if (form.disciplina.trim()) payload.disciplina = form.disciplina.trim();
+	if (form.sesso) payload.sesso = form.sesso;
+	if (form.dataNascita) payload.dataNascita = new Date(form.dataNascita).toISOString();
+	if (form.luogoNascita.trim()) payload.luogoNascita = form.luogoNascita.trim();
+	if (form.note.trim()) payload.note = form.note.trim();
+	return payload;
+}
 
 export default function SociPage() {
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [statoFilter, setStatoFilter] = useState<string>("tutti");
-	const [disciplinaFilter, setDisciplinaFilter] = useState<string>("tutti");
-	const [openActions, setOpenActions] = useState<string | null>(null);
+	const [page, setPage] = useState(1);
+	const perPage = 20;
+	const [search, setSearch] = useState("");
+	const [searchInput, setSearchInput] = useState("");
+	const [stato, setStato] = useState<StatoSocio | "">("");
+	const [tipologia, setTipologia] = useState<TipologiaSocio | "">("");
+	const [disciplina, setDisciplina] = useState("");
 
-	const filteredData = useMemo(() => {
-		let data = SAMPLE_SOCI;
-		if (statoFilter !== "tutti") {
-			data = data.filter((s) => s.stato === statoFilter);
-		}
-		if (disciplinaFilter !== "tutti") {
-			data = data.filter((s) => s.disciplina === disciplinaFilter);
-		}
-		return data;
-	}, [statoFilter, disciplinaFilter]);
+	const [modalOpen, setModalOpen] = useState(false);
+	const [editId, setEditId] = useState<string | null>(null);
+	const [form, setForm] = useState<SocioFormState>(EMPTY_FORM);
+	const [saving, setSaving] = useState(false);
+	const [formError, setFormError] = useState<string | null>(null);
 
-	const disciplines = useMemo(() => [...new Set(SAMPLE_SOCI.map((s) => s.disciplina))], []);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
 
-	const columns = useMemo<ColumnDef<Socio>[]>(
-		() => [
-			{
-				accessorKey: "tessera",
-				header: "Tessera",
-				cell: ({ row }) => <span className="font-mono text-sm">{row.getValue("tessera")}</span>,
-			},
-			{
-				accessorKey: "cognome",
-				header: "Cognome",
-				cell: ({ row }) => <span className="font-medium">{row.getValue("cognome")}</span>,
-			},
-			{
-				accessorKey: "nome",
-				header: "Nome",
-			},
-			{
-				accessorKey: "disciplina",
-				header: "Disciplina",
-			},
-			{
-				accessorKey: "stato",
-				header: "Stato",
-				cell: ({ row }) => {
-					const stato = row.getValue("stato") as string;
-					return (
-						<span
-							className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATI_COLORS[stato]}`}
-						>
-							{STATI_LABELS[stato]}
-						</span>
-					);
-				},
-			},
-			{
-				accessorKey: "certificato",
-				header: "Certificato",
-				cell: ({ row }) => {
-					const cert = row.getValue("certificato") as string;
-					return (
-						<span
-							className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${CERT_COLORS[cert]}`}
-						>
-							{cert}
-						</span>
-					);
-				},
-			},
-			{
-				id: "azioni",
-				header: "Azioni",
-				cell: ({ row }) => (
-					<div className="relative">
-						<button
-							type="button"
-							className="rounded-md p-1 hover:bg-muted"
-							onClick={() =>
-								setOpenActions(openActions === row.original.id ? null : row.original.id)
-							}
-						>
-							<MoreHorizontal className="h-4 w-4" />
-						</button>
-						{openActions === row.original.id && (
-							<div className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-border bg-popover py-1 shadow-lg">
-								<button
-									type="button"
-									className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"
-									onClick={() => setOpenActions(null)}
-								>
-									<Eye className="h-3.5 w-3.5" /> Visualizza
-								</button>
-								<button
-									type="button"
-									className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"
-									onClick={() => setOpenActions(null)}
-								>
-									<Edit className="h-3.5 w-3.5" /> Modifica
-								</button>
-								<button
-									type="button"
-									className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-destructive hover:bg-muted"
-									onClick={() => setOpenActions(null)}
-								>
-									<Trash2 className="h-3.5 w-3.5" /> Elimina
-								</button>
-							</div>
-						)}
-					</div>
-				),
-			},
-		],
-		[openActions],
-	);
+	const utils = trpc.useUtils();
 
-	const table = useReactTable({
-		data: filteredData,
-		columns,
-		state: { sorting, globalFilter },
-		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		initialState: {
-			pagination: { pageSize: 20 },
-		},
+	const query = trpc.soci.list.useQuery({
+		page,
+		perPage,
+		search: search || undefined,
+		stato: stato || undefined,
+		tipologia: tipologia || undefined,
+		disciplina: disciplina || undefined,
 	});
 
+	const statsQuery = trpc.soci.stats.useQuery();
+
+	const createMutation = trpc.soci.create.useMutation({
+		onSuccess: () => {
+			utils.soci.list.invalidate();
+			utils.soci.stats.invalidate();
+			toast.success("Socio creato con successo");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
+		},
+		onSettled: () => setSaving(false),
+	});
+
+	const updateMutation = trpc.soci.update.useMutation({
+		onSuccess: () => {
+			utils.soci.list.invalidate();
+			utils.soci.stats.invalidate();
+			toast.success("Socio aggiornato");
+			closeModal();
+		},
+		onError: (err) => {
+			setFormError(err.message);
+			toast.error(err.message);
+		},
+		onSettled: () => setSaving(false),
+	});
+
+	const deleteMutation = trpc.soci.delete.useMutation({
+		onSuccess: () => {
+			utils.soci.list.invalidate();
+			utils.soci.stats.invalidate();
+			toast.success("Socio rimosso (stato: dimesso)");
+			setDeleteTarget(null);
+		},
+		onError: (err) => toast.error(err.message),
+	});
+
+	const exportQuery = trpc.soci.exportCsv.useQuery(
+		{
+			stato: stato || undefined,
+			tipologia: tipologia || undefined,
+			disciplina: disciplina || undefined,
+		},
+		{ enabled: false },
+	);
+
+	const stats = useMemo(() => {
+		if (!statsQuery.data) return { attivi: 0, sospesi: 0, dimessi: 0, totali: 0 };
+		const map: Record<string, number> = {};
+		for (const r of statsQuery.data.byStato) map[r.stato ?? ""] = r.count;
+		const attivi = map.attivo ?? 0;
+		const sospesi = map.sospeso ?? 0;
+		const dimessi = map.dimesso ?? 0;
+		const totali = Object.values(map).reduce((a, b) => a + b, 0);
+		return { attivi, sospesi, dimessi, totali };
+	}, [statsQuery.data]);
+
+	const items = query.data?.items ?? [];
+	const total = query.data?.total ?? 0;
+	const totalPages = query.data?.totalPages ?? 1;
+
+	function openCreate() {
+		setEditId(null);
+		setForm(EMPTY_FORM);
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function openEdit(row: (typeof items)[number]) {
+		setEditId(row.id);
+		setForm({
+			nome: row.nome ?? "",
+			cognome: row.cognome ?? "",
+			codiceFiscale: row.codiceFiscale ?? "",
+			codiceTessera: row.codiceTessera ?? "",
+			email: row.email ?? "",
+			telefono: row.telefono ?? "",
+			tipologia: (row.tipologia as TipologiaSocio) ?? "socio",
+			disciplina: row.disciplina ?? "",
+			sesso: (row.sesso as "M" | "F") ?? "",
+			dataNascita: row.dataNascita
+				? new Date(row.dataNascita as unknown as string).toISOString().slice(0, 10)
+				: "",
+			luogoNascita: row.luogoNascita ?? "",
+			note: row.note ?? "",
+			consensoGdpr: !!row.consensoGdpr,
+			consensoFoto: !!row.consensoFoto,
+			consensoMarketing: !!row.consensoMarketing,
+		});
+		setFormError(null);
+		setModalOpen(true);
+	}
+
+	function closeModal() {
+		setModalOpen(false);
+		setEditId(null);
+		setForm(EMPTY_FORM);
+		setFormError(null);
+		setSaving(false);
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		setFormError(null);
+		if (!form.nome.trim() || !form.cognome.trim()) {
+			setFormError("Nome e cognome sono obbligatori.");
+			return;
+		}
+		const payload = formValuesToInput(form);
+		setSaving(true);
+		if (editId) {
+			updateMutation.mutate({ id: editId, ...payload } as Parameters<
+				typeof updateMutation.mutate
+			>[0]);
+		} else {
+			createMutation.mutate(payload as Parameters<typeof createMutation.mutate>[0]);
+		}
+	}
+
+	function applySearch() {
+		setSearch(searchInput);
+		setPage(1);
+	}
+
+	async function handleExport() {
+		const res = await exportQuery.refetch();
+		const data = res.data;
+		if (!data) {
+			toast.error("Errore export");
+			return;
+		}
+		const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = data.filename;
+		a.click();
+		URL.revokeObjectURL(url);
+		toast.success("CSV scaricato");
+	}
+
 	return (
-		<div className="space-y-6 p-6">
-			{/* Page header */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="p-6">
+			<div className="page-header">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">Soci</h1>
-					<p className="text-muted-foreground">Gestisci i soci della tua associazione</p>
+					<h1 className="page-title">Soci</h1>
+					<p className="page-subtitle">
+						{stats.totali} soci · {stats.attivi} attivi · {stats.sospesi} sospesi · {stats.dimessi}{" "}
+						dimessi
+					</p>
 				</div>
-				<div className="flex gap-2">
+				<div className="page-actions">
 					<button
 						type="button"
-						className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+						className="btn btn-outline btn-sm"
+						onClick={handleExport}
+						disabled={exportQuery.isFetching}
 					>
-						<Download className="h-4 w-4" />
-						Export CSV
+						<Download className="icon" /> {exportQuery.isFetching ? "Esporto..." : "Esporta CSV"}
 					</button>
-					<Link
-						href="/soci/nuovo"
-						className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-					>
-						<Plus className="h-4 w-4" />
-						Nuovo Socio
-					</Link>
+					<button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+						<Plus className="icon" /> Nuovo Socio
+					</button>
 				</div>
 			</div>
 
-			{/* Filters bar */}
-			<div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
-				{/* Search */}
-				<div className="relative flex-1">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+			<div className="filters-bar">
+				<div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+					<Search
+						style={{
+							position: "absolute",
+							left: 10,
+							top: "50%",
+							transform: "translateY(-50%)",
+							width: 16,
+							height: 16,
+							color: "hsl(var(--muted-foreground))",
+						}}
+					/>
 					<input
-						type="text"
-						placeholder="Cerca per nome, cognome, tessera..."
-						className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-						value={globalFilter}
-						onChange={(e) => setGlobalFilter(e.target.value)}
+						className="input"
+						style={{ paddingLeft: 34 }}
+						placeholder="Cerca per nome, cognome, codice fiscale, email..."
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") applySearch();
+						}}
 					/>
 				</div>
-
-				{/* Stato filter */}
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={statoFilter}
-					onChange={(e) => setStatoFilter(e.target.value)}
+					className="select"
+					value={stato}
+					onChange={(e) => {
+						setStato(e.target.value as StatoSocio | "");
+						setPage(1);
+					}}
 				>
-					<option value="tutti">Tutti gli stati</option>
+					<option value="">Tutti gli stati</option>
 					<option value="attivo">Attivo</option>
-					<option value="scaduto">Scaduto</option>
 					<option value="sospeso">Sospeso</option>
-					<option value="in_attesa">In attesa</option>
+					<option value="scaduto">Scaduto</option>
+					<option value="dimesso">Dimesso</option>
 				</select>
-
-				{/* Disciplina filter */}
 				<select
-					className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-					value={disciplinaFilter}
-					onChange={(e) => setDisciplinaFilter(e.target.value)}
+					className="select"
+					value={tipologia}
+					onChange={(e) => {
+						setTipologia(e.target.value as TipologiaSocio | "");
+						setPage(1);
+					}}
 				>
-					<option value="tutti">Tutte le discipline</option>
-					{disciplines.map((d) => (
-						<option key={d} value={d}>
-							{d}
-						</option>
-					))}
+					<option value="">Tutte le tipologie</option>
+					<option value="socio">Socio</option>
+					<option value="atleta">Atleta</option>
+					<option value="istruttore">Istruttore</option>
+					<option value="dirigente">Dirigente</option>
+					<option value="volontario">Volontario</option>
 				</select>
+				<input
+					className="input"
+					style={{ maxWidth: 180 }}
+					placeholder="Disciplina"
+					value={disciplina}
+					onChange={(e) => {
+						setDisciplina(e.target.value);
+						setPage(1);
+					}}
+				/>
+				<button type="button" className="btn btn-outline btn-sm" onClick={applySearch}>
+					Cerca
+				</button>
 			</div>
 
-			{/* Table */}
-			<div className="overflow-hidden rounded-lg border border-border bg-card">
-				<div className="overflow-x-auto">
-					<table className="w-full">
+			<div className="card">
+				<div className="table-container">
+					<table className="table">
 						<thead>
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id} className="border-b border-border bg-muted/50">
-									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-											onClick={header.column.getToggleSortingHandler()}
-											style={{ cursor: header.column.getCanSort() ? "pointer" : "default" }}
-										>
-											{header.isPlaceholder
-												? null
-												: flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
+							<tr>
+								<th>Tessera</th>
+								<th>Cognome</th>
+								<th>Nome</th>
+								<th>Tipologia</th>
+								<th>Disciplina</th>
+								<th>Email</th>
+								<th>Stato</th>
+								<th style={{ textAlign: "right" }}>Azioni</th>
+							</tr>
 						</thead>
 						<tbody>
-							{table.getRowModel().rows.length === 0 ? (
+							{query.isLoading ? (
 								<tr>
 									<td
-										colSpan={columns.length}
-										className="px-4 py-8 text-center text-sm text-muted-foreground"
+										colSpan={8}
+										style={{
+											textAlign: "center",
+											padding: "3rem",
+											color: "hsl(var(--muted-foreground))",
+										}}
 									>
-										Nessun socio trovato
+										Caricamento...
+									</td>
+								</tr>
+							) : query.isError ? (
+								<tr>
+									<td
+										colSpan={8}
+										style={{ textAlign: "center", padding: "3rem", color: "#dc2626" }}
+									>
+										Errore: {query.error.message}
+									</td>
+								</tr>
+							) : items.length === 0 ? (
+								<tr>
+									<td colSpan={8} style={{ padding: 0 }}>
+										<EmptyState
+											icon={Users}
+											title="Nessun socio trovato"
+											description={
+												search || stato || tipologia || disciplina
+													? "Prova a modificare i filtri di ricerca."
+													: "Crea il primo socio per iniziare."
+											}
+											action={
+												<button
+													type="button"
+													className="btn btn-primary btn-sm"
+													onClick={openCreate}
+												>
+													<Plus className="icon" /> Nuovo Socio
+												</button>
+											}
+										/>
 									</td>
 								</tr>
 							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										className="border-b border-border last:border-0 hover:bg-muted/30"
-									>
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} className="px-4 py-3 text-sm">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</td>
-										))}
+								items.map((s) => (
+									<tr key={s.id}>
+										<td
+											style={{
+												fontFamily: "monospace",
+												fontSize: "0.8125rem",
+												color: "hsl(var(--muted-foreground))",
+											}}
+										>
+											{s.codiceTessera ?? "—"}
+										</td>
+										<td style={{ fontWeight: 500 }}>{s.cognome}</td>
+										<td style={{ fontWeight: 500 }}>{s.nome}</td>
+										<td>
+											<TipologiaBadge tipo={s.tipologia as TipologiaSocio} />
+										</td>
+										<td>{s.disciplina ?? "—"}</td>
+										<td
+											style={{
+												color: "hsl(var(--muted-foreground))",
+												fontSize: "0.875rem",
+											}}
+										>
+											{s.email ?? "—"}
+										</td>
+										<td>
+											<StatoBadge stato={s.stato as StatoSocio} />
+										</td>
+										<td>
+											<div className="table-actions" style={{ justifyContent: "flex-end" }}>
+												<button
+													type="button"
+													className="table-action"
+													title="Modifica"
+													onClick={() => openEdit(s)}
+												>
+													<Pencil className="icon" />
+												</button>
+												<button
+													type="button"
+													className="table-action"
+													title="Elimina"
+													onClick={() =>
+														setDeleteTarget({ id: s.id, label: `${s.cognome} ${s.nome}` })
+													}
+												>
+													<Trash2 className="icon" style={{ color: "#dc2626" }} />
+												</button>
+											</div>
+										</td>
 									</tr>
 								))
 							)}
 						</tbody>
 					</table>
 				</div>
-
-				{/* Pagination */}
-				<div className="flex items-center justify-between border-t border-border px-4 py-3">
-					<p className="text-sm text-muted-foreground">
-						{table.getFilteredRowModel().rows.length} soci totali
-					</p>
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
-						>
-							<ChevronLeft className="h-4 w-4" />
-						</button>
-						<span className="text-sm text-muted-foreground">
-							Pagina {table.getState().pagination.pageIndex + 1} di {table.getPageCount()}
+				{total > 0 && (
+					<div className="pagination">
+						<span>
+							Mostra {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} di {total} soci
 						</span>
+						<div style={{ display: "flex", gap: "0.25rem" }}>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page === 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								<ChevronLeft className="icon-sm" />
+							</button>
+							<span
+								style={{
+									padding: "0 0.75rem",
+									display: "flex",
+									alignItems: "center",
+									fontSize: "0.875rem",
+								}}
+							>
+								{page} / {totalPages}
+							</span>
+							<button
+								type="button"
+								className="btn btn-outline btn-sm"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+							>
+								<ChevronRight className="icon-sm" />
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* Create/Edit Modal */}
+			<Modal
+				open={modalOpen}
+				onClose={closeModal}
+				title={editId ? "Modifica socio" : "Nuovo socio"}
+				subtitle={editId ? "Aggiorna i dati del socio" : "Inserisci i dati anagrafici"}
+				size="lg"
+				footer={
+					<>
 						<button
 							type="button"
-							className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
+							className="btn btn-outline btn-sm"
+							onClick={closeModal}
+							disabled={saving}
 						>
-							<ChevronRight className="h-4 w-4" />
+							Annulla
 						</button>
+						<button
+							type="submit"
+							form="socio-form"
+							className="btn btn-primary btn-sm"
+							disabled={saving}
+						>
+							<Check className="icon" /> {saving ? "Salvataggio..." : "Salva"}
+						</button>
+					</>
+				}
+			>
+				<form id="socio-form" onSubmit={handleSubmit}>
+					{formError && (
+						<div
+							style={{
+								padding: "0.75rem 1rem",
+								background: "rgba(220,38,38,0.1)",
+								color: "#dc2626",
+								borderRadius: 6,
+								fontSize: "0.875rem",
+								marginBottom: "1rem",
+							}}
+						>
+							{formError}
+						</div>
+					)}
+					<FormGrid>
+						<Field label="Nome" required>
+							<Input
+								value={form.nome}
+								onChange={(e) => setForm({ ...form, nome: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Cognome" required>
+							<Input
+								value={form.cognome}
+								onChange={(e) => setForm({ ...form, cognome: e.target.value })}
+								required
+							/>
+						</Field>
+						<Field label="Codice Fiscale" hint="16 caratteri">
+							<Input
+								value={form.codiceFiscale}
+								onChange={(e) =>
+									setForm({ ...form, codiceFiscale: e.target.value.toUpperCase() })
+								}
+								maxLength={16}
+								style={{ fontFamily: "monospace", textTransform: "uppercase" }}
+							/>
+						</Field>
+						<Field label="Codice Tessera">
+							<Input
+								value={form.codiceTessera}
+								onChange={(e) => setForm({ ...form, codiceTessera: e.target.value })}
+							/>
+						</Field>
+						<Field label="Email">
+							<Input
+								type="email"
+								value={form.email}
+								onChange={(e) => setForm({ ...form, email: e.target.value })}
+							/>
+						</Field>
+						<Field label="Telefono">
+							<Input
+								value={form.telefono}
+								onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+							/>
+						</Field>
+						<Field label="Tipologia" required>
+							<Select
+								value={form.tipologia}
+								onChange={(e) =>
+									setForm({ ...form, tipologia: e.target.value as TipologiaSocio })
+								}
+							>
+								<option value="socio">Socio</option>
+								<option value="atleta">Atleta</option>
+								<option value="istruttore">Istruttore</option>
+								<option value="dirigente">Dirigente</option>
+								<option value="volontario">Volontario</option>
+							</Select>
+						</Field>
+						<Field label="Disciplina">
+							<Input
+								value={form.disciplina}
+								onChange={(e) => setForm({ ...form, disciplina: e.target.value })}
+								placeholder="es. Atletica, Nuoto..."
+							/>
+						</Field>
+						<Field label="Data di Nascita">
+							<Input
+								type="date"
+								value={form.dataNascita}
+								onChange={(e) => setForm({ ...form, dataNascita: e.target.value })}
+							/>
+						</Field>
+						<Field label="Sesso">
+							<Select
+								value={form.sesso}
+								onChange={(e) => setForm({ ...form, sesso: e.target.value as "M" | "F" | "" })}
+							>
+								<option value="">—</option>
+								<option value="M">Maschio</option>
+								<option value="F">Femmina</option>
+							</Select>
+						</Field>
+						<Field label="Luogo di Nascita" span={2}>
+							<Input
+								value={form.luogoNascita}
+								onChange={(e) => setForm({ ...form, luogoNascita: e.target.value })}
+							/>
+						</Field>
+						<Field label="Note" span={2}>
+							<Textarea
+								value={form.note}
+								onChange={(e) => setForm({ ...form, note: e.target.value })}
+							/>
+						</Field>
+					</FormGrid>
+					<div
+						style={{
+							marginTop: "1.5rem",
+							padding: "1rem",
+							background: "hsl(var(--muted) / 0.3)",
+							borderRadius: 6,
+							display: "flex",
+							flexDirection: "column",
+							gap: "0.5rem",
+						}}
+					>
+						<p
+							style={{
+								fontSize: "0.8125rem",
+								fontWeight: 600,
+								margin: 0,
+								marginBottom: "0.25rem",
+							}}
+						>
+							Consensi GDPR
+						</p>
+						<label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem" }}>
+							<input
+								type="checkbox"
+								checked={form.consensoGdpr}
+								onChange={(e) => setForm({ ...form, consensoGdpr: e.target.checked })}
+							/>
+							Consenso al trattamento dei dati personali (obbligatorio)
+						</label>
+						<label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem" }}>
+							<input
+								type="checkbox"
+								checked={form.consensoFoto}
+								onChange={(e) => setForm({ ...form, consensoFoto: e.target.checked })}
+							/>
+							Consenso all'utilizzo di foto e video
+						</label>
+						<label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem" }}>
+							<input
+								type="checkbox"
+								checked={form.consensoMarketing}
+								onChange={(e) => setForm({ ...form, consensoMarketing: e.target.checked })}
+							/>
+							Consenso alle comunicazioni di marketing
+						</label>
 					</div>
-				</div>
-			</div>
+				</form>
+			</Modal>
+
+			{/* Delete Confirm */}
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				onConfirm={() => {
+					if (deleteTarget) deleteMutation.mutate({ id: deleteTarget.id });
+				}}
+				title="Rimuovere socio?"
+				message={`Il socio ${deleteTarget?.label ?? ""} sara' contrassegnato come dimesso. L'operazione mantiene lo storico.`}
+				confirmLabel="Dimetti"
+				loading={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

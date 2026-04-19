@@ -216,7 +216,7 @@ export class OneDriveService implements OneDriveProvider {
 				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/octet-stream",
 			},
-			body: content,
+			body: new Uint8Array(content),
 		});
 
 		await throwIfGraphError(res, "Upload file OneDrive");
