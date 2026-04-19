@@ -29,7 +29,7 @@ async function seed() {
 	await db.delete(schema.planiAbbonamento);
 
 	// ── 1. Piani Abbonamento ──────────────────────────────────────────────────
-	const _piani = await db
+	await db
 		.insert(schema.planiAbbonamento)
 		.values([
 			{
@@ -323,7 +323,7 @@ async function seed() {
 			.map((u, i) => {
 				if (u.role === "super_admin") return null;
 				return {
-					utenteId: utenti[i]?.id,
+					utenteId: utenti[i]!.id,
 					tenantId: demoTenant.id,
 					ruolo: roleMap[u.role] ?? "atleta",
 					attivo: true,
@@ -480,7 +480,7 @@ async function seed() {
 		.returning();
 
 	// ── 6. Corsi (4 per demo-asd) ─────────────────────────────────────────────
-	const _corsi = await db
+	await db
 		.insert(schema.corsi)
 		.values([
 			{
@@ -554,7 +554,7 @@ async function seed() {
 		.returning();
 
 	// ── 7. Eventi ─────────────────────────────────────────────────────────────
-	const _eventi = await db
+	await db
 		.insert(schema.eventi)
 		.values([
 			{
@@ -653,7 +653,7 @@ async function seed() {
 	const quoteValues = activeSoci.map((socio, i) => ({
 		tenantId: demoTenant.id,
 		socioId: socio.id,
-		tipoQuotaId: tipiQuota[0]?.id,
+		tipoQuotaId: tipiQuota[0]!.id,
 		annoSportivoId: annoSportivo.id,
 		importo: "100.00",
 		importoPagato: i < 5 ? "100.00" : i < 7 ? "50.00" : "0.00",
@@ -666,10 +666,10 @@ async function seed() {
 		dataPagamento: i < 5 ? new Date("2025-09-20") : null,
 		metodoPagamento: (i < 5 ? "bonifico" : null) as "bonifico" | null,
 	}));
-	const _quote = await db.insert(schema.quote).values(quoteValues).returning();
+	await db.insert(schema.quote).values(quoteValues);
 
 	// ── 9. Certificati Medici ────────────────────────────────────────────────
-	const _certificati = await db
+	await db
 		.insert(schema.certificatiMedici)
 		.values(
 			activeSoci.slice(0, 8).map((s, i) => ({
@@ -686,7 +686,7 @@ async function seed() {
 		.returning();
 
 	// ── 10. Prima Nota / Movimenti Contabilità ───────────────────────────────
-	const _movimenti = await db
+	await db
 		.insert(schema.primaNotaMovimenti)
 		.values([
 			{
@@ -765,7 +765,7 @@ async function seed() {
 		.returning();
 
 	// ── 11. Comunicazioni ────────────────────────────────────────────────────
-	const _comunicazioni = await db
+	await db
 		.insert(schema.comunicazioni)
 		.values([
 			{
@@ -804,7 +804,7 @@ async function seed() {
 		.returning();
 
 	// ── 12. Documenti ────────────────────────────────────────────────────────
-	const _documenti = await db
+	await db
 		.insert(schema.documenti)
 		.values([
 			{
@@ -851,11 +851,11 @@ async function seed() {
 		.returning();
 
 	// ── 13. Fatture Piattaforma (billing super_admin) ────────────────────────
-	const _fatture = await db
+	await db
 		.insert(schema.fatturePiattaforma)
 		.values([
 			{
-				tenantId: tenants[0]?.id,
+				tenantId: tenants[0]!.id,
 				numero: "2026-001",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -871,7 +871,7 @@ async function seed() {
 				dataPagamento: new Date("2026-04-03"),
 			},
 			{
-				tenantId: tenants[1]?.id,
+				tenantId: tenants[1]!.id,
 				numero: "2026-002",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -887,7 +887,7 @@ async function seed() {
 				dataPagamento: new Date("2026-04-03"),
 			},
 			{
-				tenantId: tenants[2]?.id,
+				tenantId: tenants[2]!.id,
 				numero: "2026-003",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -903,7 +903,7 @@ async function seed() {
 				dataPagamento: new Date("2026-04-04"),
 			},
 			{
-				tenantId: tenants[3]?.id,
+				tenantId: tenants[3]!.id,
 				numero: "2026-004",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -919,7 +919,7 @@ async function seed() {
 				dataPagamento: new Date("2026-04-05"),
 			},
 			{
-				tenantId: tenants[5]?.id,
+				tenantId: tenants[5]!.id,
 				numero: "2026-005",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -935,7 +935,7 @@ async function seed() {
 				dataPagamento: new Date("2026-04-02"),
 			},
 			{
-				tenantId: tenants[6]?.id,
+				tenantId: tenants[6]!.id,
 				numero: "2026-006",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -950,7 +950,7 @@ async function seed() {
 				stato: "emessa",
 			},
 			{
-				tenantId: tenants[7]?.id,
+				tenantId: tenants[7]!.id,
 				numero: "2026-007",
 				annoFattura: 2026,
 				dataEmissione: new Date("2026-04-01"),
@@ -965,10 +965,7 @@ async function seed() {
 				stato: "pagata",
 				dataPagamento: new Date("2026-04-06"),
 			},
-		])
-		.returning();
-	for (const _u of utentiData) {
-	}
+		]);
 }
 
 seed()
