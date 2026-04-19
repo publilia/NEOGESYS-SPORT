@@ -1,5 +1,36 @@
 @import "tailwindcss";
 
+/* ============================== TAILWIND THEME TOKENS ==============================
+ * Tailwind v4 non ha un `tailwind.config.js` implicito: le utilities custom
+ * `bg-background`, `text-foreground`, `border-border` che usiamo sotto devono
+ * essere registrate come `@theme` tokens (`--color-*`) affinché @apply le
+ * riconosca in fase di build. Stesso pattern di apps/web/src/styles/globals.css.
+ * Senza questo blocco il build fallisce con:
+ *   "Cannot apply unknown utility class `border-border`".
+ */
+@theme {
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+	--radius-lg: var(--radius);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: calc(var(--radius) - 4px);
+}
+
 :root {
 	--background: 0 0% 100%;
 	--foreground: 222 47% 11%;
