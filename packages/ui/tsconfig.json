@@ -1,0 +1,11 @@
+{
+	"extends": "@neogesys/tsconfig/base.json",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
+		"rootDir": "src",
+		"outDir": "dist"
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
+	"exclude": ["node_modules", "dist"]
+}

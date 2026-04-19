@@ -1,0 +1,2225 @@
+@import "tailwindcss";
+
+/* ============================== TAILWIND THEME TOKENS ============================== */
+@theme {
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-success: hsl(var(--success));
+	--color-warning: hsl(var(--warning));
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+	--font-sans: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+	--radius-lg: 0.75rem;
+	--radius-md: 0.5rem;
+	--radius-sm: 0.375rem;
+}
+
+/* ============================== PALETTE SYSTEM ============================== */
+:root,
+[data-palette="default"] {
+	--background: 0 0% 100%;
+	--foreground: 222 47% 11%;
+	--card: 0 0% 100%;
+	--card-foreground: 222 47% 11%;
+	--popover: 0 0% 100%;
+	--popover-foreground: 222 47% 11%;
+	--primary: 221 83% 53%;
+	--primary-foreground: 210 40% 98%;
+	--secondary: 210 40% 96%;
+	--secondary-foreground: 222 47% 11%;
+	--muted: 210 40% 96%;
+	--muted-foreground: 215 16% 47%;
+	--accent: 210 40% 94%;
+	--accent-foreground: 222 47% 11%;
+	--destructive: 0 84% 60%;
+	--destructive-foreground: 0 0% 98%;
+	--success: 142 71% 45%;
+	--warning: 38 92% 50%;
+	--border: 214 32% 91%;
+	--input: 214 32% 91%;
+	--ring: 221 83% 53%;
+}
+.dark,
+.dark[data-palette="default"] {
+	--background: 222 47% 7%;
+	--foreground: 210 40% 98%;
+	--card: 222 47% 10%;
+	--card-foreground: 210 40% 98%;
+	--popover: 222 47% 10%;
+	--popover-foreground: 210 40% 98%;
+	--primary: 217 91% 60%;
+	--primary-foreground: 222 47% 11%;
+	--secondary: 217 33% 17%;
+	--secondary-foreground: 210 40% 98%;
+	--muted: 217 33% 17%;
+	--muted-foreground: 215 20% 65%;
+	--accent: 217 33% 20%;
+	--accent-foreground: 210 40% 98%;
+	--destructive: 0 63% 50%;
+	--destructive-foreground: 0 0% 98%;
+	--success: 142 71% 45%;
+	--warning: 38 92% 50%;
+	--border: 217 33% 20%;
+	--input: 217 33% 20%;
+	--ring: 217 91% 60%;
+}
+
+[data-palette="ocean"] {
+	--primary: 189 94% 43%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 180 40% 94%;
+	--accent: 180 50% 90%;
+	--ring: 189 94% 43%;
+}
+.dark[data-palette="ocean"] {
+	--primary: 188 86% 53%;
+	--primary-foreground: 222 47% 11%;
+	--background: 200 47% 7%;
+	--card: 200 47% 10%;
+}
+
+[data-palette="forest"] {
+	--primary: 142 71% 35%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 60 20% 94%;
+	--accent: 90 30% 90%;
+	--ring: 142 71% 35%;
+}
+.dark[data-palette="forest"] {
+	--primary: 142 61% 45%;
+	--background: 120 20% 7%;
+	--card: 120 20% 10%;
+}
+
+[data-palette="sunset"] {
+	--primary: 24 95% 53%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 340 40% 95%;
+	--accent: 340 50% 92%;
+	--ring: 24 95% 53%;
+}
+.dark[data-palette="sunset"] {
+	--primary: 24 95% 58%;
+	--background: 24 30% 8%;
+	--card: 24 30% 12%;
+}
+
+[data-palette="monochrome"] {
+	--primary: 0 0% 20%;
+	--primary-foreground: 0 0% 98%;
+	--secondary: 0 0% 94%;
+	--accent: 0 0% 90%;
+	--ring: 0 0% 40%;
+}
+.dark[data-palette="monochrome"] {
+	--primary: 0 0% 90%;
+	--primary-foreground: 0 0% 10%;
+	--background: 0 0% 7%;
+	--card: 0 0% 10%;
+}
+
+[data-palette="vibrant"] {
+	--primary: 271 91% 65%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 190 70% 94%;
+	--accent: 190 80% 90%;
+	--ring: 271 91% 65%;
+}
+.dark[data-palette="vibrant"] {
+	--primary: 271 91% 70%;
+	--background: 260 30% 8%;
+	--card: 260 30% 12%;
+}
+
+[data-palette="corporate"] {
+	--primary: 217 90% 20%;
+	--primary-foreground: 45 100% 70%;
+	--secondary: 45 80% 94%;
+	--accent: 45 70% 90%;
+	--ring: 45 80% 50%;
+}
+.dark[data-palette="corporate"] {
+	--primary: 45 80% 60%;
+	--primary-foreground: 217 90% 15%;
+	--background: 217 50% 8%;
+	--card: 217 50% 12%;
+}
+
+[data-palette="sport"] {
+	--primary: 0 84% 50%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 0 0% 94%;
+	--accent: 0 0% 90%;
+	--ring: 0 84% 50%;
+}
+.dark[data-palette="sport"] {
+	--primary: 0 84% 58%;
+	--background: 0 0% 8%;
+	--card: 0 0% 12%;
+}
+
+/* ============================== PULSAR STAR (special cosmic theme) ============================== */
+/* NB: questi valori DEVONO restare allineati con apps/web/src/lib/palettes.ts
+   (sezione id: "pulsar"). Se cambi uno, cambia l'altro. */
+[data-palette="pulsar"] {
+	--primary: 272 85% 55%;
+	--primary-foreground: 48 89% 93%;
+	--secondary: 258 55% 94%;
+	--secondary-foreground: 260 60% 8%;
+	--accent: 328 90% 58%;
+	--accent-foreground: 48 89% 93%;
+	--background: 250 40% 99%;
+	--foreground: 260 60% 8%;
+	--card: 250 40% 100%;
+	--card-foreground: 260 60% 8%;
+	--popover: 250 40% 100%;
+	--popover-foreground: 260 60% 8%;
+	--muted: 258 35% 95%;
+	--muted-foreground: 260 15% 42%;
+	--border: 258 32% 88%;
+	--input: 258 32% 88%;
+	--ring: 328 90% 58%;
+	--sidebar-background: 258 40% 96%;
+	--sidebar-foreground: 260 60% 8%;
+	--sidebar-border: 258 32% 88%;
+}
+.dark[data-palette="pulsar"] {
+	--primary: 272 95% 72%;
+	--primary-foreground: 260 65% 4%;
+	--secondary: 260 45% 13%;
+	--secondary-foreground: 48 89% 93%;
+	--accent: 328 100% 68%;
+	--accent-foreground: 260 65% 4%;
+	--background: 260 70% 3%;
+	--foreground: 48 89% 94%;
+	--card: 258 60% 7%;
+	--card-foreground: 48 89% 94%;
+	--popover: 258 60% 7%;
+	--popover-foreground: 48 89% 94%;
+	--muted: 260 50% 12%;
+	--muted-foreground: 258 30% 72%;
+	--destructive: 0 75% 55%;
+	--destructive-foreground: 48 89% 93%;
+	--border: 260 50% 15%;
+	--input: 260 50% 15%;
+	--ring: 192 90% 60%;
+	--sidebar-background: 262 75% 2%;
+	--sidebar-foreground: 48 89% 94%;
+	--sidebar-border: 260 50% 13%;
+}
+
+/* Cosmic background: deep space particles + nebula glow */
+[data-palette="pulsar"] body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	background: radial-gradient(ellipse at 20% 30%, hsl(272 82% 58% / 0.08), transparent 40%),
+		radial-gradient(ellipse at 80% 70%, hsl(328 86% 60% / 0.07), transparent 45%),
+		radial-gradient(ellipse at 50% 10%, hsl(210 90% 60% / 0.05), transparent 35%);
+	animation: pulsar-nebula-drift 24s ease-in-out infinite alternate;
+}
+[data-palette="pulsar"] body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	background-image: radial-gradient(1px 1px at 12% 22%, hsl(0 0% 100% / 0.8), transparent 60%),
+		radial-gradient(1px 1px at 35% 80%, hsl(272 82% 80% / 0.8), transparent 60%),
+		radial-gradient(1px 1px at 68% 15%, hsl(328 86% 75% / 0.8), transparent 60%),
+		radial-gradient(1px 1px at 88% 62%, hsl(0 0% 100% / 0.8), transparent 60%),
+		radial-gradient(1px 1px at 50% 50%, hsl(210 80% 80% / 0.8), transparent 60%),
+		radial-gradient(1px 1px at 22% 72%, hsl(0 0% 100% / 0.8), transparent 60%),
+		radial-gradient(1.5px 1.5px at 75% 35%, hsl(272 82% 80% / 0.9), transparent 60%),
+		radial-gradient(1px 1px at 5% 90%, hsl(0 0% 100% / 0.8), transparent 60%);
+	background-size: 100% 100%;
+	animation: pulsar-twinkle 6s ease-in-out infinite;
+	opacity: 0.6;
+}
+[data-palette="pulsar"].dark body::after {
+	opacity: 1;
+}
+
+[data-palette="pulsar"] .app-sidebar,
+[data-palette="pulsar"] .app-header,
+[data-palette="pulsar"] .card,
+[data-palette="pulsar"] main {
+	position: relative;
+	z-index: 1;
+}
+
+/* Glow ring on primary buttons & cards */
+[data-palette="pulsar"] .btn-primary {
+	background: linear-gradient(135deg, hsl(272 82% 58%) 0%, hsl(328 86% 60%) 100%);
+	box-shadow: 0 0 0 0 hsl(272 82% 58% / 0.4), 0 4px 20px -4px hsl(272 82% 58% / 0.4);
+	animation: pulsar-ring 3s ease-in-out infinite;
+}
+[data-palette="pulsar"] .btn-primary:hover {
+	filter: brightness(1.1) saturate(1.1);
+}
+
+/* Pulsing highlight on active nav item = proton/quark spin */
+[data-palette="pulsar"] .nav-item.active {
+	background: linear-gradient(90deg, hsl(272 82% 58% / 0.15) 0%, hsl(328 86% 60% / 0.1) 100%);
+	position: relative;
+	overflow: hidden;
+}
+[data-palette="pulsar"] .nav-item.active::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, transparent, hsl(272 92% 70% / 0.2), transparent);
+	animation: pulsar-shimmer 2.5s ease-in-out infinite;
+}
+
+/* Tessera card gets photon bursts */
+[data-palette="pulsar"] .tessera-card {
+	animation: pulsar-float 6s ease-in-out infinite;
+}
+
+@keyframes pulsar-nebula-drift {
+	0% {
+		transform: translate(0, 0) scale(1);
+	}
+	50% {
+		transform: translate(-2%, 1%) scale(1.05);
+	}
+	100% {
+		transform: translate(1%, -1%) scale(1);
+	}
+}
+@keyframes pulsar-twinkle {
+	0%,
+	100% {
+		opacity: 0.6;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.02);
+	}
+}
+@keyframes pulsar-ring {
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 hsl(272 82% 58% / 0.4), 0 4px 20px -4px hsl(272 82% 58% / 0.4);
+	}
+	50% {
+		box-shadow: 0 0 0 8px hsl(272 82% 58% / 0), 0 4px 24px -2px hsl(328 86% 60% / 0.5);
+	}
+}
+@keyframes pulsar-shimmer {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+@keyframes pulsar-float {
+	0%,
+	100% {
+		transform: translateY(0) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-4px) rotate(0.4deg);
+	}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PULSAR CARD PREVIEW · Liquid Glass aesthetic
+   ═══════════════════════════════════════════════════════════════════════
+   Il bottone speciale della palette PULSAR nel palette-selector e in
+   /impostazioni#branding. Replica il look iOS "Liquid Glass":
+   - Sfondo spaziale profondo (Cosmic Night blu/viola) con nebulosa
+   - Stelle in 2 layer con parallax (twinkle + drift)
+   - Stella shooting ogni ~8s
+   - Superficie glass con backdrop-blur + highlight top-edge
+   - Core con alone pulsante (la quasar in miniatura)
+   - Sempre animata, indipendentemente dalla palette attiva: è la
+     preview del tema, non il tema stesso. */
+
+.pulsar-card-preview {
+	--pc-violet: 272 92% 70%;
+	--pc-magenta: 328 95% 65%;
+	--pc-cyan: 192 87% 59%;
+	--pc-starlight: 48 89% 93%;
+	--pc-night: 260 65% 6%;
+	--pc-deep: 248 46% 12%;
+	position: relative;
+	display: block;
+	width: 100%;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.875rem;
+	overflow: hidden;
+	cursor: pointer;
+	padding: 0.875rem;
+	background: radial-gradient(ellipse at 20% 0%, hsl(var(--pc-violet) / 0.35), transparent 55%),
+		radial-gradient(ellipse at 85% 100%, hsl(var(--pc-magenta) / 0.3), transparent 55%),
+		linear-gradient(135deg, hsl(var(--pc-night)) 0%, hsl(var(--pc-deep)) 100%);
+	box-shadow:
+		0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+		0 0 0 1px rgba(139, 63, 229, 0.2),
+		0 8px 24px -6px rgba(139, 63, 229, 0.25),
+		0 2px 8px -2px rgba(237, 63, 158, 0.2);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pulsar-card-preview:hover {
+	transform: translateY(-1px);
+	box-shadow:
+		0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+		0 0 0 1px rgba(139, 63, 229, 0.4),
+		0 12px 32px -6px rgba(139, 63, 229, 0.45),
+		0 4px 12px -2px rgba(237, 63, 158, 0.35);
+}
+.pulsar-card-preview.pulsar-card-selected {
+	box-shadow:
+		0 1px 0 0 rgba(255, 255, 255, 0.15) inset,
+		0 0 0 2px hsl(var(--pc-magenta)),
+		0 12px 32px -6px rgba(237, 63, 158, 0.5),
+		0 4px 16px -2px rgba(139, 63, 229, 0.5);
+}
+.pulsar-card-preview-lg {
+	padding: 1.25rem;
+	border-radius: 1rem;
+	min-height: 5.5rem;
+}
+
+/* Layer 1: nebula drift */
+.pulsar-card-bg {
+	position: absolute;
+	inset: -20%;
+	background: radial-gradient(ellipse at 30% 40%, hsl(var(--pc-violet) / 0.4), transparent 50%),
+		radial-gradient(ellipse at 70% 60%, hsl(var(--pc-magenta) / 0.35), transparent 50%),
+		radial-gradient(ellipse at 50% 50%, hsl(var(--pc-cyan) / 0.15), transparent 60%);
+	filter: blur(18px);
+	animation: pulsar-card-nebula 12s ease-in-out infinite alternate;
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* Layer 2: stelle piccole twinkling */
+.pulsar-card-stars {
+	position: absolute;
+	inset: 0;
+	background-image: radial-gradient(
+			0.5px 0.5px at 8% 18%,
+			hsl(var(--pc-starlight) / 0.9),
+			transparent 70%
+		), radial-gradient(0.5px 0.5px at 22% 62%, hsl(var(--pc-starlight) / 0.85), transparent 70%),
+		radial-gradient(1px 1px at 36% 28%, hsl(var(--pc-cyan) / 0.9), transparent 70%),
+		radial-gradient(0.5px 0.5px at 48% 85%, hsl(var(--pc-starlight) / 0.9), transparent 70%),
+		radial-gradient(1px 1px at 64% 42%, hsl(var(--pc-magenta) / 0.9), transparent 70%),
+		radial-gradient(0.5px 0.5px at 75% 78%, hsl(var(--pc-starlight) / 0.85), transparent 70%),
+		radial-gradient(1px 1px at 88% 22%, hsl(var(--pc-violet) / 0.9), transparent 70%),
+		radial-gradient(0.5px 0.5px at 94% 58%, hsl(var(--pc-starlight) / 0.9), transparent 70%);
+	animation: pulsar-card-twinkle 3.5s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* Layer 3: stella cadente + pulsar beam */
+.pulsar-card-nebula {
+	position: absolute;
+	top: -10%;
+	left: -20%;
+	width: 140%;
+	height: 120%;
+	background: linear-gradient(
+		115deg,
+		transparent 40%,
+		hsl(var(--pc-starlight) / 0.55) 47%,
+		hsl(var(--pc-starlight) / 0.95) 50%,
+		hsl(var(--pc-starlight) / 0.55) 53%,
+		transparent 60%
+	);
+	background-size: 200% 200%;
+	background-repeat: no-repeat;
+	mix-blend-mode: screen;
+	animation: pulsar-card-shootingstar 8s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 2;
+}
+
+/* Superficie Liquid Glass (iOS-inspired) */
+.pulsar-card-glass {
+	position: relative;
+	z-index: 3;
+	border-radius: 0.625rem;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.08) 0%,
+		rgba(255, 255, 255, 0.03) 50%,
+		rgba(255, 255, 255, 0.06) 100%
+	);
+	backdrop-filter: blur(8px) saturate(1.2);
+	-webkit-backdrop-filter: blur(8px) saturate(1.2);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.15) inset, 0 -1px 0 0 rgba(0, 0, 0, 0.1) inset;
+	padding: 0.625rem 0.75rem;
+}
+
+/* Core quasar in miniatura (la sfera luminosa con alone) */
+.pulsar-card-core {
+	position: relative;
+	flex-shrink: 0;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 9999px;
+	display: grid;
+	place-items: center;
+	background: radial-gradient(
+		circle at 30% 30%,
+		hsl(var(--pc-starlight)) 0%,
+		hsl(var(--pc-magenta)) 35%,
+		hsl(var(--pc-violet)) 70%,
+		hsl(var(--pc-night)) 100%
+	);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 12px 2px hsl(var(--pc-magenta) / 0.5), 0
+		0 24px 4px hsl(var(--pc-violet) / 0.3);
+	animation: pulsar-card-core-pulse 2.4s ease-in-out infinite;
+}
+.pulsar-card-core-lg {
+	width: 2.25rem;
+	height: 2.25rem;
+}
+
+/* Badge "Special" */
+.pulsar-card-badge {
+	display: inline-block;
+	padding: 0.0625rem 0.375rem;
+	border-radius: 9999px;
+	font-size: 0.5625rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: hsl(var(--pc-night));
+	background: linear-gradient(135deg, hsl(var(--pc-starlight)) 0%, hsl(var(--pc-cyan) / 0.9) 100%);
+	box-shadow: 0 0 8px hsl(var(--pc-starlight) / 0.6);
+}
+
+@keyframes pulsar-card-nebula {
+	0% {
+		transform: translate(0, 0) scale(1) rotate(0deg);
+		filter: blur(18px) hue-rotate(0deg);
+	}
+	100% {
+		transform: translate(-3%, 2%) scale(1.08) rotate(6deg);
+		filter: blur(22px) hue-rotate(20deg);
+	}
+}
+@keyframes pulsar-card-twinkle {
+	0%,
+	100% {
+		opacity: 0.7;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.03);
+	}
+}
+@keyframes pulsar-card-shootingstar {
+	0%,
+	85% {
+		background-position: -100% 100%;
+		opacity: 0;
+	}
+	90% {
+		opacity: 1;
+	}
+	100% {
+		background-position: 100% -100%;
+		opacity: 0;
+	}
+}
+@keyframes pulsar-card-core-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 12px 2px hsl(var(--pc-magenta) / 0.5),
+			0 0 24px 4px hsl(var(--pc-violet) / 0.3);
+	}
+	50% {
+		transform: scale(1.08);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset, 0 0 18px 3px hsl(var(--pc-magenta) / 0.7),
+			0 0 32px 6px hsl(var(--pc-violet) / 0.5);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pulsar-card-bg,
+	.pulsar-card-stars,
+	.pulsar-card-nebula,
+	.pulsar-card-core {
+		animation: none !important;
+	}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PULSAR · Liquid Glass applicato al tema ATTIVO (non solo alla preview)
+   ═══════════════════════════════════════════════════════════════════════
+   Quando la palette PULSAR è selezionata, le card e i popover ereditano
+   lo stile vetro liquido: superficie semi-traslucida con backdrop blur,
+   highlight top-edge, ombra a strati. Evocativo iOS / visionOS. */
+
+[data-palette="pulsar"] .card,
+[data-palette="pulsar"] .popover {
+	background: linear-gradient(135deg, hsl(var(--card) / 0.85) 0%, hsl(var(--card) / 0.7) 100%);
+	backdrop-filter: blur(14px) saturate(1.3);
+	-webkit-backdrop-filter: blur(14px) saturate(1.3);
+	border: 1px solid hsl(var(--border) / 0.6);
+	box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.08) inset, 0 8px 24px -4px hsl(260 60% 3% / 0.4), 0
+		2px 8px -2px hsl(272 82% 58% / 0.2);
+}
+[data-palette="pulsar"].dark .card,
+[data-palette="pulsar"].dark .popover {
+	background: linear-gradient(135deg, hsl(var(--card) / 0.75) 0%, hsl(var(--card) / 0.55) 100%);
+}
+[data-palette="pulsar"] .app-header {
+	background: linear-gradient(
+		180deg,
+		hsl(var(--background) / 0.9) 0%,
+		hsl(var(--background) / 0.7) 100%
+	);
+	backdrop-filter: blur(18px) saturate(1.4);
+	-webkit-backdrop-filter: blur(18px) saturate(1.4);
+	border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+/* Cosmic objects · solo su palette PULSAR attiva, parallax layer
+   aggiuntivo con pianeta che orbita lentamente in background */
+[data-palette="pulsar"] body::before,
+[data-palette="pulsar"] body::after {
+	/* ridefiniti più giù — aggiungiamo nuovi layer */
+}
+[data-palette="pulsar"] main::before {
+	content: "";
+	position: fixed;
+	top: 15%;
+	right: 8%;
+	width: 80px;
+	height: 80px;
+	border-radius: 9999px;
+	background: radial-gradient(
+		circle at 35% 35%,
+		hsl(272 92% 70% / 0.45) 0%,
+		hsl(328 95% 65% / 0.3) 50%,
+		transparent 70%
+	);
+	filter: blur(4px);
+	pointer-events: none;
+	z-index: 0;
+	animation: pulsar-planet-orbit 40s linear infinite;
+	opacity: 0.5;
+}
+[data-palette="pulsar"].dark main::before {
+	opacity: 0.9;
+}
+@keyframes pulsar-planet-orbit {
+	0% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+	50% {
+		transform: translate(-200px, 100px) rotate(180deg);
+	}
+	100% {
+		transform: translate(0, 0) rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	[data-palette="pulsar"] main::before {
+		animation: none !important;
+	}
+}
+
+/* Quasar brand button animation (used in AppHeader quasar menu) */
+.quasar-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 9999px;
+	background: radial-gradient(
+		circle at 30% 30%,
+		hsl(272 82% 65%) 0%,
+		hsl(328 86% 55%) 60%,
+		hsl(260 60% 25%) 100%
+	);
+	border: none;
+	cursor: pointer;
+	box-shadow: 0 0 0 0 hsl(272 82% 58% / 0.6), 0 0 12px 2px hsl(328 86% 60% / 0.4);
+	animation: quasar-pulse 2.4s ease-in-out infinite;
+	color: white;
+}
+.quasar-btn:hover {
+	filter: brightness(1.15) saturate(1.2);
+}
+@keyframes quasar-pulse {
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 hsl(272 82% 58% / 0.6), 0 0 10px 2px hsl(328 86% 60% / 0.35);
+	}
+	50% {
+		box-shadow: 0 0 0 6px hsl(272 82% 58% / 0), 0 0 18px 4px hsl(328 86% 60% / 0.55);
+	}
+}
+
+/* Pulsazione INTERNA sulla quasar minimal dentro il quasar-btn.
+   L'alone box-shadow del bottone (sopra) è la coda luminosa; questa
+   animazione fa respirare il nucleo della stella: leggero scale +
+   luminosità. Sincronizzata a 2.4s = stesso ritmo del glow esterno. */
+.quasar-btn .quasar-btn-mark {
+	color: #fff6d9; /* Starlight — la SVG eredita via currentColor */
+	transform-origin: center;
+	animation: quasar-pulse-inner 2.4s ease-in-out infinite;
+}
+@keyframes quasar-pulse-inner {
+	0%,
+	100% {
+		transform: scale(1);
+		filter: brightness(1) drop-shadow(0 0 0 transparent);
+	}
+	50% {
+		transform: scale(1.06);
+		filter: brightness(1.2) drop-shadow(0 0 2px rgba(255, 246, 217, 0.6));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.quasar-btn {
+		animation: none;
+	}
+	.quasar-btn .quasar-btn-mark {
+		animation: none;
+	}
+}
+
+/* ============================== BASE ============================== */
+html,
+body {
+	font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+	font-size: 14px;
+	background: hsl(var(--background));
+	color: hsl(var(--foreground));
+	transition: background-color 200ms ease, color 200ms ease;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+body {
+	min-height: 100vh;
+	overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+::-webkit-scrollbar-track {
+	background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+	background: hsl(var(--border));
+	border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ============================== BUTTON ============================== */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	transition: all 150ms ease;
+	white-space: nowrap;
+	cursor: pointer;
+	background: none;
+	border: none;
+	color: inherit;
+	font-family: inherit;
+}
+.btn:focus-visible {
+	outline: 2px solid hsl(var(--ring));
+	outline-offset: 2px;
+}
+.btn-primary {
+	background: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+}
+.btn-primary:hover {
+	background: hsl(var(--primary) / 0.9);
+}
+.btn-secondary {
+	background: hsl(var(--secondary));
+	color: hsl(var(--secondary-foreground));
+}
+.btn-secondary:hover {
+	background: hsl(var(--secondary) / 0.8);
+}
+.btn-outline {
+	border: 1px solid hsl(var(--border));
+}
+.btn-outline:hover {
+	background: hsl(var(--accent));
+}
+.btn-ghost:hover {
+	background: hsl(var(--accent));
+}
+.btn-icon {
+	padding: 0.5rem;
+	width: 2.25rem;
+	height: 2.25rem;
+}
+.btn-sm {
+	padding: 0.375rem 0.75rem;
+	font-size: 0.8125rem;
+}
+
+/* ============================== BADGE ============================== */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.125rem 0.625rem;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	background: hsl(var(--secondary));
+	color: hsl(var(--secondary-foreground));
+}
+.badge-success {
+	background: hsl(var(--success) / 0.15);
+	color: hsl(var(--success));
+}
+.badge-warning {
+	background: hsl(var(--warning) / 0.15);
+	color: hsl(var(--warning));
+}
+.badge-destructive {
+	background: hsl(var(--destructive) / 0.15);
+	color: hsl(var(--destructive));
+}
+.badge-primary {
+	background: hsl(var(--primary) / 0.15);
+	color: hsl(var(--primary));
+}
+.badge-outline {
+	background: transparent;
+	color: hsl(var(--foreground));
+	border: 1px solid hsl(var(--border));
+}
+
+/* ============================== CARD ============================== */
+.card {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.75rem;
+}
+.card-header {
+	padding: 1.25rem 1.25rem 0.75rem;
+}
+.card-body {
+	padding: 1.25rem;
+}
+.card-title {
+	font-size: 1rem;
+	font-weight: 600;
+}
+.card-desc {
+	font-size: 0.8125rem;
+	color: hsl(var(--muted-foreground));
+	margin-top: 0.25rem;
+}
+
+/* ============================== INPUT ============================== */
+.input,
+.select {
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	border: 1px solid hsl(var(--input));
+	background: hsl(var(--background));
+	color: hsl(var(--foreground));
+	transition: border-color 150ms;
+	font-family: inherit;
+	font-size: inherit;
+}
+.input:focus,
+.select:focus {
+	outline: none;
+	border-color: hsl(var(--ring));
+	box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+}
+
+/* ============================== ICON ============================== */
+.icon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+.icon-sm {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+.icon-lg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+.icon-xl {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+/* ============================== LAYOUT ============================== */
+.app-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.app-header {
+	position: sticky;
+	top: 0;
+	z-index: 40;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	height: 3.5rem;
+	padding: 0 1rem;
+	background: hsl(var(--background) / 0.95);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid hsl(var(--border));
+}
+.header-left {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+}
+.logo {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 800;
+	font-size: 0.875rem;
+	letter-spacing: -0.02em;
+	color: inherit;
+	text-decoration: none;
+}
+.logo-mark {
+	/* Container del brand mark (quasar NEOGESYS) — sfondo "notte cosmica"
+	   #13102A (lo stesso usato dal wordmark orizzontale) per far brillare
+	   l'alone magenta/viola del disco di accrescimento senza conflitto
+	   cromatico. Il SVG è self-luminoso e scala via width/height 100%.
+	   Usato solo nelle demo HTML e nei contesti in cui serve la sola mark. */
+	width: 2rem;
+	height: 2rem;
+	border-radius: 0.5rem;
+	background: #13102a;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+}
+.logo-mark > svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+/* Logo esteso NEOGESYS {SECTOR} — usato nell'AppHeader.
+   Il wrapper ha il fondo scuro "Cosmic Night" #13102A; il wordmark
+   "NEOGESYS" eredita colore Starlight #FFF6D9 via `color:`.
+   La label del settore (SPORT, PHARMA, RETAIL, …) è il pezzo
+   variabile ed è renderizzata come pill cosmica separata. */
+.logo-horizontal {
+	gap: 0.5rem;
+}
+.logo-horizontal-wrap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	padding: 0 0.625rem;
+	border-radius: 0.5rem;
+	background: #13102a;
+	color: #fff6d9;
+	box-shadow: 0 0 0 1px rgba(139, 63, 229, 0.25), 0 0 18px rgba(237, 63, 158, 0.12);
+	overflow: hidden;
+}
+.logo-horizontal-wrap > svg {
+	height: 1.25rem;
+	width: auto;
+	display: block;
+}
+.logo-sector {
+	display: inline-block;
+	padding: 0.125rem 0.5rem;
+	border-radius: 9999px;
+	font-size: 0.6875rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #fff6d9;
+	background: linear-gradient(135deg, #8b3fe5 0%, #ed3f9e 100%);
+	box-shadow: 0 0 12px rgba(237, 63, 158, 0.35);
+	white-space: nowrap;
+}
+.tenant-name {
+	color: hsl(var(--muted-foreground));
+	font-size: 0.75rem;
+	font-weight: 500;
+}
+.tenant-name::before {
+	content: "•";
+	margin-right: 0.5rem;
+	opacity: 0.5;
+}
+
+/* Tenant menu — dropdown che ha rimpiazzato la label statica .tenant-name.
+   Mostra nome tenant, ruolo, piano e apre un popover con le azioni rapide
+   del tenant (e lo switcher per il super_admin). */
+.tenant-menu-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem 0.5rem;
+	margin-left: 0.5rem;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 0.5rem;
+	color: inherit;
+	cursor: pointer;
+	font-family: inherit;
+	transition: background 150ms, border-color 150ms;
+	max-width: 14rem;
+}
+.tenant-menu-btn:hover {
+	background: hsl(var(--accent));
+	border-color: hsl(var(--border));
+}
+.tenant-menu-btn::before {
+	content: "•";
+	margin-right: 0.125rem;
+	opacity: 0.4;
+	color: hsl(var(--muted-foreground));
+}
+.tenant-menu-label {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.15;
+	text-align: left;
+	min-width: 0;
+}
+.tenant-menu-name {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 10rem;
+}
+.tenant-menu-role {
+	font-size: 0.625rem;
+	color: hsl(var(--muted-foreground));
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.header-search {
+	flex: 1;
+	max-width: 32rem;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	background: hsl(var(--muted));
+	color: hsl(var(--muted-foreground));
+	font-size: 0.8125rem;
+	cursor: text;
+	transition: all 150ms;
+	border: none;
+	font-family: inherit;
+}
+.header-search:hover {
+	background: hsl(var(--accent));
+}
+.header-search kbd {
+	margin-left: auto;
+	padding: 0.125rem 0.375rem;
+	background: hsl(var(--background));
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.25rem;
+	font-size: 0.6875rem;
+	font-family: inherit;
+}
+
+.header-right {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+.header-right .btn-icon {
+	position: relative;
+	color: hsl(var(--muted-foreground));
+}
+.header-right .btn-icon:hover {
+	color: hsl(var(--foreground));
+}
+.notification-dot {
+	position: absolute;
+	top: 0.375rem;
+	right: 0.375rem;
+	width: 1rem;
+	height: 1rem;
+	border-radius: 50%;
+	background: hsl(var(--destructive));
+	color: hsl(var(--destructive-foreground));
+	font-size: 0.625rem;
+	font-weight: 600;
+	display: grid;
+	place-items: center;
+}
+
+.avatar {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
+	color: hsl(var(--primary-foreground));
+	display: grid;
+	place-items: center;
+	font-weight: 600;
+	font-size: 0.75rem;
+}
+
+/* Main container */
+.app-body {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+/* Sidebar */
+.app-sidebar {
+	width: 240px;
+	flex-shrink: 0;
+	background: hsl(var(--card));
+	border-right: 1px solid hsl(var(--border));
+	display: flex;
+	flex-direction: column;
+	transition: width 200ms ease;
+	overflow: hidden;
+}
+.app-sidebar.collapsed {
+	width: 64px;
+}
+.sidebar-nav {
+	padding: 0.75rem 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	overflow-y: auto;
+	flex: 1;
+}
+
+/* Footer sidebar — mostra la versione release. Aggiornato dallo script
+   scripts/release.mjs insieme a VERSION e apps/web/src/lib/version.ts. */
+.sidebar-footer {
+	padding: 0.5rem 0.75rem;
+	border-top: 1px solid hsl(var(--border));
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.6875rem;
+	color: hsl(var(--muted-foreground));
+	background: hsl(var(--card));
+}
+.sidebar-version {
+	font-family: ui-monospace, monospace;
+	font-weight: 600;
+	color: hsl(var(--primary));
+	letter-spacing: 0.02em;
+}
+.sidebar-version-build {
+	padding: 0.0625rem 0.375rem;
+	border-radius: 9999px;
+	background: hsl(38 92% 50% / 0.18);
+	color: hsl(38 92% 50%);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-size: 0.5625rem;
+}
+.collapsed .sidebar-footer {
+	justify-content: center;
+	padding: 0.5rem 0.25rem;
+}
+.collapsed .sidebar-version-build {
+	display: none;
+}
+.collapsed .sidebar-version {
+	font-size: 0.5625rem;
+}
+.nav-group-label {
+	padding: 0.75rem 0.75rem 0.25rem;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: hsl(var(--muted-foreground));
+}
+.collapsed .nav-group-label {
+	display: none;
+}
+.nav-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	color: hsl(var(--muted-foreground));
+	font-weight: 500;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	transition: all 150ms;
+	width: 100%;
+	text-align: left;
+	white-space: nowrap;
+	background: none;
+	border: none;
+	font-family: inherit;
+	text-decoration: none;
+}
+.nav-item:hover {
+	background: hsl(var(--accent));
+	color: hsl(var(--foreground));
+}
+.nav-item.active {
+	background: hsl(var(--primary) / 0.1);
+	color: hsl(var(--primary));
+}
+.nav-item.active .icon {
+	color: hsl(var(--primary));
+}
+.nav-item .icon {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+.collapsed .nav-item {
+	justify-content: center;
+	padding: 0.625rem;
+}
+.collapsed .nav-item .nav-label {
+	display: none;
+}
+.nav-badge {
+	margin-left: auto;
+	background: hsl(var(--destructive));
+	color: hsl(var(--destructive-foreground));
+	padding: 0.0625rem 0.375rem;
+	border-radius: 9999px;
+	font-size: 0.6875rem;
+	font-weight: 600;
+}
+.collapsed .nav-badge {
+	display: none;
+}
+
+/* Topbar mode */
+.app-topbar {
+	display: none;
+	padding: 0 1rem;
+	background: hsl(var(--card));
+	border-bottom: 1px solid hsl(var(--border));
+}
+.topbar-nav {
+	display: flex;
+	gap: 0.25rem;
+	overflow-x: auto;
+}
+.topbar-nav .nav-item {
+	flex-direction: row;
+	padding: 0.875rem 1rem;
+	border-radius: 0;
+	position: relative;
+}
+.topbar-nav .nav-item.active {
+	background: transparent;
+}
+.topbar-nav .nav-item.active::after {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	left: 0.5rem;
+	right: 0.5rem;
+	height: 2px;
+	background: hsl(var(--primary));
+}
+body[data-layout="topbar"] .app-sidebar {
+	display: none;
+}
+body[data-layout="topbar"] .app-topbar {
+	display: block;
+}
+
+/* Main content */
+.app-main {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.5rem;
+}
+.page-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 1.5rem;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+.page-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	margin: 0;
+}
+.page-subtitle {
+	color: hsl(var(--muted-foreground));
+	font-size: 0.875rem;
+	margin: 0.25rem 0 0;
+}
+.page-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+	.app-sidebar {
+		position: fixed;
+		top: 3.5rem;
+		bottom: 0;
+		left: 0;
+		z-index: 30;
+		transform: translateX(-100%);
+		transition: transform 250ms;
+		width: 240px !important;
+	}
+	.app-sidebar.mobile-open {
+		transform: translateX(0);
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+	}
+}
+@media (max-width: 768px) {
+	.header-search {
+		display: none;
+	}
+	.tenant-name {
+		display: none;
+	}
+	/* Su mobile nascondo l'etichetta del tenant-menu ma lascio il bottone
+	   per preservare l'accesso al menu — clic diretto sull'icona. */
+	.tenant-menu-label {
+		display: none;
+	}
+	.app-main {
+		padding: 1rem;
+	}
+	.page-title {
+		font-size: 1.25rem;
+	}
+}
+
+/* ============================== DASHBOARD ============================== */
+.stat-grid {
+	display: grid;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.stat-card {
+	padding: 1.25rem;
+}
+.stat-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.75rem;
+}
+.stat-card-title {
+	font-size: 0.8125rem;
+	color: hsl(var(--muted-foreground));
+	font-weight: 500;
+}
+.stat-icon {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 0.5rem;
+	display: grid;
+	place-items: center;
+}
+.stat-value {
+	font-size: 1.875rem;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+	line-height: 1.1;
+}
+.stat-trend {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.75rem;
+	margin-top: 0.5rem;
+}
+.stat-trend.up {
+	color: hsl(var(--success));
+}
+.stat-trend.down {
+	color: hsl(var(--destructive));
+}
+.stat-trend.warn {
+	color: hsl(var(--warning));
+}
+
+.dash-grid {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 1rem;
+}
+@media (max-width: 1024px) {
+	.dash-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.chart-bars {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5rem;
+	height: 200px;
+	padding: 1rem 0;
+}
+.chart-bar {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+.chart-bar-fill {
+	width: 100%;
+	background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
+	border-radius: 0.25rem 0.25rem 0 0;
+	transition: height 400ms ease;
+	min-height: 4px;
+}
+.chart-bar-label {
+	font-size: 0.6875rem;
+	color: hsl(var(--muted-foreground));
+}
+.chart-bar-value {
+	font-size: 0.6875rem;
+	font-weight: 600;
+}
+
+.alert-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.alert-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	background: hsl(var(--muted));
+	border-left: 3px solid hsl(var(--warning));
+	font-size: 0.8125rem;
+}
+.alert-item.warn {
+	border-left-color: hsl(var(--warning));
+}
+.alert-item.danger {
+	border-left-color: hsl(var(--destructive));
+}
+.alert-item.info {
+	border-left-color: hsl(var(--primary));
+}
+.alert-icon {
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 0.5rem;
+	background: hsl(var(--warning) / 0.15);
+	color: hsl(var(--warning));
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+}
+.alert-item.danger .alert-icon {
+	background: hsl(var(--destructive) / 0.15);
+	color: hsl(var(--destructive));
+}
+.alert-item.info .alert-icon {
+	background: hsl(var(--primary) / 0.15);
+	color: hsl(var(--primary));
+}
+.alert-title {
+	font-weight: 600;
+}
+.alert-desc {
+	color: hsl(var(--muted-foreground));
+	font-size: 0.75rem;
+	margin-top: 0.125rem;
+}
+
+.event-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.event-item {
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	transition: background 150ms;
+	cursor: pointer;
+}
+.event-item:hover {
+	background: hsl(var(--muted));
+}
+.event-date {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 0.5rem;
+	background: hsl(var(--primary) / 0.1);
+	color: hsl(var(--primary));
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.event-date-day {
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1;
+}
+.event-date-month {
+	font-size: 0.625rem;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+.event-title {
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+.event-meta {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	margin-top: 0.125rem;
+	display: flex;
+	gap: 0.75rem;
+}
+
+/* ============================== TABLE ============================== */
+.table-container {
+	overflow-x: auto;
+}
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.875rem;
+}
+.table thead th {
+	padding: 0.75rem 1rem;
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	background: hsl(var(--muted) / 0.5);
+	border-bottom: 1px solid hsl(var(--border));
+	position: sticky;
+	top: 0;
+}
+.table tbody td {
+	padding: 0.875rem 1rem;
+	border-bottom: 1px solid hsl(var(--border));
+}
+.table tbody tr:hover {
+	background: hsl(var(--muted) / 0.5);
+}
+.table tbody tr:last-child td {
+	border-bottom: none;
+}
+.table-actions {
+	display: flex;
+	gap: 0.25rem;
+}
+.table-action {
+	padding: 0.375rem;
+	border-radius: 0.375rem;
+	color: hsl(var(--muted-foreground));
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+.table-action:hover {
+	background: hsl(var(--accent));
+	color: hsl(var(--foreground));
+}
+
+.filters-bar {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+}
+.filters-bar .input,
+.filters-bar .select {
+	flex: 0 1 auto;
+	min-width: 160px;
+}
+.filters-bar .input[placeholder*="erca"] {
+	flex: 1 1 280px;
+	max-width: 360px;
+}
+
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem 1rem;
+	border-top: 1px solid hsl(var(--border));
+	font-size: 0.8125rem;
+	color: hsl(var(--muted-foreground));
+}
+
+/* ============================== COURSES ============================== */
+.course-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+.course-card {
+	padding: 1.25rem;
+	cursor: pointer;
+	transition: all 200ms;
+}
+.course-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 24px hsl(var(--foreground) / 0.08);
+}
+.course-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 0.5rem;
+}
+.course-title {
+	font-weight: 700;
+	font-size: 1rem;
+}
+.course-desc {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	margin: 0.25rem 0 0.75rem;
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+.course-desc span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+.capacity-bar {
+	height: 0.5rem;
+	background: hsl(var(--muted));
+	border-radius: 9999px;
+	overflow: hidden;
+	margin: 0.75rem 0 0.375rem;
+}
+.capacity-fill {
+	height: 100%;
+	border-radius: 9999px;
+	transition: width 300ms;
+}
+.capacity-fill.low {
+	background: hsl(var(--success));
+}
+.capacity-fill.mid {
+	background: hsl(var(--warning));
+}
+.capacity-fill.high {
+	background: hsl(var(--destructive));
+}
+.capacity-text {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	display: flex;
+	justify-content: space-between;
+}
+
+/* ============================== CALENDAR ============================== */
+.calendar-nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+}
+.calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1px;
+	background: hsl(var(--border));
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+.calendar-dow {
+	background: hsl(var(--muted));
+	padding: 0.5rem;
+	text-align: center;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: hsl(var(--muted-foreground));
+}
+.calendar-day {
+	background: hsl(var(--card));
+	min-height: 90px;
+	padding: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	cursor: pointer;
+	transition: background 150ms;
+}
+.calendar-day:hover {
+	background: hsl(var(--accent));
+}
+.calendar-day.other-month {
+	opacity: 0.4;
+}
+.calendar-day.today .day-num {
+	background: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	font-weight: 700;
+}
+.day-num {
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+.cal-event {
+	font-size: 0.6875rem;
+	padding: 0.125rem 0.375rem;
+	border-radius: 0.25rem;
+	background: hsl(var(--primary) / 0.15);
+	color: hsl(var(--primary));
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.cal-event.evento {
+	background: hsl(var(--warning) / 0.15);
+	color: hsl(var(--warning));
+}
+.cal-event.corso {
+	background: hsl(var(--primary) / 0.15);
+	color: hsl(var(--primary));
+}
+
+/* ============================== POPOVERS & MODALS ============================== */
+.popover {
+	position: absolute;
+	z-index: 50;
+	background: hsl(var(--popover));
+	color: hsl(var(--popover-foreground));
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.75rem;
+	box-shadow: 0 10px 38px -10px hsl(var(--foreground) / 0.35), 0 10px 20px -15px
+		hsl(var(--foreground) / 0.2);
+	padding: 0.5rem;
+	min-width: 14rem;
+}
+.popover-item {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	padding: 0.5rem 0.625rem;
+	border-radius: 0.375rem;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	transition: background 100ms;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	color: inherit;
+	font-family: inherit;
+}
+.popover-item:hover {
+	background: hsl(var(--accent));
+}
+.popover-item.active {
+	background: hsl(var(--primary) / 0.1);
+	color: hsl(var(--primary));
+	font-weight: 600;
+}
+.popover-divider {
+	height: 1px;
+	background: hsl(var(--border));
+	margin: 0.375rem -0.5rem;
+}
+.popover-label {
+	padding: 0.375rem 0.625rem;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: hsl(var(--muted-foreground));
+}
+
+.palette-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 0.375rem;
+	padding: 0.25rem;
+}
+.palette-swatch {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	border-radius: 0.5rem;
+	border: 2px solid transparent;
+	cursor: pointer;
+	transition: all 150ms;
+	font-size: 0.75rem;
+	font-weight: 500;
+	background: none;
+	color: inherit;
+	font-family: inherit;
+}
+.palette-swatch:hover {
+	background: hsl(var(--accent));
+}
+.palette-swatch.active {
+	border-color: hsl(var(--ring));
+	background: hsl(var(--accent));
+}
+.palette-dot {
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: conic-gradient(var(--swatch-a), var(--swatch-b), var(--swatch-a));
+	box-shadow: 0 0 0 1px hsl(var(--border));
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 45;
+	background: hsl(var(--foreground) / 0.4);
+	backdrop-filter: blur(4px);
+	animation: fadeIn 120ms ease;
+}
+
+.cmdk-modal {
+	position: fixed;
+	top: 15%;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 60;
+	width: min(90vw, 40rem);
+	background: hsl(var(--popover));
+	color: hsl(var(--popover-foreground));
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.75rem;
+	box-shadow: 0 20px 50px hsl(var(--foreground) / 0.25);
+	overflow: hidden;
+}
+.cmdk-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid hsl(var(--border));
+}
+.cmdk-header input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	font-size: 1rem;
+	outline: none;
+	color: hsl(var(--foreground));
+	font-family: inherit;
+}
+.cmdk-header kbd {
+	font-size: 0.6875rem;
+	padding: 0.125rem 0.375rem;
+	background: hsl(var(--muted));
+	border-radius: 0.25rem;
+	font-family: ui-monospace, monospace;
+}
+.cmdk-results {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0.5rem;
+	max-height: 60vh;
+}
+.cmdk-group {
+	margin-bottom: 0.5rem;
+}
+.cmdk-group-label {
+	padding: 0.375rem 0.625rem;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: hsl(var(--muted-foreground));
+}
+.cmdk-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 0.625rem;
+	border-radius: 0.375rem;
+	cursor: pointer;
+	font-size: 0.875rem;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	color: inherit;
+	font-family: inherit;
+}
+.cmdk-item:hover,
+.cmdk-item.selected {
+	background: hsl(var(--accent));
+}
+.cmdk-footer {
+	display: flex;
+	justify-content: space-between;
+	padding: 0.5rem 1rem;
+	border-top: 1px solid hsl(var(--border));
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+}
+.cmdk-footer kbd {
+	font-size: 0.6875rem;
+	padding: 0.0625rem 0.375rem;
+	background: hsl(var(--muted));
+	border-radius: 0.25rem;
+	font-family: ui-monospace, monospace;
+	margin: 0 0.125rem;
+}
+
+/* ============================== AI DRAWER ============================== */
+.ai-drawer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 55;
+	width: min(90vw, 420px);
+	background: hsl(var(--background));
+	border-left: 1px solid hsl(var(--border));
+	display: flex;
+	flex-direction: column;
+	transform: translateX(100%);
+	transition: transform 250ms ease;
+	box-shadow: -10px 0 40px hsl(var(--foreground) / 0.1);
+}
+.ai-drawer.open {
+	transform: translateX(0);
+}
+.ai-header {
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid hsl(var(--border));
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.ai-title {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	font-weight: 700;
+}
+.ai-title .icon {
+	color: hsl(var(--primary));
+}
+.ai-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1rem 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+.ai-msg {
+	display: flex;
+	gap: 0.625rem;
+	align-items: flex-start;
+}
+.ai-avatar {
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	flex-shrink: 0;
+	display: grid;
+	place-items: center;
+	background: hsl(var(--secondary));
+	color: hsl(var(--secondary-foreground));
+	font-size: 0.6875rem;
+	font-weight: 700;
+}
+.ai-msg.user {
+	flex-direction: row-reverse;
+}
+.ai-msg.user .ai-avatar {
+	background: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+}
+.ai-msg-content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+.ai-msg.user .ai-msg-content {
+	align-items: flex-end;
+}
+.ai-msg-body {
+	max-width: 85%;
+	padding: 0.625rem 0.875rem;
+	border-radius: 0.75rem;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+}
+.ai-msg.user .ai-msg-body {
+	background: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+	border-bottom-right-radius: 0.25rem;
+}
+.ai-msg.assistant .ai-msg-body {
+	background: hsl(var(--muted));
+	border-bottom-left-radius: 0.25rem;
+}
+.ai-suggestions {
+	padding: 0 1.25rem 0.5rem;
+	display: flex;
+	gap: 0.375rem;
+	flex-wrap: wrap;
+}
+.ai-chip {
+	padding: 0.375rem 0.625rem;
+	background: hsl(var(--muted));
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	cursor: pointer;
+	transition: background 150ms;
+	border: none;
+	color: inherit;
+	font-family: inherit;
+}
+.ai-chip:hover {
+	background: hsl(var(--accent));
+}
+.ai-input {
+	padding: 0.75rem 1.25rem 1rem;
+	border-top: 1px solid hsl(var(--border));
+	display: flex;
+	gap: 0.5rem;
+}
+.ai-input input {
+	flex: 1;
+	padding: 0.625rem 0.875rem;
+	border: 1px solid hsl(var(--border));
+	background: hsl(var(--card));
+	border-radius: 9999px;
+	color: hsl(var(--foreground));
+	font-family: inherit;
+}
+.ai-input input:focus {
+	outline: none;
+	border-color: hsl(var(--ring));
+}
+.ai-input .btn-icon {
+	background: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+	border-radius: 50%;
+	width: 2.25rem;
+	height: 2.25rem;
+}
+
+/* ============================== INTEGRATIONS ============================== */
+.int-section {
+	margin-bottom: 1.5rem;
+}
+.int-section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 600;
+	margin-bottom: 0.75rem;
+	font-size: 0.9375rem;
+}
+.int-grid {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.int-card {
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+}
+.int-card-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+.int-card-name {
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+.int-card-desc {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+}
+.int-card-actions {
+	display: flex;
+	gap: 0.375rem;
+	margin-top: auto;
+}
+
+/* ============================== SETTINGS ============================== */
+.settings-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.setting-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid hsl(var(--border));
+}
+.setting-row:last-child {
+	border: none;
+}
+.setting-label {
+	font-weight: 500;
+	font-size: 0.875rem;
+}
+.setting-desc {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	margin-top: 0.125rem;
+}
+
+.radio-group {
+	display: inline-flex;
+	background: hsl(var(--muted));
+	border-radius: 0.5rem;
+	padding: 0.25rem;
+	gap: 0.125rem;
+}
+.radio-btn {
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	cursor: pointer;
+	color: hsl(var(--muted-foreground));
+	background: none;
+	border: none;
+	font-family: inherit;
+}
+.radio-btn.active {
+	background: hsl(var(--background));
+	color: hsl(var(--foreground));
+	box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1);
+}
+
+/* ============================== ANIMATIONS ============================== */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes slideUp {
+	from {
+		opacity: 0;
+		transform: translate(-50%, 20px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+}
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
+.anim-fade {
+	animation: fadeIn 150ms ease;
+}
+.anim-slide {
+	animation: slideUp 200ms ease;
+}
+.anim-scale {
+	animation: scaleIn 180ms ease;
+}

@@ -1,0 +1,175 @@
+services:
+
+  # ─────────────────────────── DATABASE ───────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: neogesys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: neogesys_sport
+      POSTGRES_USER: neogesys
+      POSTGRES_PASSWORD: neogesys_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neogesys -d neogesys_sport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - neogesys
+
+  # ─────────────────────────── CACHE ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: neogesys-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - neogesys
+
+  # ─────────────────────────── STORAGE ────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: neogesys-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minio_dev
+      MINIO_ROOT_PASSWORD: minio_dev_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - neogesys
+
+  # ─────────────────────── API (tsx, no build) ────────────────────
+  api:
+    image: node:22-alpine
+    container_name: neogesys-api
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      DATABASE_URL: postgresql://neogesys:neogesys_dev@postgres:5432/neogesys_sport
+      REDIS_URL: redis://redis:6379
+      BETTER_AUTH_SECRET: dev_secret_change_in_production_32chars
+      BETTER_AUTH_URL: http://localhost:4000
+      VAULT_MASTER_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minio_dev
+      MINIO_SECRET_KEY: minio_dev_secret
+      MINIO_BUCKET: neogesys-docs
+      MINIO_USE_SSL: "false"
+      ANTHROPIC_API_KEY: sk-ant-placeholder
+    volumes:
+      - .:/workspace
+      - node_modules_root:/workspace/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@9.15.4 --activate &&
+        pnpm install &&
+        pnpm --filter @neogesys/api dev
+      "
+    networks:
+      - neogesys
+
+  # ─────────────────────── WEB (Next.js dev) ──────────────────────
+  web:
+    image: node:22-alpine
+    container_name: neogesys-web
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    volumes:
+      - .:/workspace
+      - node_modules_root:/workspace/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@9.15.4 --activate &&
+        pnpm install &&
+        pnpm --filter @neogesys/web dev
+      "
+    networks:
+      - neogesys
+
+  # ─────────────────────── ADMIN (Next.js dev) ────────────────────
+  admin:
+    image: node:22-alpine
+    container_name: neogesys-admin
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+    volumes:
+      - .:/workspace
+      - node_modules_root:/workspace/node_modules
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@9.15.4 --activate &&
+        pnpm install &&
+        pnpm --filter @neogesys/admin dev
+      "
+    networks:
+      - neogesys
+
+  # ─────────────────────── DEMO (HTML statico) ────────────────────
+  demo:
+    image: nginx:alpine
+    container_name: neogesys-demo
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./demo:/usr/share/nginx/html:ro
+    networks:
+      - neogesys
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  node_modules_root:
+
+networks:
+  neogesys:
+    driver: bridge
