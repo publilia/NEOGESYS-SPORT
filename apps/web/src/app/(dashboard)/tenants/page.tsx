@@ -279,13 +279,8 @@ export default function TenantsPage() {
 						</div>
 					</div>
 					<div className="stat-value">
-						{Number(
-							(overview?.byPiano as Record<string, number> | undefined)?.pro ?? 0,
-						) +
-							Number(
-								(overview?.byPiano as Record<string, number> | undefined)
-									?.enterprise ?? 0,
-							)}
+						{Number((overview?.byPiano as Record<string, number> | undefined)?.pro ?? 0) +
+							Number((overview?.byPiano as Record<string, number> | undefined)?.enterprise ?? 0)}
 					</div>
 					<div className="stat-trend up">
 						<CheckCircle2 className="icon-sm" /> <span>Tenant paganti</span>
@@ -455,16 +450,11 @@ export default function TenantsPage() {
 												}}
 											>
 												{t.createdAt
-													? new Date(t.createdAt as unknown as string).toLocaleDateString(
-															"it-IT",
-													  )
+													? new Date(t.createdAt as unknown as string).toLocaleDateString("it-IT")
 													: "—"}
 											</td>
 											<td>
-												<div
-													className="table-actions"
-													style={{ justifyContent: "flex-end" }}
-												>
+												<div className="table-actions" style={{ justifyContent: "flex-end" }}>
 													<button
 														type="button"
 														className="btn btn-ghost btn-icon"
@@ -490,8 +480,7 @@ export default function TenantsPage() {
 															onClick={() =>
 																setSuspendTarget({
 																	id: t.id,
-																	nome:
-																		t.nomeVisualizzato ?? t.ragioneSociale ?? t.slug,
+																	nome: t.nomeVisualizzato ?? t.ragioneSociale ?? t.slug,
 																})
 															}
 														>
@@ -518,9 +507,7 @@ export default function TenantsPage() {
 							borderTop: "1px solid hsl(var(--border))",
 						}}
 					>
-						<span
-							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
-						>
+						<span style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
 							Pagina {page} di {totalPages}
 						</span>
 						<div style={{ display: "flex", gap: "0.5rem" }}>
@@ -571,18 +558,11 @@ export default function TenantsPage() {
 					<Field label="Ragione sociale" required span={2}>
 						<Input
 							value={form.ragioneSociale}
-							onChange={(e) =>
-								setForm((f) => ({ ...f, ragioneSociale: e.target.value }))
-							}
+							onChange={(e) => setForm((f) => ({ ...f, ragioneSociale: e.target.value }))}
 						/>
 					</Field>
 					{!editId && (
-						<Field
-							label="Slug"
-							required
-							hint="Solo lettere minuscole, numeri e trattini"
-							span={1}
-						>
+						<Field label="Slug" required hint="Solo lettere minuscole, numeri e trattini" span={1}>
 							<Input
 								value={form.slug}
 								onChange={(e) =>
@@ -598,9 +578,7 @@ export default function TenantsPage() {
 					<Field label="Tipo ente" required span={1}>
 						<Select
 							value={form.tipoEnte}
-							onChange={(e) =>
-								setForm((f) => ({ ...f, tipoEnte: e.target.value as TipoEnte }))
-							}
+							onChange={(e) => setForm((f) => ({ ...f, tipoEnte: e.target.value as TipoEnte }))}
 						>
 							<option value="ASD">ASD</option>
 							<option value="SSD">SSD</option>
@@ -630,9 +608,7 @@ export default function TenantsPage() {
 					<Field label="Codice fiscale" span={1}>
 						<Input
 							value={form.codiceFiscale}
-							onChange={(e) =>
-								setForm((f) => ({ ...f, codiceFiscale: e.target.value }))
-							}
+							onChange={(e) => setForm((f) => ({ ...f, codiceFiscale: e.target.value }))}
 						/>
 					</Field>
 					<Field label="PEC" span={1}>
@@ -680,9 +656,7 @@ export default function TenantsPage() {
 								<Input
 									type="email"
 									value={form.adminEmail}
-									onChange={(e) =>
-										setForm((f) => ({ ...f, adminEmail: e.target.value }))
-									}
+									onChange={(e) => setForm((f) => ({ ...f, adminEmail: e.target.value }))}
 								/>
 							</Field>
 						</>

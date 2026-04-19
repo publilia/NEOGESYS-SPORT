@@ -6,9 +6,9 @@ import { trpc } from "@/lib/trpc";
 import { APP_VERSION, formatReleaseDateTime } from "@/lib/version";
 import {
 	Activity,
+	BookOpen,
 	Briefcase,
 	Building2,
-	BookOpen,
 	Calculator,
 	Calendar,
 	CreditCard,
@@ -140,7 +140,12 @@ export function Sidebar({ collapsed }: SidebarProps) {
 					<>
 						<div
 							className="nav-group-label"
-							style={{ color: "hsl(var(--destructive))", display: "flex", alignItems: "center", gap: "0.375rem" }}
+							style={{
+								color: "hsl(var(--destructive))",
+								display: "flex",
+								alignItems: "center",
+								gap: "0.375rem",
+							}}
 						>
 							<Shield style={{ width: "0.75rem", height: "0.75rem" }} />
 							Piattaforma

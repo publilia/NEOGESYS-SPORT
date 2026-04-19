@@ -91,10 +91,7 @@ export function Modal({
 					}}
 				>
 					<div>
-						<h2
-							id="modal-title"
-							style={{ fontSize: "1.125rem", fontWeight: 600, margin: 0 }}
-						>
+						<h2 id="modal-title" style={{ fontSize: "1.125rem", fontWeight: 600, margin: 0 }}>
 							{title}
 						</h2>
 						{subtitle && (
@@ -109,12 +106,7 @@ export function Modal({
 							</p>
 						)}
 					</div>
-					<button
-						type="button"
-						className="table-action"
-						onClick={onClose}
-						aria-label="Chiudi"
-					>
+					<button type="button" className="table-action" onClick={onClose} aria-label="Chiudi">
 						<X className="icon" />
 					</button>
 				</div>

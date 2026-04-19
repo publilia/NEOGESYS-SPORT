@@ -1,6 +1,11 @@
 "use client";
 
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+	InputHTMLAttributes,
+	ReactNode,
+	SelectHTMLAttributes,
+	TextareaHTMLAttributes,
+} from "react";
 
 interface FieldProps {
 	label: string;
@@ -38,9 +43,7 @@ export function Field({ label, hint, error, required, children, span = 1 }: Fiel
 				</p>
 			)}
 			{error && (
-				<p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#dc2626" }}>
-					{error}
-				</p>
+				<p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#dc2626" }}>{error}</p>
 			)}
 		</div>
 	);

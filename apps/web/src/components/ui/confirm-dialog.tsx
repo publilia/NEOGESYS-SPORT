@@ -47,9 +47,7 @@ export function ConfirmDialog({
 					<button
 						type="button"
 						className={
-							variant === "danger"
-								? "btn btn-destructive btn-sm"
-								: "btn btn-primary btn-sm"
+							variant === "danger" ? "btn btn-destructive btn-sm" : "btn btn-primary btn-sm"
 						}
 						onClick={onConfirm}
 						disabled={loading}

@@ -1,11 +1,4 @@
-import {
-	anniSportivi,
-	primaNotaMovimenti,
-	quote,
-	soci,
-	tenants,
-	tipiQuota,
-} from "@neogesys/db";
+import { anniSportivi, primaNotaMovimenti, quote, soci, tenants, tipiQuota } from "@neogesys/db";
 import { TRPCError } from "@trpc/server";
 import { and, count, desc, eq, gte, isNotNull, lt, lte, sql, sum } from "drizzle-orm";
 import { z } from "zod";
@@ -242,8 +235,7 @@ export const quoteRouter = router({
 
 			const totalePagato = Number(q.importoPagato) + input.importoPagato;
 			const importo = Number(q.importo);
-			const nuovoStato: "pagato" | "parziale" =
-				totalePagato >= importo ? "pagato" : "parziale";
+			const nuovoStato: "pagato" | "parziale" = totalePagato >= importo ? "pagato" : "parziale";
 			const dataPag = input.dataPagamento ? new Date(input.dataPagamento) : new Date();
 
 			const [updated] = await ctx.db
@@ -254,11 +246,7 @@ export const quoteRouter = router({
 					dataPagamento: nuovoStato === "pagato" ? dataPag : null,
 					metodoPagamento: input.metodoPagamento,
 					stripePaymentId: input.stripePaymentId ?? null,
-					note: input.note
-						? q.note
-							? `${q.note}\n${input.note}`
-							: input.note
-						: q.note,
+					note: input.note ? (q.note ? `${q.note}\n${input.note}` : input.note) : q.note,
 					updatedAt: new Date(),
 				})
 				.where(eq(quote.id, input.quotaId))
@@ -388,8 +376,7 @@ export const quoteRouter = router({
 		if (input.annoSportivoId) baseConds.push(eq(quote.annoSportivoId, input.annoSportivoId));
 		if (input.periodoInizio)
 			baseConds.push(gte(quote.dataEmissione, new Date(input.periodoInizio)));
-		if (input.periodoFine)
-			baseConds.push(lte(quote.dataEmissione, new Date(input.periodoFine)));
+		if (input.periodoFine) baseConds.push(lte(quote.dataEmissione, new Date(input.periodoFine)));
 
 		const totals = await ctx.db
 			.select({
@@ -440,12 +427,13 @@ export const quoteRouter = router({
 				count: Number(d.count),
 				incassato: Number(d.incassato ?? 0),
 			})),
-			byMese: (byMese as unknown as Array<{ mese: string; count: string; incassato: string }>)
-				.map((r) => ({
+			byMese: (byMese as unknown as Array<{ mese: string; count: string; incassato: string }>).map(
+				(r) => ({
 					mese: r.mese,
 					count: Number(r.count),
 					incassato: Number(r.incassato),
-				})),
+				}),
+			),
 		};
 	}),
 

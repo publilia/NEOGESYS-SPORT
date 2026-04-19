@@ -63,8 +63,7 @@ export const dashboardRouter = router({
 			`),
 		]);
 
-		const normalizeRow = (r: unknown) =>
-			(r as unknown as Array<Record<string, unknown>>)[0] ?? {};
+		const normalizeRow = (r: unknown) => (r as unknown as Array<Record<string, unknown>>)[0] ?? {};
 
 		return {
 			soci: normalizeRow(sociStats),

@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
 	const isPlatformContext = current.tenant === "NEOGESYS Platform";
 	const isAllowedOnPlatform = PLATFORM_ALLOWED_ROUTES.some(
-		(r) => pathname === r || pathname.startsWith(r + "/"),
+		(r) => pathname === r || pathname.startsWith(`${r}/`),
 	);
 	const showPlatformEmpty = isPlatformContext && !isAllowedOnPlatform;
 

@@ -545,11 +545,7 @@ export default function CorsiPage() {
 							<p style={{ fontSize: "0.8125rem", fontWeight: 600, margin: 0 }}>
 								Orario settimanale
 							</p>
-							<button
-								type="button"
-								className="btn btn-outline btn-sm"
-								onClick={addOrario}
-							>
+							<button type="button" className="btn btn-outline btn-sm" onClick={addOrario}>
 								<Plus className="icon-sm" /> Aggiungi giorno
 							</button>
 						</div>
@@ -641,10 +637,7 @@ export default function CorsiPage() {
 				}
 			>
 				<Field label="Seleziona socio" required>
-					<Select
-						value={selectedSocioId}
-						onChange={(e) => setSelectedSocioId(e.target.value)}
-					>
+					<Select value={selectedSocioId} onChange={(e) => setSelectedSocioId(e.target.value)}>
 						<option value="">—</option>
 						{sociQuery.data?.items.map((s) => (
 							<option key={s.id} value={s.id}>

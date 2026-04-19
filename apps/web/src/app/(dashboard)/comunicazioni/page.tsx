@@ -65,8 +65,12 @@ export default function ComunicazioniPage() {
 	const [form, setForm] = useState<ComFormState>(EMPTY_FORM);
 	const [formError, setFormError] = useState<string | null>(null);
 
-	const [deleteTarget, setDeleteTarget] = useState<{ id: string; oggetto: string | null } | null>(null);
-	const [inviaTarget, setInviaTarget] = useState<{ id: string; oggetto: string | null } | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; oggetto: string | null } | null>(
+		null,
+	);
+	const [inviaTarget, setInviaTarget] = useState<{ id: string; oggetto: string | null } | null>(
+		null,
+	);
 
 	const utils = trpc.useUtils();
 
@@ -324,9 +328,7 @@ export default function ComunicazioniPage() {
 												}}
 											>
 												{m.dataInvio
-													? new Date(m.dataInvio as unknown as string).toLocaleDateString(
-															"it-IT",
-														)
+													? new Date(m.dataInvio as unknown as string).toLocaleDateString("it-IT")
 													: "—"}
 											</td>
 											<td>
@@ -335,9 +337,7 @@ export default function ComunicazioniPage() {
 														<button
 															type="button"
 															className="btn btn-primary btn-sm"
-															onClick={() =>
-																setInviaTarget({ id: m.id, oggetto: m.oggetto })
-															}
+															onClick={() => setInviaTarget({ id: m.id, oggetto: m.oggetto })}
 														>
 															<Send className="icon-sm" /> Invia
 														</button>
@@ -353,9 +353,7 @@ export default function ComunicazioniPage() {
 													<button
 														type="button"
 														className="table-action"
-														onClick={() =>
-															setDeleteTarget({ id: m.id, oggetto: m.oggetto })
-														}
+														onClick={() => setDeleteTarget({ id: m.id, oggetto: m.oggetto })}
 														title="Elimina"
 													>
 														<Trash2 className="icon" style={{ color: "#dc2626" }} />

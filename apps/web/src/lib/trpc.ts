@@ -1,12 +1,8 @@
 "use client";
 
-import { QueryClient } from "@tanstack/react-query";
-import {
-	createTRPCReact,
-	httpBatchLink,
-	type CreateTRPCReact,
-} from "@trpc/react-query";
 import type { AppRouter } from "@neogesys/api";
+import { QueryClient } from "@tanstack/react-query";
+import { type CreateTRPCReact, createTRPCReact, httpBatchLink } from "@trpc/react-query";
 
 /**
  * Shared tRPC React client for the NEOGESYS Sport web app.

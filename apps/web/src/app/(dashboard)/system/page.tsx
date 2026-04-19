@@ -137,13 +137,13 @@ export default function SystemPage() {
 					borderColor: hasDown
 						? "hsl(var(--destructive) / 0.3)"
 						: allHealthy
-						  ? "hsl(var(--success) / 0.3)"
-						  : "hsl(var(--warning) / 0.3)",
+							? "hsl(var(--success) / 0.3)"
+							: "hsl(var(--warning) / 0.3)",
 					background: hasDown
 						? "hsl(var(--destructive) / 0.05)"
 						: allHealthy
-						  ? "hsl(var(--success) / 0.05)"
-						  : "hsl(var(--warning) / 0.05)",
+							? "hsl(var(--success) / 0.05)"
+							: "hsl(var(--warning) / 0.05)",
 				}}
 			>
 				<div
@@ -188,8 +188,8 @@ export default function SystemPage() {
 							{hasDown
 								? "Servizi non operativi"
 								: allHealthy
-								  ? "Tutti i servizi operativi"
-								  : "Alcuni servizi in stato degraded"}
+									? "Tutti i servizi operativi"
+									: "Alcuni servizi in stato degraded"}
 						</div>
 						<div
 							style={{
@@ -197,8 +197,7 @@ export default function SystemPage() {
 								color: "hsl(var(--muted-foreground))",
 							}}
 						>
-							Tenant attivi: {summary?.activeTenants ?? 0} · Versione API:{" "}
-							{summary?.version ?? "—"}
+							Tenant attivi: {summary?.activeTenants ?? 0} · Versione API: {summary?.version ?? "—"}
 						</div>
 					</div>
 					<span
@@ -206,8 +205,8 @@ export default function SystemPage() {
 							hasDown
 								? "badge badge-destructive"
 								: allHealthy
-								  ? "badge badge-success"
-								  : "badge badge-warning"
+									? "badge badge-success"
+									: "badge badge-warning"
 						}
 					>
 						● {hasDown ? "Incident" : allHealthy ? "Operational" : "Degraded"}
@@ -236,7 +235,11 @@ export default function SystemPage() {
 					title="Check totali"
 					value={String(checks.length)}
 					subtitle={`${checks.filter((c) => c.status === "ok").length} OK`}
-					pct={checks.length ? (checks.filter((c) => c.status === "ok").length / checks.length) * 100 : 0}
+					pct={
+						checks.length
+							? (checks.filter((c) => c.status === "ok").length / checks.length) * 100
+							: 0
+					}
 					color={hasDown ? "destructive" : allHealthy ? "success" : "warning"}
 					Icon={Zap}
 				/>
@@ -294,10 +297,7 @@ export default function SystemPage() {
 														gap: "0.5rem",
 													}}
 												>
-													<Icon
-														className="icon"
-														style={{ color: "hsl(var(--primary))" }}
-													/>
+													<Icon className="icon" style={{ color: "hsl(var(--primary))" }} />
 													<span style={{ fontWeight: 500 }}>{c.name}</span>
 												</div>
 											</td>

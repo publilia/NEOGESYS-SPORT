@@ -55,8 +55,7 @@ export default function PortaleLoginPage() {
 							color: "#FFF6D9",
 							borderRadius: "0.875rem",
 							padding: "1.25rem 1.75rem",
-							boxShadow:
-								"0 0 0 1px rgba(139, 63, 229, 0.25), 0 0 32px rgba(237, 63, 158, 0.15)",
+							boxShadow: "0 0 0 1px rgba(139, 63, 229, 0.25), 0 0 32px rgba(237, 63, 158, 0.15)",
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",

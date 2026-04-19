@@ -145,7 +145,9 @@ export default function IntegrazioniPage() {
 
 	const openConfig = (provider: string, tipo: TipoIntegrazione, nome: string) => {
 		setConfigProvider({ provider, tipo, nome });
-		const fields = CREDENTIAL_FIELDS[provider] ?? [{ key: "api_key", label: "API Key", secret: true }];
+		const fields = CREDENTIAL_FIELDS[provider] ?? [
+			{ key: "api_key", label: "API Key", secret: true },
+		];
 		const initial: Record<string, string> = {};
 		for (const f of fields) initial[f.key] = "";
 		setCredValues(initial);
@@ -209,12 +211,10 @@ export default function IntegrazioniPage() {
 						}}
 					/>
 					<div>
-						<div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>
-							Vault credenziali sicuro
-						</div>
+						<div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>Vault credenziali sicuro</div>
 						<div style={{ fontSize: "0.8125rem", color: "hsl(var(--muted-foreground))" }}>
-							Tutte le credenziali sono cifrate con AES-256-GCM e una chiave KMS per tenant.
-							Le API key non vengono mai esposte in chiaro, nemmeno negli export. Solo il ruolo{" "}
+							Tutte le credenziali sono cifrate con AES-256-GCM e una chiave KMS per tenant. Le API
+							key non vengono mai esposte in chiaro, nemmeno negli export. Solo il ruolo{" "}
 							<code
 								style={{
 									background: "hsl(var(--muted))",
@@ -233,7 +233,7 @@ export default function IntegrazioniPage() {
 
 			{CATEGORIES.map((cat) => {
 				const CatIcon = cat.Icon;
-				const list = ((providersByTipo as unknown) as Record<string, ProviderMeta[]>)[cat.tipo] ?? [];
+				const list = (providersByTipo as unknown as Record<string, ProviderMeta[]>)[cat.tipo] ?? [];
 				if (list.length === 0) return null;
 				return (
 					<div key={cat.tipo} style={{ marginBottom: "1.5rem" }}>
@@ -246,9 +246,7 @@ export default function IntegrazioniPage() {
 							}}
 						>
 							<CatIcon className="icon-lg" style={{ color: "hsl(var(--primary))" }} />
-							<h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: 0 }}>
-								{cat.label}
-							</h2>
+							<h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: 0 }}>{cat.label}</h2>
 						</div>
 						<div
 							style={{
@@ -281,9 +279,7 @@ export default function IntegrazioniPage() {
 												}}
 											>
 												<div style={{ minWidth: 0 }}>
-													<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>
-														{p.nome}
-													</div>
+													<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>{p.nome}</div>
 													<div
 														style={{
 															fontSize: "0.8125rem",
@@ -327,9 +323,7 @@ export default function IntegrazioniPage() {
 															type="button"
 															className="btn btn-outline btn-sm"
 															style={{ flex: 1 }}
-															onClick={() =>
-																openConfig(p.provider, cat.tipo, p.nome)
-															}
+															onClick={() => openConfig(p.provider, cat.tipo, p.nome)}
 														>
 															<Settings2 className="icon-sm" /> Configura
 														</button>
@@ -338,9 +332,7 @@ export default function IntegrazioniPage() {
 															className="btn btn-ghost btn-sm"
 															title="Testa connessione"
 															disabled={testMut.isPending}
-															onClick={() =>
-																testMut.mutate({ provider: p.provider })
-															}
+															onClick={() => testMut.mutate({ provider: p.provider })}
 														>
 															<Zap className="icon-sm" /> Test
 														</button>
@@ -349,9 +341,7 @@ export default function IntegrazioniPage() {
 																type="button"
 																className="btn btn-ghost btn-sm"
 																disabled={disableMut.isPending}
-																onClick={() =>
-																	disableMut.mutate({ provider: p.provider })
-																}
+																onClick={() => disableMut.mutate({ provider: p.provider })}
 															>
 																Off
 															</button>
@@ -360,9 +350,7 @@ export default function IntegrazioniPage() {
 																type="button"
 																className="btn btn-ghost btn-sm"
 																disabled={enableMut.isPending}
-																onClick={() =>
-																	enableMut.mutate({ provider: p.provider })
-																}
+																onClick={() => enableMut.mutate({ provider: p.provider })}
 															>
 																On
 															</button>
@@ -413,16 +401,16 @@ export default function IntegrazioniPage() {
 			>
 				{configProvider && (
 					<FormGrid>
-						{(CREDENTIAL_FIELDS[configProvider.provider] ?? [
-							{ key: "api_key", label: "API Key", secret: true },
-						]).map((f) => (
+						{(
+							CREDENTIAL_FIELDS[configProvider.provider] ?? [
+								{ key: "api_key", label: "API Key", secret: true },
+							]
+						).map((f) => (
 							<Field key={f.key} label={f.label} required span={2}>
 								<Input
 									type={f.secret ? "password" : "text"}
 									value={credValues[f.key] ?? ""}
-									onChange={(e) =>
-										setCredValues((v) => ({ ...v, [f.key]: e.target.value }))
-									}
+									onChange={(e) => setCredValues((v) => ({ ...v, [f.key]: e.target.value }))}
 									autoComplete="off"
 								/>
 							</Field>

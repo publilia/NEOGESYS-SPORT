@@ -76,10 +76,10 @@ export function PlatformContextEmpty({ pathname }: { pathname: string }) {
 						margin: 0,
 					}}
 				>
-					Stai navigando come <strong>Super Admin</strong> sulla piattaforma NEOGESYS.{" "}
-					La sezione <strong>{sectionLabel}</strong> contiene dati specifici di un tenant —
-					per vederli, seleziona un tenant dal menu tenant in alto a sinistra (impersonation),{" "}
-					oppure usa le sezioni Piattaforma qui sotto.
+					Stai navigando come <strong>Super Admin</strong> sulla piattaforma NEOGESYS. La sezione{" "}
+					<strong>{sectionLabel}</strong> contiene dati specifici di un tenant — per vederli,
+					seleziona un tenant dal menu tenant in alto a sinistra (impersonation), oppure usa le
+					sezioni Piattaforma qui sotto.
 				</p>
 			</div>
 

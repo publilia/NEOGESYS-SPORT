@@ -278,21 +278,14 @@ export default function DocumentiPage() {
 									<tr key={d.id}>
 										<td>
 											<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-												<FileText
-													className="icon"
-													style={{ color: "hsl(var(--primary))" }}
-												/>
+												<FileText className="icon" style={{ color: "hsl(var(--primary))" }} />
 												<span style={{ fontWeight: 500 }}>{d.nome}</span>
 											</div>
 										</td>
 										<td>
-											<span className="badge badge-outline">
-												{TIPO_LABELS[d.tipo as TipoDoc]}
-											</span>
+											<span className="badge badge-outline">{TIPO_LABELS[d.tipo as TipoDoc]}</span>
 										</td>
-										<td>
-											{d.socioCognome ? `${d.socioCognome} ${d.socioNome}` : "—"}
-										</td>
+										<td>{d.socioCognome ? `${d.socioCognome} ${d.socioNome}` : "—"}</td>
 										<td
 											style={{
 												fontFamily: "monospace",
@@ -310,9 +303,7 @@ export default function DocumentiPage() {
 											}}
 										>
 											{d.createdAt
-												? new Date(d.createdAt as unknown as string).toLocaleDateString(
-														"it-IT",
-													)
+												? new Date(d.createdAt as unknown as string).toLocaleDateString("it-IT")
 												: "—"}
 										</td>
 										<td>
@@ -337,9 +328,7 @@ export default function DocumentiPage() {
 												<button
 													type="button"
 													className="table-action"
-													onClick={() =>
-														setDeleteTarget({ id: d.id, nome: d.nome })
-													}
+													onClick={() => setDeleteTarget({ id: d.id, nome: d.nome })}
 													title="Elimina"
 												>
 													<Trash2 className="icon" style={{ color: "#dc2626" }} />
@@ -480,7 +469,8 @@ export default function DocumentiPage() {
 											margin: "0.25rem 0 0",
 										}}
 									>
-										✓ {form.fileUrl} {form.dimensioneBytes && `(${formatBytes(Number(form.dimensioneBytes))})`}
+										✓ {form.fileUrl}{" "}
+										{form.dimensioneBytes && `(${formatBytes(Number(form.dimensioneBytes))})`}
 									</p>
 								)}
 							</Field>

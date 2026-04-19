@@ -5,17 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
 import { trpc } from "@/lib/trpc";
-import {
-	Calendar,
-	Check,
-	MapPin,
-	Pencil,
-	Plus,
-	Trash2,
-	UserPlus,
-	Users,
-	X,
-} from "lucide-react";
+import { Calendar, Check, MapPin, Pencil, Plus, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -213,9 +203,7 @@ export default function EventiPage() {
 			<div className="page-header">
 				<div>
 					<h1 className="page-title">Eventi</h1>
-					<p className="page-subtitle">
-						{items.length} eventi · gare, tornei, stage e saggi
-					</p>
+					<p className="page-subtitle">{items.length} eventi · gare, tornei, stage e saggi</p>
 				</div>
 				<div className="page-actions">
 					<a href="/calendario" className="btn btn-outline btn-sm">
@@ -274,10 +262,7 @@ export default function EventiPage() {
 					{items.map((e) => {
 						const dt = new Date(e.dataInizio as unknown as string);
 						const giorno = dt.getDate();
-						const mese = dt
-							.toLocaleString("it-IT", { month: "short" })
-							.toUpperCase()
-							.slice(0, 3);
+						const mese = dt.toLocaleString("it-IT", { month: "short" }).toUpperCase().slice(0, 3);
 						return (
 							<div key={e.id} className="card">
 								<div className="card-body">
@@ -335,10 +320,10 @@ export default function EventiPage() {
 													marginBottom: "0.5rem",
 												}}
 											>
-												<span className="badge badge-outline">{TIPO_LABELS[e.tipo as TipoEvento]}</span>
-												{e.disciplina && (
-													<span style={{ marginLeft: 8 }}>{e.disciplina}</span>
-												)}
+												<span className="badge badge-outline">
+													{TIPO_LABELS[e.tipo as TipoEvento]}
+												</span>
+												{e.disciplina && <span style={{ marginLeft: 8 }}>{e.disciplina}</span>}
 											</div>
 											{e.luogo && (
 												<div
@@ -613,10 +598,7 @@ export default function EventiPage() {
 				}
 			>
 				<Field label="Seleziona socio" required>
-					<Select
-						value={selectedSocioId}
-						onChange={(e) => setSelectedSocioId(e.target.value)}
-					>
+					<Select value={selectedSocioId} onChange={(e) => setSelectedSocioId(e.target.value)}>
 						<option value="">—</option>
 						{sociQuery.data?.items.map((s) => (
 							<option key={s.id} value={s.id}>

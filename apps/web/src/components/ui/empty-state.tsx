@@ -23,10 +23,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
 			}}
 		>
 			{Icon && (
-				<Icon
-					size={48}
-					style={{ color: "hsl(var(--muted-foreground))", marginBottom: "1rem" }}
-				/>
+				<Icon size={48} style={{ color: "hsl(var(--muted-foreground))", marginBottom: "1rem" }} />
 			)}
 			<h3 style={{ fontSize: "1rem", fontWeight: 600, margin: 0 }}>{title}</h3>
 			{description && (

@@ -134,19 +134,14 @@ export const comunicazioniRouter = router({
 			const sociRows = await ctx.db
 				.select({ id: soci.id, email: soci.email, telefono: soci.telefono })
 				.from(soci)
-				.where(
-					and(eq(soci.tenantId, tenantId), inArray(soci.id, input.destinatariSoci)),
-				);
+				.where(and(eq(soci.tenantId, tenantId), inArray(soci.id, input.destinatariSoci)));
 			if (sociRows.length > 0) {
 				await ctx.db.insert(comunicazioniDestinatari).values(
 					sociRows.map((s) => ({
 						comunicazioneId: created.id,
 						socioId: s.id,
 						canale: input.tipo,
-						indirizzo:
-							input.tipo === "email"
-								? (s.email ?? "")
-								: (s.telefono ?? ""),
+						indirizzo: input.tipo === "email" ? (s.email ?? "") : (s.telefono ?? ""),
 						stato: "pending" as const,
 					})),
 				);
@@ -175,8 +170,7 @@ export const comunicazioniRouter = router({
 			.set(patch)
 			.where(and(eq(comunicazioni.id, id), eq(comunicazioni.tenantId, tenantId)))
 			.returning();
-		if (!updated)
-			throw new TRPCError({ code: "NOT_FOUND", message: "Comunicazione non trovata." });
+		if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Comunicazione non trovata." });
 		return updated;
 	}),
 
@@ -207,8 +201,7 @@ export const comunicazioniRouter = router({
 				.from(comunicazioni)
 				.where(and(eq(comunicazioni.id, input.id), eq(comunicazioni.tenantId, tenantId)))
 				.limit(1);
-			if (!com)
-				throw new TRPCError({ code: "NOT_FOUND", message: "Comunicazione non trovata." });
+			if (!com) throw new TRPCError({ code: "NOT_FOUND", message: "Comunicazione non trovata." });
 			if (com.stato !== "bozza") {
 				throw new TRPCError({ code: "BAD_REQUEST", message: "Solo bozze possono essere inviate." });
 			}

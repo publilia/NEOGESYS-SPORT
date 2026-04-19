@@ -3,13 +3,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { trpc } from "@/lib/trpc";
-import {
-	ChevronLeft,
-	ChevronRight,
-	Eye,
-	Search,
-	Shield,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Search, Shield } from "lucide-react";
 import { useState } from "react";
 
 type AuditEntry = {
@@ -82,7 +76,7 @@ export default function AuditPage() {
 				`${e.azione} ${e.target} ${e.superAdminEmail ?? ""} ${e.ipAddress ?? ""}`
 					.toLowerCase()
 					.includes(search.toLowerCase()),
-		  )
+			)
 		: items;
 
 	const azioniDistinct = Array.from(new Set(items.map((i) => i.azione))).sort();
@@ -95,9 +89,7 @@ export default function AuditPage() {
 			<div className="page-header">
 				<div>
 					<h1 className="page-title">Audit Log</h1>
-					<p className="page-subtitle">
-						Log immutabile piattaforma · {total} eventi totali
-					</p>
+					<p className="page-subtitle">Log immutabile piattaforma · {total} eventi totali</p>
 				</div>
 			</div>
 
@@ -127,12 +119,10 @@ export default function AuditPage() {
 						}}
 					/>
 					<div>
-						<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>
-							Audit log super admin
-						</div>
+						<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>Audit log super admin</div>
 						<div style={{ fontSize: "0.8125rem", color: "hsl(var(--muted-foreground))" }}>
-							Ogni azione effettuata dal super_admin sulla piattaforma è registrata
-							immutabilmente. Solo il ruolo{" "}
+							Ogni azione effettuata dal super_admin sulla piattaforma è registrata immutabilmente.
+							Solo il ruolo{" "}
 							<code
 								style={{
 									background: "hsl(var(--muted))",
@@ -288,9 +278,7 @@ export default function AuditPage() {
 							borderTop: "1px solid hsl(var(--border))",
 						}}
 					>
-						<span
-							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
-						>
+						<span style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
 							Pagina {page} di {totalPages} · {total} eventi
 						</span>
 						<div style={{ display: "flex", gap: "0.5rem" }}>
@@ -343,9 +331,7 @@ export default function AuditPage() {
 						</div>
 						<div>
 							<strong>Azione:</strong>{" "}
-							<span
-								className={`badge ${resolveBadge(detailEntry.azione)}`}
-							>
+							<span className={`badge ${resolveBadge(detailEntry.azione)}`}>
 								{detailEntry.azione}
 							</span>
 						</div>
@@ -358,8 +344,7 @@ export default function AuditPage() {
 							</div>
 						)}
 						<div>
-							<strong>IP:</strong>{" "}
-							<code>{detailEntry.ipAddress ?? "—"}</code>
+							<strong>IP:</strong> <code>{detailEntry.ipAddress ?? "—"}</code>
 						</div>
 						{detailEntry.userAgent && (
 							<div>

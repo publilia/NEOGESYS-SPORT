@@ -49,8 +49,7 @@ export function QuasarMenu() {
 
 	// Per super_admin il piano si gestisce da Billing (vista cross-tenant).
 	// Per tenant user c'è la pagina di upgrade self-service dedicata.
-	const upgradePianoHref =
-		current.role === "super_admin" ? "/billing" : "/impostazioni/piano";
+	const upgradePianoHref = current.role === "super_admin" ? "/billing" : "/impostazioni/piano";
 
 	// Skippa la fetch se siamo nel contesto "NEOGESYS Platform" — il client tRPC
 	// non invia l'header tenant (vedi lib/trpc.ts) e l'API risponderebbe 401.
@@ -105,11 +104,7 @@ export function QuasarMenu() {
 				    bottone). Pulsa sempre via `.quasar-btn .quasar-btn-mark` in
 				    globals.css (scale + opacity ~2.4s, sincronizzata con l'alone
 				    esterno box-shadow). */}
-				<NeogesysMarkMinimal
-					className="quasar-btn-mark"
-					size="1.35rem"
-					ariaHidden
-				/>
+				<NeogesysMarkMinimal className="quasar-btn-mark" size="1.35rem" ariaHidden />
 			</button>
 
 			{open && (

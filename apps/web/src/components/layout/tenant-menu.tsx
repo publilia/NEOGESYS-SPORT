@@ -92,13 +92,20 @@ export function TenantMenu() {
 			{open && (
 				<div
 					className="popover"
-					style={{ top: "3.5rem", left: 0, width: "22rem", maxHeight: "min(80vh, 560px)", overflowY: "auto" }}
+					style={{
+						top: "3.5rem",
+						left: 0,
+						width: "22rem",
+						maxHeight: "min(80vh, 560px)",
+						overflowY: "auto",
+					}}
 				>
 					{/* Header */}
 					<div
 						style={{
 							padding: "1rem",
-							background: "linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--accent) / 0.12))",
+							background:
+								"linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--accent) / 0.12))",
 							borderBottom: "1px solid hsl(var(--border))",
 						}}
 					>
@@ -180,10 +187,18 @@ export function TenantMenu() {
 							<a href="/impostazioni" className="popover-item" style={{ textDecoration: "none" }}>
 								<Building2 className="icon" /> Anagrafica & sede legale
 							</a>
-							<a href="/impostazioni#branding" className="popover-item" style={{ textDecoration: "none" }}>
+							<a
+								href="/impostazioni#branding"
+								className="popover-item"
+								style={{ textDecoration: "none" }}
+							>
 								<Palette className="icon" /> Branding & palette
 							</a>
-							<a href="/impostazioni#piano" className="popover-item" style={{ textDecoration: "none" }}>
+							<a
+								href="/impostazioni#piano"
+								className="popover-item"
+								style={{ textDecoration: "none" }}
+							>
 								<CreditCard className="icon" /> Piano & fatturazione
 							</a>
 							<a href="/utenti" className="popover-item" style={{ textDecoration: "none" }}>
@@ -315,7 +330,10 @@ export function TenantMenu() {
 							<div className="popover-divider" />
 							<a href="/tenants" className="popover-item" style={{ textDecoration: "none" }}>
 								<Building2 className="icon" /> Tutti i tenant
-								<ChevronDown className="icon-sm" style={{ marginLeft: "auto", transform: "rotate(-90deg)", opacity: 0.5 }} />
+								<ChevronDown
+									className="icon-sm"
+									style={{ marginLeft: "auto", transform: "rotate(-90deg)", opacity: 0.5 }}
+								/>
 							</a>
 							<a href="/billing" className="popover-item" style={{ textDecoration: "none" }}>
 								<CreditCard className="icon" /> Billing piattaforma
@@ -338,7 +356,9 @@ export function TenantMenu() {
 						}}
 					>
 						<Sparkles className="icon-sm" style={{ opacity: 0.6 }} />
-						<span>Ruolo: <strong>{roleInfo.label}</strong></span>
+						<span>
+							Ruolo: <strong>{roleInfo.label}</strong>
+						</span>
 					</div>
 				</div>
 			)}
@@ -351,7 +371,10 @@ export function TenantMenu() {
 function TrialBadge({ end }: { end: Date | string }) {
 	const endDate = typeof end === "string" ? new Date(end) : end;
 	const now = new Date();
-	const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+	const daysLeft = Math.max(
+		0,
+		Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+	);
 	const critical = daysLeft <= 3;
 	return (
 		<div

@@ -21,11 +21,7 @@ export default function AIPage() {
 						Usa il pannello laterale (⌘J) per chiedere assistenza all'AI
 					</p>
 				</div>
-				<button
-					type="button"
-					className="btn btn-primary"
-					onClick={() => setAiDrawerOpen(true)}
-				>
+				<button type="button" className="btn btn-primary" onClick={() => setAiDrawerOpen(true)}>
 					<Sparkles className="icon" />
 					Apri AI Drawer
 				</button>
@@ -40,8 +36,10 @@ export default function AIPage() {
 						<div>
 							<h3 className="text-lg font-semibold">Suggerimenti rapidi</h3>
 							<p className="text-sm text-muted-foreground mt-1">
-								L'AI può aiutarti con analisi dati, invio comunicazioni, generazione report
-								e automazioni varie. Premi <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘J</kbd> in qualsiasi momento.
+								L'AI può aiutarti con analisi dati, invio comunicazioni, generazione report e
+								automazioni varie. Premi{" "}
+								<kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘J</kbd> in
+								qualsiasi momento.
 							</p>
 						</div>
 					</div>

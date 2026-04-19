@@ -230,8 +230,7 @@ export const eventiRouter = router({
 					),
 				)
 				.returning({ id: iscrizioniEvento.id });
-			if (!deleted)
-				throw new TRPCError({ code: "NOT_FOUND", message: "Iscrizione non trovata." });
+			if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Iscrizione non trovata." });
 			return { success: true };
 		}),
 

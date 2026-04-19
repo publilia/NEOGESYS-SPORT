@@ -179,16 +179,12 @@ export default function PianoUpgradePage() {
 						<Metric
 							icon={Users}
 							label="Limite soci"
-							value={
-								tenant?.maxSoci === "999999" ? "Illimitati" : (tenant?.maxSoci ?? "—")
-							}
+							value={tenant?.maxSoci === "999999" ? "Illimitati" : (tenant?.maxSoci ?? "—")}
 						/>
 						<Metric
 							icon={User}
 							label="Limite utenti"
-							value={
-								tenant?.maxUtenti === "999999" ? "Illimitati" : (tenant?.maxUtenti ?? "—")
-							}
+							value={tenant?.maxUtenti === "999999" ? "Illimitati" : (tenant?.maxUtenti ?? "—")}
 						/>
 						{tenant?.trialEnd && pianoAttuale === "trial" && (
 							<Metric
@@ -279,9 +275,7 @@ export default function PianoUpgradePage() {
 									<div style={{ fontWeight: 600, fontSize: "1.125rem", marginBottom: "0.25rem" }}>
 										{p.nome}
 									</div>
-									<div
-										style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.125rem" }}
-									>
+									<div style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.125rem" }}>
 										€ {Number(p.prezzoMensile).toFixed(0)}
 										<span
 											style={{
@@ -328,17 +322,11 @@ export default function PianoUpgradePage() {
 									>
 										<FeatureRow
 											icon={Users}
-											label={
-												p.maxSoci >= 999999 ? "Soci illimitati" : `Fino a ${p.maxSoci} soci`
-											}
+											label={p.maxSoci >= 999999 ? "Soci illimitati" : `Fino a ${p.maxSoci} soci`}
 										/>
 										<FeatureRow
 											icon={User}
-											label={
-												p.maxUtenti >= 999999
-													? "Utenti illimitati"
-													: `${p.maxUtenti} utenti`
-											}
+											label={p.maxUtenti >= 999999 ? "Utenti illimitati" : `${p.maxUtenti} utenti`}
 										/>
 										{p.maxStorageMb > 0 && (
 											<FeatureRow
@@ -347,9 +335,7 @@ export default function PianoUpgradePage() {
 											/>
 										)}
 										{p.aiAbilitato && <FeatureRow icon={Zap} label="AI assistant" />}
-										{p.fatturazioneSDI && (
-											<FeatureRow icon={Shield} label="Fatturazione SDI" />
-										)}
+										{p.fatturazioneSDI && <FeatureRow icon={Shield} label="Fatturazione SDI" />}
 										{p.customDomain && <FeatureRow icon={Globe} label="Custom domain" />}
 										{p.customPalette && <FeatureRow icon={Palette} label="Palette custom" />}
 										{p.supportoPrioritario && (
@@ -442,7 +428,11 @@ export default function PianoUpgradePage() {
 							}}
 						>
 							<div
-								style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}
+								style={{
+									display: "flex",
+									justifyContent: "space-between",
+									marginBottom: "0.25rem",
+								}}
 							>
 								<span>Nuovo limite soci</span>
 								<strong>
@@ -482,9 +472,7 @@ export default function PianoUpgradePage() {
 							<button
 								type="button"
 								className="btn btn-primary"
-								onClick={() =>
-									pendingPiano && changeMut.mutate({ piano: pendingPiano })
-								}
+								onClick={() => pendingPiano && changeMut.mutate({ piano: pendingPiano })}
 								disabled={changeMut.isPending}
 							>
 								{changeMut.isPending ? "Aggiorno…" : "Conferma upgrade"}
@@ -519,9 +507,7 @@ function Metric({
 				}}
 			/>
 			<div>
-				<div style={{ fontSize: "0.6875rem", color: "hsl(var(--muted-foreground))" }}>
-					{label}
-				</div>
+				<div style={{ fontSize: "0.6875rem", color: "hsl(var(--muted-foreground))" }}>{label}</div>
 				<div style={{ fontSize: "0.875rem", fontWeight: 600 }}>{value}</div>
 			</div>
 		</div>
@@ -538,10 +524,7 @@ function FeatureRow({ icon: Icon, label }: { icon: typeof Users; label: string }
 				fontSize: "0.8125rem",
 			}}
 		>
-			<Icon
-				className="icon-sm"
-				style={{ color: "hsl(var(--primary))", flexShrink: 0 }}
-			/>
+			<Icon className="icon-sm" style={{ color: "hsl(var(--primary))", flexShrink: 0 }} />
 			<span>{label}</span>
 		</li>
 	);

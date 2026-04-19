@@ -37,7 +37,9 @@ interface Cell {
 
 export default function CalendarioPage() {
 	const now = new Date();
-	const [calendarMonth, setCalendarMonth] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
+	const [calendarMonth, setCalendarMonth] = useState(
+		new Date(now.getFullYear(), now.getMonth(), 1),
+	);
 
 	const year = calendarMonth.getFullYear();
 	const month = calendarMonth.getMonth();
@@ -61,7 +63,8 @@ export default function CalendarioPage() {
 		for (const c of corsiCalendar.data ?? []) {
 			const start = new Date(c.start as string);
 			const key = keyOf(start);
-			(byDay[key] ??= []).push({
+			byDay[key] = byDay[key] ?? [];
+			byDay[key].push({
 				id: String(c.id),
 				title: String(c.title).split(" · ")[0] ?? String(c.title),
 				kind: "corso",
@@ -71,7 +74,8 @@ export default function CalendarioPage() {
 		for (const e of eventiCalendar.data ?? []) {
 			const start = new Date(e.start as unknown as string);
 			const key = keyOf(start);
-			(byDay[key] ??= []).push({
+			byDay[key] = byDay[key] ?? [];
+			byDay[key].push({
 				id: String(e.id),
 				title: String(e.title),
 				kind: "evento",
@@ -143,21 +147,13 @@ export default function CalendarioPage() {
 			<div className="card">
 				<div className="card-body">
 					<div className="calendar-nav">
-						<button
-							type="button"
-							className="btn btn-ghost btn-icon"
-							onClick={() => navMonth(-1)}
-						>
+						<button type="button" className="btn btn-ghost btn-icon" onClick={() => navMonth(-1)}>
 							<ChevronLeft className="icon" />
 						</button>
 						<div style={{ fontSize: "1.125rem", fontWeight: 600 }}>
 							{MONTH_NAMES[month]} {year}
 						</div>
-						<button
-							type="button"
-							className="btn btn-ghost btn-icon"
-							onClick={() => navMonth(1)}
-						>
+						<button type="button" className="btn btn-ghost btn-icon" onClick={() => navMonth(1)}>
 							<ChevronRight className="icon" />
 						</button>
 					</div>

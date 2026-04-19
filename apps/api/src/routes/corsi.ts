@@ -180,8 +180,7 @@ export const corsiRouter = router({
 		if (data.etaMax !== undefined) updateData.etaMax = data.etaMax;
 		if (data.sedeNome !== undefined) updateData.sedeNome = data.sedeNome;
 		if (data.capacitaMax !== undefined) updateData.capacitaMax = data.capacitaMax;
-		if (data.orarioSettimanale !== undefined)
-			updateData.orarioSettimanale = data.orarioSettimanale;
+		if (data.orarioSettimanale !== undefined) updateData.orarioSettimanale = data.orarioSettimanale;
 		if (data.quotaAssociata !== undefined)
 			updateData.quotaAssociata = data.quotaAssociata != null ? String(data.quotaAssociata) : null;
 		if (data.stato !== undefined) updateData.stato = data.stato;
@@ -244,10 +243,7 @@ export const corsiRouter = router({
 			.select({ id: iscrizioniCorso.id })
 			.from(iscrizioniCorso)
 			.where(
-				and(
-					eq(iscrizioniCorso.corsoId, input.corsoId),
-					eq(iscrizioniCorso.socioId, input.socioId),
-				),
+				and(eq(iscrizioniCorso.corsoId, input.corsoId), eq(iscrizioniCorso.socioId, input.socioId)),
 			)
 			.limit(1);
 		if (existing) {
@@ -323,10 +319,7 @@ export const corsiRouter = router({
 				.from(iscrizioniCorso)
 				.innerJoin(soci, eq(iscrizioniCorso.socioId, soci.id))
 				.where(
-					and(
-						eq(iscrizioniCorso.corsoId, input.corsoId),
-						eq(iscrizioniCorso.tenantId, tenantId),
-					),
+					and(eq(iscrizioniCorso.corsoId, input.corsoId), eq(iscrizioniCorso.tenantId, tenantId)),
 				)
 				.orderBy(asc(soci.cognome), asc(soci.nome));
 		}),
@@ -360,10 +353,7 @@ export const corsiRouter = router({
 	getPresenze: protectedProcedure.input(getPresenzeInput).query(async ({ ctx, input }) => {
 		const tenantId = requireTenant(ctx.tenant?.id);
 
-		const conds = [
-			eq(presenze.corsoId, input.corsoId),
-			eq(presenze.tenantId, tenantId),
-		];
+		const conds = [eq(presenze.corsoId, input.corsoId), eq(presenze.tenantId, tenantId)];
 		if (input.dataInizio) conds.push(gte(presenze.dataLezione, new Date(input.dataInizio)));
 		if (input.dataFine) conds.push(lte(presenze.dataLezione, new Date(input.dataFine)));
 

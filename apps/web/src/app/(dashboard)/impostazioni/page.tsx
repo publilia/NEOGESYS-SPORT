@@ -8,9 +8,9 @@ import {
 	ArrowUpRight,
 	Check,
 	CheckCircle,
+	type LucideIcon,
 	Monitor,
 	Moon,
-	type LucideIcon,
 	PanelLeft,
 	PanelTop,
 	Save,
@@ -18,8 +18,8 @@ import {
 	Sun,
 	Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -149,17 +149,12 @@ export default function ImpostazioniPage() {
 											}}
 										/>
 										{active && (
-											<CheckCircle
-												className="icon"
-												style={{ color: "hsl(var(--primary))" }}
-											/>
+											<CheckCircle className="icon" style={{ color: "hsl(var(--primary))" }} />
 										)}
 									</div>
 									<div>
 										<div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>{l.name}</div>
-										<div
-											style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))" }}
-										>
+										<div style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))" }}>
 											{l.desc}
 										</div>
 									</div>
@@ -310,7 +305,9 @@ export default function ImpostazioniPage() {
 												}}
 											>
 												<div className="pulsar-card-core pulsar-card-core-lg">
-													<Sparkles style={{ width: "1.125rem", height: "1.125rem", color: "white" }} />
+													<Sparkles
+														style={{ width: "1.125rem", height: "1.125rem", color: "white" }}
+													/>
 												</div>
 												<div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
 													<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -535,9 +532,7 @@ export default function ImpostazioniPage() {
 								<Zap className="icon" />
 							</div>
 							<div style={{ flex: 1, minWidth: "200px" }}>
-								<div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
-									Vuoi cambiare piano?
-								</div>
+								<div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>Vuoi cambiare piano?</div>
 								<div
 									style={{
 										fontSize: "0.8125rem",

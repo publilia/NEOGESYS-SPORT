@@ -110,16 +110,12 @@ function updateChangelog(newVersion) {
 		? unreleasedMatch[1].trim()
 		: "_Nessuna nota Unreleased — release vuota._";
 
-	const newEntry = [
-		`## [${newVersion}] · ${todayIso()}`,
-		"",
-		unreleasedNotes,
-		"",
-		"---",
-		"",
-	].join("\n");
+	const newEntry = [`## [${newVersion}] · ${todayIso()}`, "", unreleasedNotes, "", "---", ""].join(
+		"\n",
+	);
 
-	const resetUnreleased = `## [Unreleased]\n\n_(nessuna nota — pronta per la prossima release)_\n\n---\n\n`;
+	const resetUnreleased =
+		"## [Unreleased]\n\n_(nessuna nota — pronta per la prossima release)_\n\n---\n\n";
 
 	let next;
 	if (unreleasedMatch) {
@@ -133,13 +129,11 @@ function updateChangelog(newVersion) {
 		next = `${resetUnreleased}${newEntry}${content}`;
 	}
 	writeFileSync(CHANGELOG_FILE, next, "utf8");
-	console.log(`✓ CHANGELOG.md aggiornato con [${newVersion}]`);
 }
 
 function gitTag(version) {
 	try {
 		execSync(`git tag v${version}`, { cwd: ROOT, stdio: "inherit" });
-		console.log(`✓ git tag v${version} creato`);
 	} catch (err) {
 		console.warn(`! git tag fallito: ${err.message}`);
 	}
@@ -164,7 +158,6 @@ function updateMirrors(newVersion) {
 		}
 		const next = content.replace(re, `const STATIC_VERSION = "${newVersion}";`);
 		writeFileSync(file, next, "utf8");
-		console.log(`✓ Mirror aggiornato: ${file.replace(`${ROOT}/`, "")}`);
 	}
 
 	if (existsSync(ROOT_PKG)) {
@@ -172,7 +165,6 @@ function updateMirrors(newVersion) {
 			const pkg = JSON.parse(readFileSync(ROOT_PKG, "utf8"));
 			pkg.version = newVersion;
 			writeFileSync(ROOT_PKG, `${JSON.stringify(pkg, null, "\t")}\n`, "utf8");
-			console.log(`✓ Root package.json version = ${newVersion}`);
 		} catch (err) {
 			console.warn(`! Impossibile aggiornare package.json: ${err.message}`);
 		}
@@ -190,27 +182,17 @@ const current = readVersion();
 const nextV = bump(current, mode);
 const next = formatVersion(nextV);
 
-console.log(`  Versione corrente : ${current.raw}`);
-console.log(`  Nuova versione    : ${next}`);
-console.log(`  Modalità          : ${mode}${dryRun ? " (dry-run)" : ""}`);
-
 if (dryRun) {
 	process.exit(0);
 }
 
 writeFileSync(VERSION_FILE, `${next}\n`, "utf8");
-console.log(`✓ VERSION scritto: ${next}`);
 
 updateMirrors(next);
 updateChangelog(next);
 
 if (doTag) {
 	gitTag(next);
+} else {
+	console.log(`\nRelease ${next} prepared. Run with --tag to create the git tag.`);
 }
-
-console.log("");
-console.log("  Prossimi step (manuali):");
-console.log(`    git add VERSION CHANGELOG.md`);
-console.log(`    git commit -m "release: ${next}"`);
-if (!doTag) console.log(`    git tag v${next}`);
-console.log(`    git push --follow-tags`);

@@ -614,9 +614,7 @@ export default function SociPage() {
 						<Field label="Codice Fiscale" hint="16 caratteri">
 							<Input
 								value={form.codiceFiscale}
-								onChange={(e) =>
-									setForm({ ...form, codiceFiscale: e.target.value.toUpperCase() })
-								}
+								onChange={(e) => setForm({ ...form, codiceFiscale: e.target.value.toUpperCase() })}
 								maxLength={16}
 								style={{ fontFamily: "monospace", textTransform: "uppercase" }}
 							/>
@@ -643,9 +641,7 @@ export default function SociPage() {
 						<Field label="Tipologia" required>
 							<Select
 								value={form.tipologia}
-								onChange={(e) =>
-									setForm({ ...form, tipologia: e.target.value as TipologiaSocio })
-								}
+								onChange={(e) => setForm({ ...form, tipologia: e.target.value as TipologiaSocio })}
 							>
 								<option value="socio">Socio</option>
 								<option value="atleta">Atleta</option>

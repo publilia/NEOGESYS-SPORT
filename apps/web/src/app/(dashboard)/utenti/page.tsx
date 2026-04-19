@@ -5,15 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, FormGrid, Input, Select } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
 import { trpc } from "@/lib/trpc";
-import {
-	ChevronLeft,
-	ChevronRight,
-	Plus,
-	Shield,
-	Trash2,
-	UserCheck,
-	UserCog,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Shield, Trash2, UserCheck, UserCog } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -223,7 +215,10 @@ export default function UtentiPage() {
 				{listQuery.isLoading ? (
 					<div style={{ padding: "2rem", textAlign: "center" }}>Caricamento…</div>
 				) : items.length === 0 ? (
-					<EmptyState title="Nessun utente" description="Nessun utente trovato con i filtri correnti." />
+					<EmptyState
+						title="Nessun utente"
+						description="Nessun utente trovato con i filtri correnti."
+					/>
 				) : (
 					<div className="table-container">
 						<table className="table">
@@ -305,10 +300,7 @@ export default function UtentiPage() {
 												)}
 											</td>
 											<td>
-												<div
-													className="table-actions"
-													style={{ justifyContent: "flex-end" }}
-												>
+												<div className="table-actions" style={{ justifyContent: "flex-end" }}>
 													<button
 														type="button"
 														className="btn btn-ghost btn-icon"
@@ -356,9 +348,7 @@ export default function UtentiPage() {
 							borderTop: "1px solid hsl(var(--border))",
 						}}
 					>
-						<span
-							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
-						>
+						<span style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
 							Pagina {page} di {totalPages}
 						</span>
 						<div style={{ display: "flex", gap: "0.5rem" }}>
@@ -434,9 +424,7 @@ export default function UtentiPage() {
 					<Field label="Ruolo" required span={1}>
 						<Select
 							value={inviteForm.ruolo}
-							onChange={(e) =>
-								setInviteForm((f) => ({ ...f, ruolo: e.target.value as Ruolo }))
-							}
+							onChange={(e) => setInviteForm((f) => ({ ...f, ruolo: e.target.value as Ruolo }))}
 						>
 							{RUOLI.map((r) => (
 								<option key={r} value={r}>
@@ -456,11 +444,7 @@ export default function UtentiPage() {
 				size="sm"
 				footer={
 					<>
-						<button
-							type="button"
-							className="btn btn-outline btn-sm"
-							onClick={closeRoleModal}
-						>
+						<button type="button" className="btn btn-outline btn-sm" onClick={closeRoleModal}>
 							Annulla
 						</button>
 						<button
@@ -505,8 +489,7 @@ export default function UtentiPage() {
 				open={confirmDeactivateId !== null}
 				onClose={() => setConfirmDeactivateId(null)}
 				onConfirm={() => {
-					if (confirmDeactivateId)
-						deactivateMut.mutate({ utenteId: confirmDeactivateId });
+					if (confirmDeactivateId) deactivateMut.mutate({ utenteId: confirmDeactivateId });
 				}}
 				title="Disattivare utente?"
 				message="L'utente non potrà più accedere al tenant. Puoi riattivarlo in qualsiasi momento."

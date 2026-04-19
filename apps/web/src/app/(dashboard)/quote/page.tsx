@@ -617,9 +617,7 @@ export default function QuotePage() {
 						<Field label="Anno Sportivo">
 							<Select
 								value={createForm.annoSportivoId}
-								onChange={(e) =>
-									setCreateForm({ ...createForm, annoSportivoId: e.target.value })
-								}
+								onChange={(e) => setCreateForm({ ...createForm, annoSportivoId: e.target.value })}
 							>
 								<option value="">—</option>
 								{anniQuery.data?.map((a) => (

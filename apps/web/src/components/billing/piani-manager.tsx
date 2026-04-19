@@ -423,12 +423,7 @@ export function PianiManager() {
 						>
 							Annulla
 						</button>
-						<button
-							type="submit"
-							form="piano-form"
-							className="btn btn-primary"
-							disabled={isSaving}
-						>
+						<button type="submit" form="piano-form" className="btn btn-primary" disabled={isSaving}>
 							<Save className="icon" />
 							{editing ? "Salva modifiche" : "Crea piano"}
 						</button>
@@ -656,11 +651,7 @@ function Chip({ label, value }: { label: string; value: number }) {
 		>
 			<div style={{ fontSize: "0.625rem", color: "hsl(var(--muted-foreground))" }}>{label}</div>
 			<div style={{ fontWeight: 600, fontSize: "0.75rem", display: "flex", alignItems: "center" }}>
-				{value >= 999999 ? (
-					<InfinityIcon className="icon-sm" />
-				) : (
-					value.toLocaleString("it-IT")
-				)}
+				{value >= 999999 ? <InfinityIcon className="icon-sm" /> : value.toLocaleString("it-IT")}
 			</div>
 		</div>
 	);
@@ -707,9 +698,7 @@ function FormField({
 			</span>
 			{children}
 			{hint && (
-				<span style={{ fontSize: "0.6875rem", color: "hsl(var(--muted-foreground))" }}>
-					{hint}
-				</span>
+				<span style={{ fontSize: "0.6875rem", color: "hsl(var(--muted-foreground))" }}>{hint}</span>
 			)}
 		</label>
 	);

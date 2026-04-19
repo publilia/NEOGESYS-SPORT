@@ -124,8 +124,8 @@ export default function PianiPage() {
 						<CreditCard className="h-6 w-6 text-indigo-600" /> Gestione piani
 					</h1>
 					<p className="mt-1 text-sm text-gray-500">
-						Listino abbonamenti piattaforma. I prezzi e le feature sono modificabili dall&apos;app web
-						lato super_admin su <code className="text-gray-700">/billing</code>.
+						Listino abbonamenti piattaforma. I prezzi e le feature sono modificabili dall&apos;app
+						web lato super_admin su <code className="text-gray-700">/billing</code>.
 					</p>
 				</div>
 				<a
@@ -173,9 +173,7 @@ export default function PianiPage() {
 							) : (
 								<>
 									<span className="text-3xl font-bold">€{p.priceEur}</span>
-									{p.priceEur > 0 ? (
-										<span className="text-xs text-gray-500">/mese</span>
-									) : null}
+									{p.priceEur > 0 ? <span className="text-xs text-gray-500">/mese</span> : null}
 								</>
 							)}
 						</div>
@@ -231,8 +229,8 @@ export default function PianiPage() {
 						<p className="mt-1 text-sm text-gray-600">
 							L&apos;editor live dei piani è integrato su <code>/billing</code> nell&apos;app web.
 							Lì puoi modificare prezzi, toggle delle feature (AI, SDI, custom domain, supporto
-							prioritario…), limiti di soci/utenti e disattivare piani obsoleti — con persistenza
-							su Postgres via <code>piattaforma.piani.*</code>.
+							prioritario…), limiti di soci/utenti e disattivare piani obsoleti — con persistenza su
+							Postgres via <code>piattaforma.piani.*</code>.
 						</p>
 						<a
 							href={`${WEB_BILLING_URL}/billing`}

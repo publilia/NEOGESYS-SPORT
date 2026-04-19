@@ -193,12 +193,7 @@ export const documentiRouter = router({
 			return ctx.db
 				.select()
 				.from(consensiGdpr)
-				.where(
-					and(
-						eq(consensiGdpr.socioId, input.socioId),
-						eq(consensiGdpr.tenantId, tenantId),
-					),
-				)
+				.where(and(eq(consensiGdpr.socioId, input.socioId), eq(consensiGdpr.tenantId, tenantId)))
 				.orderBy(desc(consensiGdpr.createdAt));
 		}),
 

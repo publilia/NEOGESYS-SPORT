@@ -121,9 +121,7 @@ export function PaletteSelector() {
 													</p>
 												) : null}
 											</div>
-											{isSelected && (
-												<Check className="h-4 w-4 shrink-0 text-white drop-shadow" />
-											)}
+											{isSelected && <Check className="h-4 w-4 shrink-0 text-white drop-shadow" />}
 										</div>
 									</div>
 								</button>

@@ -1,23 +1,14 @@
 "use client";
 
 import { NeogesysLogoHorizontal } from "@/components/brand/neogesys-mark";
+import { TenantMenu } from "@/components/layout/tenant-menu";
 import { PaletteSelector } from "@/components/palette-selector";
 import { QuasarMenu } from "@/components/quasar-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { TenantMenu } from "@/components/layout/tenant-menu";
 import { NEOGESYS_SECTOR } from "@/lib/brand";
 import { getRoleInfo, useCurrentUser } from "@/lib/current-user";
 import { useUIStore } from "@/lib/store";
-import {
-	Bell,
-	ChevronDown,
-	Inbox,
-	LogOut,
-	Menu,
-	Search,
-	Settings,
-	User,
-} from "lucide-react";
+import { Bell, ChevronDown, Inbox, LogOut, Menu, Search, Settings, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface AppHeaderProps {
@@ -72,11 +63,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 			</div>
 
 			{/* Center: Command palette trigger */}
-			<button
-				type="button"
-				onClick={() => setCommandPaletteOpen(true)}
-				className="header-search"
-			>
+			<button type="button" onClick={() => setCommandPaletteOpen(true)} className="header-search">
 				<Search className="icon" />
 				<span>Cerca soci, corsi, azioni...</span>
 				<kbd>⌘K</kbd>
@@ -155,7 +142,10 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 							}}
 						>
 							<span style={{ fontSize: "0.8125rem", fontWeight: 500 }}>{current.name}</span>
-							<span className={`badge ${roleInfo.badgeCls}`} style={{ fontSize: "0.625rem", padding: "0 0.375rem", lineHeight: "1rem" }}>
+							<span
+								className={`badge ${roleInfo.badgeCls}`}
+								style={{ fontSize: "0.625rem", padding: "0 0.375rem", lineHeight: "1rem" }}
+							>
 								{roleInfo.label}
 							</span>
 						</div>

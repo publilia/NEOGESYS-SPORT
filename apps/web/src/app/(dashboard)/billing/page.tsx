@@ -206,9 +206,7 @@ export default function BillingPage() {
 									const stato = inv.stato as StatoFattura;
 									return (
 										<tr key={inv.id}>
-											<td style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												{inv.numero}
-											</td>
+											<td style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{inv.numero}</td>
 											<td
 												style={{
 													fontFamily: "monospace",
@@ -249,9 +247,7 @@ export default function BillingPage() {
 														<CheckCircle2 className="icon-sm" /> Pagata
 													</span>
 												)}
-												{stato === "emessa" && (
-													<span className="badge badge-warning">Emessa</span>
-												)}
+												{stato === "emessa" && <span className="badge badge-warning">Emessa</span>}
 												{stato === "scaduta" && (
 													<span className="badge badge-destructive">
 														<XCircle className="icon-sm" /> Scaduta
@@ -263,10 +259,7 @@ export default function BillingPage() {
 												)}
 											</td>
 											<td>
-												<div
-													className="table-actions"
-													style={{ justifyContent: "flex-end" }}
-												>
+												<div className="table-actions" style={{ justifyContent: "flex-end" }}>
 													{inv.pdfUrl ? (
 														<a
 															href={inv.pdfUrl}
@@ -306,9 +299,7 @@ export default function BillingPage() {
 							borderTop: "1px solid hsl(var(--border))",
 						}}
 					>
-						<span
-							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
-						>
+						<span style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
 							Pagina {page} di {totalPages}
 						</span>
 						<div style={{ display: "flex", gap: "0.5rem" }}>

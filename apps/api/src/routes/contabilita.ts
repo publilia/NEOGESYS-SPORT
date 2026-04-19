@@ -58,8 +58,7 @@ export const contabilitaRouter = router({
 		if (input.tipo) conds.push(eq(primaNotaMovimenti.tipo, input.tipo));
 		if (input.categoriaContabile)
 			conds.push(eq(primaNotaMovimenti.categoriaContabile, input.categoriaContabile));
-		if (input.dataInizio)
-			conds.push(gte(primaNotaMovimenti.data, new Date(input.dataInizio)));
+		if (input.dataInizio) conds.push(gte(primaNotaMovimenti.data, new Date(input.dataInizio)));
 		if (input.dataFine) conds.push(lte(primaNotaMovimenti.data, new Date(input.dataFine)));
 
 		const [items, totalRows] = await Promise.all([
@@ -108,12 +107,7 @@ export const contabilitaRouter = router({
 			const [row] = await ctx.db
 				.select()
 				.from(primaNotaMovimenti)
-				.where(
-					and(
-						eq(primaNotaMovimenti.id, input.id),
-						eq(primaNotaMovimenti.tenantId, tenantId),
-					),
-				)
+				.where(and(eq(primaNotaMovimenti.id, input.id), eq(primaNotaMovimenti.tenantId, tenantId)))
 				.limit(1);
 			if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Movimento non trovato." });
 			return row;
@@ -149,8 +143,7 @@ export const contabilitaRouter = router({
 		if (data.descrizione !== undefined) patch.descrizione = data.descrizione;
 		if (data.importo !== undefined) patch.importo = String(data.importo);
 		if (data.data !== undefined) patch.data = new Date(data.data);
-		if (data.categoriaContabile !== undefined)
-			patch.categoriaContabile = data.categoriaContabile;
+		if (data.categoriaContabile !== undefined) patch.categoriaContabile = data.categoriaContabile;
 		if (data.quotaId !== undefined) patch.quotaId = data.quotaId;
 		if (data.socioId !== undefined) patch.socioId = data.socioId;
 		if (data.documentoUrl !== undefined) patch.documentoUrl = data.documentoUrl;
@@ -159,12 +152,9 @@ export const contabilitaRouter = router({
 		const [updated] = await ctx.db
 			.update(primaNotaMovimenti)
 			.set(patch)
-			.where(
-				and(eq(primaNotaMovimenti.id, id), eq(primaNotaMovimenti.tenantId, tenantId)),
-			)
+			.where(and(eq(primaNotaMovimenti.id, id), eq(primaNotaMovimenti.tenantId, tenantId)))
 			.returning();
-		if (!updated)
-			throw new TRPCError({ code: "NOT_FOUND", message: "Movimento non trovato." });
+		if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Movimento non trovato." });
 		return updated;
 	}),
 
@@ -174,15 +164,9 @@ export const contabilitaRouter = router({
 			const tenantId = requireTenant(ctx.tenant?.id);
 			const [deleted] = await ctx.db
 				.delete(primaNotaMovimenti)
-				.where(
-					and(
-						eq(primaNotaMovimenti.id, input.id),
-						eq(primaNotaMovimenti.tenantId, tenantId),
-					),
-				)
+				.where(and(eq(primaNotaMovimenti.id, input.id), eq(primaNotaMovimenti.tenantId, tenantId)))
 				.returning({ id: primaNotaMovimenti.id });
-			if (!deleted)
-				throw new TRPCError({ code: "NOT_FOUND", message: "Movimento non trovato." });
+			if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Movimento non trovato." });
 			return { success: true };
 		}),
 

@@ -26,7 +26,6 @@ export interface UserAdditionalFields {
  * - 2FA TOTP support
  * - Email verification
  */
-// biome-ignore lint/suspicious/noExplicitAny: better-auth return type is too complex to portably infer
 export function createAuthConfig(options: {
 	databaseUrl: string;
 	baseUrl: string;

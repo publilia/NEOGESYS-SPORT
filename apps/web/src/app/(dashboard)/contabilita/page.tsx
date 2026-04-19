@@ -245,12 +245,15 @@ export default function ContabilitaPage() {
 			<div className="page-header">
 				<div>
 					<h1 className="page-title">Contabilità</h1>
-					<p className="page-subtitle">
-						Prima nota · {total} movimenti nel periodo selezionato
-					</p>
+					<p className="page-subtitle">Prima nota · {total} movimenti nel periodo selezionato</p>
 				</div>
 				<div className="page-actions">
-					<button type="button" className="btn btn-outline btn-sm" disabled title="Funzione SDI in arrivo">
+					<button
+						type="button"
+						className="btn btn-outline btn-sm"
+						disabled
+						title="Funzione SDI in arrivo"
+					>
 						<Receipt className="icon" /> Fattura SDI
 					</button>
 					<button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
@@ -466,9 +469,7 @@ export default function ContabilitaPage() {
 							borderTop: "1px solid hsl(var(--border))",
 						}}
 					>
-						<span
-							style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}
-						>
+						<span style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
 							Pagina {page} di {totalPages}
 						</span>
 						<div style={{ display: "flex", gap: "0.5rem" }}>
@@ -552,9 +553,7 @@ export default function ContabilitaPage() {
 						<Input
 							list="categorie-list"
 							value={form.categoriaContabile}
-							onChange={(e) =>
-								setForm((f) => ({ ...f, categoriaContabile: e.target.value }))
-							}
+							onChange={(e) => setForm((f) => ({ ...f, categoriaContabile: e.target.value }))}
 							placeholder="es. Entrate Quote"
 						/>
 						<datalist id="categorie-list">

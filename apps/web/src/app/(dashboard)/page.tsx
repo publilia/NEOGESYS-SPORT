@@ -102,13 +102,9 @@ function SuperAdminDashboard({ name }: { name: string }) {
 	const arr = mrr * 12;
 
 	const total = overview?.total ?? 0;
-	const attivi = Number(
-		(overview?.byStato as Record<string, number> | undefined)?.attivo ?? 0,
-	);
+	const attivi = Number((overview?.byStato as Record<string, number> | undefined)?.attivo ?? 0);
 	const trial = Number((overview?.byStato as Record<string, number> | undefined)?.trial ?? 0);
-	const sospesi = Number(
-		(overview?.byStato as Record<string, number> | undefined)?.sospeso ?? 0,
-	);
+	const sospesi = Number((overview?.byStato as Record<string, number> | undefined)?.sospeso ?? 0);
 
 	const recentTenants = tenantsQuery.data?.items ?? [];
 
@@ -182,50 +178,49 @@ function SuperAdminDashboard({ name }: { name: string }) {
 					</div>
 					<div className="card-body">
 						<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-							{Object.entries(
-								(overview?.byPiano as Record<string, number> | undefined) ?? {},
-							).map(([piano, count]) => {
-								const pct = total > 0 ? (Number(count) / total) * 100 : 0;
-								return (
-									<div key={piano}>
-										<div
-											style={{
-												display: "flex",
-												justifyContent: "space-between",
-												marginBottom: "0.25rem",
-												fontSize: "0.8125rem",
-											}}
-										>
-											<span style={{ textTransform: "capitalize", fontWeight: 500 }}>
-												{piano}
-											</span>
-											<span style={{ color: "hsl(var(--muted-foreground))" }}>
-												{count} ({pct.toFixed(0)}%)
-											</span>
-										</div>
-										<div
-											style={{
-												width: "100%",
-												height: "0.5rem",
-												background: "hsl(var(--muted))",
-												borderRadius: "9999px",
-												overflow: "hidden",
-											}}
-										>
+							{Object.entries((overview?.byPiano as Record<string, number> | undefined) ?? {}).map(
+								([piano, count]) => {
+									const pct = total > 0 ? (Number(count) / total) * 100 : 0;
+									return (
+										<div key={piano}>
 											<div
 												style={{
-													width: `${pct}%`,
-													height: "100%",
-													background: "hsl(var(--primary))",
-													transition: "width 0.3s",
+													display: "flex",
+													justifyContent: "space-between",
+													marginBottom: "0.25rem",
+													fontSize: "0.8125rem",
 												}}
-											/>
+											>
+												<span style={{ textTransform: "capitalize", fontWeight: 500 }}>
+													{piano}
+												</span>
+												<span style={{ color: "hsl(var(--muted-foreground))" }}>
+													{count} ({pct.toFixed(0)}%)
+												</span>
+											</div>
+											<div
+												style={{
+													width: "100%",
+													height: "0.5rem",
+													background: "hsl(var(--muted))",
+													borderRadius: "9999px",
+													overflow: "hidden",
+												}}
+											>
+												<div
+													style={{
+														width: `${pct}%`,
+														height: "100%",
+														background: "hsl(var(--primary))",
+														transition: "width 0.3s",
+													}}
+												/>
+											</div>
 										</div>
-									</div>
-								);
-							})}
-							{Object.keys((overview?.byPiano as Record<string, number>) ?? {}).length ===
-								0 && (
+									);
+								},
+							)}
+							{Object.keys((overview?.byPiano as Record<string, number>) ?? {}).length === 0 && (
 								<div style={{ color: "hsl(var(--muted-foreground))", padding: "1rem" }}>
 									Nessun dato disponibile
 								</div>
@@ -338,18 +333,14 @@ function SuperAdminDashboard({ name }: { name: string }) {
 											{initials || "?"}
 										</div>
 										<div style={{ flex: 1 }}>
-											<div className="event-title">
-												{t.nomeVisualizzato ?? t.ragioneSociale}
-											</div>
+											<div className="event-title">{t.nomeVisualizzato ?? t.ragioneSociale}</div>
 											<div className="event-meta">
 												<span style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
 													{t.slug}
 												</span>
 												<span>
 													{t.createdAt
-														? new Date(
-																t.createdAt as unknown as string,
-														  ).toLocaleDateString("it-IT")
+														? new Date(t.createdAt as unknown as string).toLocaleDateString("it-IT")
 														: "—"}
 												</span>
 											</div>
@@ -400,14 +391,11 @@ function TenantDashboard({ name }: { name: string }) {
 
 	const incomeTrend = trendQuery.data?.income ?? [];
 	const chartData = useMemo(() => {
-		const max = Math.max(
-			1,
-			...incomeTrend.map((r) => Number(r.incassato ?? 0)),
-		);
+		const max = Math.max(1, ...incomeTrend.map((r) => Number(r.incassato ?? 0)));
 		return incomeTrend.slice(-6).map((r) => {
 			const dt = r.mese ? new Date(r.mese as unknown as string) : null;
 			return {
-				m: dt ? MONTH_LABELS[dt.getMonth()] ?? "" : "",
+				m: dt ? (MONTH_LABELS[dt.getMonth()] ?? "") : "",
 				v: Number(r.incassato ?? 0),
 				h: Math.max(8, (Number(r.incassato ?? 0) / max) * 100),
 			};
@@ -424,9 +412,7 @@ function TenantDashboard({ name }: { name: string }) {
 			<div className="page-header">
 				<div>
 					<h1 className="page-title">Dashboard</h1>
-					<p className="page-subtitle">
-						Benvenuto, {name}. Gestione completa della società.
-					</p>
+					<p className="page-subtitle">Benvenuto, {name}. Gestione completa della società.</p>
 				</div>
 				<div className="page-actions">
 					<Link href="/soci" className="btn btn-primary btn-sm">
@@ -447,11 +433,7 @@ function TenantDashboard({ name }: { name: string }) {
 				<StatCard
 					title="Quote Incassate"
 					value={fmtEuro(incassato)}
-					trend={
-						daIncassare > 0
-							? `${fmtEuro(daIncassare)} da incassare`
-							: "Tutto incassato"
-					}
+					trend={daIncassare > 0 ? `${fmtEuro(daIncassare)} da incassare` : "Tutto incassato"}
 					dir={daIncassare > 0 ? "warn" : "up"}
 					Icon={Euro}
 					color="success"
@@ -459,11 +441,7 @@ function TenantDashboard({ name }: { name: string }) {
 				<StatCard
 					title="Certificati in Scadenza"
 					value={String(certInScadenza)}
-					trend={
-						certScaduti > 0
-							? `${certScaduti} già scaduti`
-							: "Nei prossimi 30 giorni"
-					}
+					trend={certScaduti > 0 ? `${certScaduti} già scaduti` : "Nei prossimi 30 giorni"}
 					dir={certScaduti > 0 ? "warn" : "up"}
 					Icon={FileWarning}
 					color={certScaduti > 0 ? "destructive" : "warning"}
@@ -511,9 +489,7 @@ function TenantDashboard({ name }: { name: string }) {
 							<div className="chart-bars">
 								{chartData.map((b) => (
 									<div key={b.m} className="chart-bar">
-										<span className="chart-bar-value">
-											€{(b.v / 1000).toFixed(1)}k
-										</span>
+										<span className="chart-bar-value">€{(b.v / 1000).toFixed(1)}k</span>
 										<div className="chart-bar-fill" style={{ height: `${b.h}%` }} />
 										<span className="chart-bar-label">{b.m}</span>
 									</div>
@@ -540,9 +516,7 @@ function TenantDashboard({ name }: { name: string }) {
 											{churnList.length}{" "}
 											{churnList.length === 1 ? "socio a rischio churn" : "soci a rischio churn"}
 										</div>
-										<div className="alert-desc">
-											Churn score alto · presenze in calo
-										</div>
+										<div className="alert-desc">Churn score alto · presenze in calo</div>
 									</div>
 								</div>
 							)}
@@ -552,12 +526,8 @@ function TenantDashboard({ name }: { name: string }) {
 										<AlertCircle className="icon" />
 									</div>
 									<div>
-										<div className="alert-title">
-											{scadute} quote scadute
-										</div>
-										<div className="alert-desc">
-											{fmtEuro(daIncassare)} totali da incassare
-										</div>
+										<div className="alert-title">{scadute} quote scadute</div>
+										<div className="alert-desc">{fmtEuro(daIncassare)} totali da incassare</div>
 									</div>
 								</div>
 							)}
@@ -567,12 +537,8 @@ function TenantDashboard({ name }: { name: string }) {
 										<FileWarning className="icon" />
 									</div>
 									<div>
-										<div className="alert-title">
-											{certScaduti} certificati medici scaduti
-										</div>
-										<div className="alert-desc">
-											Blocco partecipazione corsi attivo
-										</div>
+										<div className="alert-title">{certScaduti} certificati medici scaduti</div>
+										<div className="alert-desc">Blocco partecipazione corsi attivo</div>
 									</div>
 								</div>
 							)}
@@ -582,9 +548,7 @@ function TenantDashboard({ name }: { name: string }) {
 										<FileWarning className="icon" />
 									</div>
 									<div>
-										<div className="alert-title">
-											{certInScadenza} certificati in scadenza
-										</div>
+										<div className="alert-title">{certInScadenza} certificati in scadenza</div>
 										<div className="alert-desc">Nei prossimi 30 giorni</div>
 									</div>
 								</div>
@@ -596,14 +560,10 @@ function TenantDashboard({ name }: { name: string }) {
 									</div>
 									<div>
 										<div className="alert-title">
-											Tasso di riscossione:{" "}
-											{(() => {
+											Tasso di riscossione: {(() => {
 												const totals = quoteStatsQuery.data.totals;
 												const tot = totals.reduce((acc, t) => acc + Number(t.totale ?? 0), 0);
-												const pag = totals.reduce(
-													(acc, t) => acc + Number(t.totalePagato ?? 0),
-													0,
-												);
+												const pag = totals.reduce((acc, t) => acc + Number(t.totalePagato ?? 0), 0);
 												return tot > 0 ? `${Math.round((pag / tot) * 100)}%` : "—";
 											})()}
 										</div>

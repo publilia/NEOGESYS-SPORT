@@ -1,15 +1,10 @@
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { tenants } from "@neogesys/db";
 import { TRPCError } from "@trpc/server";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { APP_VERSION, ECOSYSTEM_PROTOCOL_VERSION } from "../lib/version";
-import {
-	protectedProcedure,
-	publicProcedure,
-	router,
-	superAdminProcedure,
-} from "../trpc/index";
+import { protectedProcedure, publicProcedure, router, superAdminProcedure } from "../trpc/index";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -257,10 +252,10 @@ export const ecosystemRouter = router({
 			version: APP_VERSION,
 			protocol: ECOSYSTEM_PROTOCOL_VERSION,
 			endpoints: {
-				manifest: `/api/trpc/ecosystem.getManifest`,
-				listApps: `/api/trpc/ecosystem.listApps`,
-				ssoIssue: `/api/trpc/ecosystem.issueSsoToken`,
-				ssoVerify: `/api/trpc/ecosystem.verifySsoToken`,
+				manifest: "/api/trpc/ecosystem.getManifest",
+				listApps: "/api/trpc/ecosystem.listApps",
+				ssoIssue: "/api/trpc/ecosystem.issueSsoToken",
+				ssoVerify: "/api/trpc/ecosystem.verifySsoToken",
 			},
 			sharedEntitiesContract: {
 				socio: {
